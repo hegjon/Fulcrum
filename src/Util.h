@@ -193,7 +193,7 @@ public:
 
     Example:
   \code
-        Warning() << "This is a warning message..."; // would print a warning message to the logging facility
+        qWarning() << "This is a warning message..."; // would print a warning message to the logging facility
    \endcode
 */
 class Warning : public Log
@@ -225,7 +225,7 @@ public:
 
 // Now add these macros for symmetry
 #define LogM(...) (qInfo()(__VA_ARGS__))
-#define WarningM(...) (Warning()(__VA_ARGS__))
+#define WarningM(...) (qWarning()(__VA_ARGS__))
 #define ErrorM(...) (Error()(__VA_ARGS__))
 #define FatalM(...) (Fatal()(__VA_ARGS__))
 
@@ -600,7 +600,7 @@ namespace Util {
         try {
             ret.emplace( LambdaOnObject<RET>(obj, lambda, timeout_ms) );
         } catch (const ThreadNotRunning & e) {
-            Warning() << __func__ << ": " << e.what();
+            qWarning() << __func__ << ": " << e.what();
         } catch (const Exception &) {}
         return ret;
     }
@@ -671,7 +671,7 @@ namespace Util {
         try {
             ret.emplace( CallOnObjectWithTimeout<RET>(timeout_ms, obj, method, std::forward<Args>(args)...) );
         } catch (const ThreadNotRunning & e) {
-            Warning() << __func__ << ": " << e.what();
+            qWarning() << __func__ << ": " << e.what();
         } catch (const Exception &) {}
         return ret;
     }
@@ -691,7 +691,7 @@ namespace Util {
         try {
             ret.emplace( CallOnObject<RET>(obj, method, std::forward<Args>(args)...) );
         } catch (const ThreadNotRunning & e) {
-            Warning() << __func__ << ": " << e.what();
+            qWarning() << __func__ << ": " << e.what();
         } catch (const Exception &) {}
         return ret;
     }

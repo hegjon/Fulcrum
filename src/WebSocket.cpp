@@ -1076,7 +1076,7 @@ namespace WebSocket
         if (socket->readBufferSize() > 0) { // <=0 indicates "infinite" read buffer (which is the default for QAbstractSocket)
             if (const auto size = buf.size() + bytesAvailable(); size > socket->readBufferSize()) {
                 const auto peerName = peerAddress().toString() + ":" + QString::number(peerPort());
-                Warning() << "WebSocket::wrapper: working buffer size " << size << " exceeds readBufferSize " << socket->readBufferSize() << ", skipping read for peer " << peerName;
+                qWarning() << "WebSocket::wrapper: working buffer size " << size << " exceeds readBufferSize " << socket->readBufferSize() << ", skipping read for peer " << peerName;
                 return;
             }
         }
@@ -1125,8 +1125,8 @@ namespace WebSocket
         } catch (const std::exception &e) {
             const auto type = dynamic_cast<const WebSocket::Deser::ProtocolError *>(&e) ? "protocol error" : "exception";
             const auto peerName = socket->peerAddress().toString() + ":" + QString::number(socket->peerPort());
-            Warning() << "WebSocket: " << type << " for " << peerName << ": " << e.what();
-            Warning() << "WebSocket: aborting " << peerName;
+            qWarning() << "WebSocket: " << type << " for " << peerName << ": " << e.what();
+            qWarning() << "WebSocket: aborting " << peerName;
             close();
             setErrorString(e.what());
         }
@@ -1134,7 +1134,7 @@ namespace WebSocket
 
     bool Wrapper::canReadLine() const
     {
-        Warning() << "WebSocket::Wrapper Warning: canReadLine called -- this is not how this class is meant to be used";
+        qWarning() << "WebSocket::Wrapper Warning: canReadLine called -- this is not how this class is meant to be used";
         if (readDataPartialBuf.contains('\n'))
             return true;
         for (const auto & m : dataMessages) {
@@ -1172,7 +1172,7 @@ namespace WebSocket
         if (len < 0)
             return len;
         if (qint64 max = std::numeric_limits<int>::max()/2; len > max) {
-            Warning() << "Wrapper::writeData: len " << len << " exceeds max " << max << ", will do a short write.";
+            qWarning() << "Wrapper::writeData: len " << len << " exceeds max " << max << ", will do a short write.";
             len = max;
         }
         auto res = socket->write(Ser::wrapPayload(QByteArray(data, int(len)), FrameType(_messageMode), isMasked()));
@@ -1187,7 +1187,7 @@ namespace WebSocket
     qint64 Wrapper::readData(char *data, qint64 maxlen) { ///< this breaks the framing if called.
         if (!isValid() || !isOpen() || maxlen < 0)
             return -1;
-        Warning() << "WebSocket::Wrapper Warning: readData called -- this is not how this class is meant to be used";
+        qWarning() << "WebSocket::Wrapper Warning: readData called -- this is not how this class is meant to be used";
         qint64 nread = 0;
         while (maxlen > 0 && (readDataPartialBuf.size() || !dataMessages.empty())) {
             if (readDataPartialBuf.isEmpty()) {
@@ -1208,7 +1208,7 @@ namespace WebSocket
     qint64 Wrapper::readLineData(char *data, qint64 maxlen) { ///< this breaks the framing if called.
         if (!isValid() || !isOpen() || maxlen < 0)
             return -1;
-        Warning() << "WebSocket::Wrapper Warning: readLineData called -- this is not how this class is meant to be used";
+        qWarning() << "WebSocket::Wrapper Warning: readLineData called -- this is not how this class is meant to be used";
         if (!canReadLine()) // <-- this is slow, but then again, this whole API is not how this class should be used.
             return 0;
         qint64 nread = 0;

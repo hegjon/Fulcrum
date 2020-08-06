@@ -205,7 +205,7 @@ void SrvMgr::clientConnected(IdMixin::Id cid, const QHostAddress &addr)
                 // NEW! As of 4/14/2020, this case should never be reached now that we attach the PerIPData very early
                 // on in the connection pipeline.  However, this code has been left here just in case for defensive
                 // programming purposes.
-                Warning() << "Connection limit (" << maxPerIP << ") exceeded for " << addr.toString()
+                qWarning() << "Connection limit (" << maxPerIP << ") exceeded for " << addr.toString()
                           << ", connection refused for client " << cid;
                 emit clientExceedsConnectionLimit(cid);
                 clientWillDieAnyway = true;
@@ -264,7 +264,7 @@ bool SrvMgr::isPeerHostNameBanned(const QString &h) const
 void SrvMgr::clientDisconnected(IdMixin::Id cid, const QHostAddress &addr)
 {
     if (auto count = addrIdMap.remove(addr, cid); UNLIKELY(count > 1)) {
-        Warning() << "Multiple clients with id: " << cid << ", address " << addr.toString() << " in addrIdMap in " << __func__ << " -- FIXME!";
+        qWarning() << "Multiple clients with id: " << cid << ", address " << addr.toString() << " in addrIdMap in " << __func__ << " -- FIXME!";
     } else if (count) {
         //DebugM("Client id ", cid, " addr ", addr.toString(), " removed from addrIdMap");
         if (const auto size = size_t(addrIdMap.size());

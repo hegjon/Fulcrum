@@ -281,7 +281,7 @@ namespace RPC {
             return;
         }
         if (idMethodMap.size() >= MAX_UNANSWERED_REQUESTS) {  // prevent memory leaks in case of misbehaving peer
-            Warning() << "Closing connection because too many unanswered requests for: " << prettyName();
+            qWarning() << "Closing connection because too many unanswered requests for: " << prettyName();
             do_disconnect();
             return;
         }
@@ -598,7 +598,7 @@ namespace RPC {
             memoryWasteTimerActive = true;
             callOnTimerSoonNoRepeat(memoryWasteTimeout, memoryWasteTimer, [this]{
                 if (!memoryWasteTimerActive)
-                    Warning() << "Memory waste timer was not active but the timer lambda fired! FIXME!";
+                    qWarning() << "Memory waste timer was not active but the timer lambda fired! FIXME!";
                 memoryWasteTimerActive = false;
                 const qint64 avail = socket ? socket->bytesAvailable() : 0;
                 if (avail >= memoryWasteThreshold) {
@@ -689,7 +689,7 @@ namespace RPC {
                         throw Exception(QString("Could not parse status code: %1").arg(QString(code)));
                     }
                     if (sm->status != 200 && sm->status != 500) { // bitcoind sends 200 on results= and 500 on error= RPC messages. Everything else is unexpected.
-                        Warning() << "Got HTTP status " << sm->status << " " << msg
+                        qWarning() << "Got HTTP status " << sm->status << " " << msg
                                   << (!Trace::isEnabled() ? "; will log the rest of this HTTP response" : "");
                         sm->logBad = true;
                         if (sm->status == 401) // 401 status indicates other side didn't like our auth cookie or we need an auth cookie.
@@ -701,7 +701,7 @@ namespace RPC {
                 } else if (sm->state == St::HEADER) {
                     // read header, line by line
                     if (sm->logBad && !Trace::isEnabled()) {
-                        Warning() << sm->status << " (header): " << data;
+                        qWarning() << sm->status << " (header): " << data;
                     }
                     if (data != "") {
                         // process non-empty HEADER lines...
@@ -718,7 +718,7 @@ namespace RPC {
                         if (name == s_content_type) {
                             sm->contentType = QString::fromUtf8(value);
                             if (sm->contentType.compare(s_application_json, Qt::CaseInsensitive) != 0) {
-                                Warning() << "Got unexpected content type: " << sm->contentType << (!Trace::isEnabled() ? "; will log the rest of this HTTP response" : "");
+                                qWarning() << "Got unexpected content type: " << sm->contentType << (!Trace::isEnabled() ? "; will log the rest of this HTTP response" : "");
                                 sm->logBad = true;
                             }
                         } else if (name == s_content_length) {
@@ -740,7 +740,7 @@ namespace RPC {
                                     return QString("Unsupported \"Connection: %1\" header field in response").arg(value);
                                 };
                                 if (lowerVal == s_close && sm->status == 200)
-                                    Warning() << MakeErrMsg(value);
+                                    qWarning() << MakeErrMsg(value);
                                 else
                                     DebugM(MakeErrMsg(value));
                             }
@@ -777,7 +777,7 @@ namespace RPC {
                             << sm->content.mid(sm->contentLength) << "'";
                 }
                 if (bool trace = Trace::isEnabled(); sm->logBad && !trace)
-                    Warning() << sm->status << " (content): " << json.trimmed();
+                    qWarning() << sm->status << " (content): " << json.trimmed();
                 else if (trace)
                     Trace() << "cl: " << sm->contentLength << " inbound JSON: " << json.trimmed();
                 sm->clear(); // reset back to BEGIN state, empty buffers, clean slate.

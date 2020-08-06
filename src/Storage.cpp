@@ -1699,7 +1699,7 @@ std::optional<TxHash> Storage::hashForTxNum(TxNum n, bool throwIfMissing, bool *
         errStr = kErrMsg.arg(n).arg(errStr);
         if (throwIfMissing)
             throw DatabaseError(errStr);
-        Warning() << errStr;
+        qWarning() << errStr;
     } else {
         ret.emplace(bytes);
     }
@@ -1773,7 +1773,7 @@ std::vector<TxHash> Storage::txHashesForBlockInBitcoindMemoryOrder(BlockHeight h
     QString err;
     auto vec = p->txNumsFile->readRecords(startCount.first, startCount.second, &err);
     if (vec.size() != startCount.second || !err.isEmpty()) {
-        Warning() << "Failed to read " << startCount.second << " txNums for height " << height << ". " << err;
+        qWarning() << "Failed to read " << startCount.second << " txNums for height " << height << ". " << err;
         return ret;
     }
     Util::reverseEachItem(vec); // reverse each hash to make them all be in bitcoind memory order.
@@ -1865,7 +1865,7 @@ auto Storage::listUnspent(const HashX & hashX) const -> UnspentItems
                     for (const auto & tx : txvec) {
                         if (!tx) {
                             // defensive programming. should never happen
-                            Warning() << "Cannot find tx for sh " << hashX.toHex() << ". FIXME!!";
+                            qWarning() << "Cannot find tx for sh " << hashX.toHex() << ". FIXME!!";
                             continue;
                         }
                         if (auto it2 = tx->hashXs.find(hashX); LIKELY(it2 != tx->hashXs.end())) {
@@ -1891,13 +1891,13 @@ auto Storage::listUnspent(const HashX & hashX) const -> UnspentItems
                                     }
                                 } else {
                                     // this should never happen!
-                                    Warning() << "Cannot find txo " << ionum << " for sh " << hashX.toHex() << " in tx " << tx->hash.toHex();
+                                    qWarning() << "Cannot find txo " << ionum << " for sh " << hashX.toHex() << " in tx " << tx->hash.toHex();
                                     continue;
                                 }
                             }
                         } else {
                             // defensive programming. should never happen
-                            Warning() << "Cannot find scripthash " << hashX.toHex() << " in tx 'hashX -> IOInfo' map for tx " << tx->hash.toHex() << ". FIXME!";
+                            qWarning() << "Cannot find scripthash " << hashX.toHex() << " in tx 'hashX -> IOInfo' map for tx " << tx->hash.toHex() << ". FIXME!";
                         }
                     }
                 }
@@ -2274,7 +2274,7 @@ namespace {
         // 3. .hash
         const auto chkHashLen = [&ret](const QByteArray & hash) -> bool {
             if (hash.length() != HashLen) {
-                Warning() << "hash is not " << HashLen << " bytes. Serialize UndoInfo fail. FIXME!";
+                qWarning() << "hash is not " << HashLen << " bytes. Serialize UndoInfo fail. FIXME!";
                 ret.clear();
                 return false;
             }
@@ -2313,7 +2313,7 @@ namespace {
         const auto setOk = [&ok, &ret] (bool b) { if (ok) *ok = b; if (!b) ret.clear(); };
         const auto chkAssertion = [&setOk] (bool assertion, const char *extra = "") {
             if (UNLIKELY(!assertion)) {
-                Warning() << "Deserialize UndoInfo called with an invalid byte array! FIXME! " << extra;
+                qWarning() << "Deserialize UndoInfo called with an invalid byte array! FIXME! " << extra;
                 setOk(false);
             }
             return assertion;

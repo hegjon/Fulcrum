@@ -277,7 +277,7 @@ void AbstractConnection::do_ping()
 
 void AbstractConnection::on_error(QAbstractSocket::SocketError err)
 {
-    Warning() << prettyName() << ": error " << err << " (" << (lastSocketError = (socket ? socket->errorString() : "(null)")) << ")";
+    qWarning() << prettyName() << ": error " << err << " (" << (lastSocketError = (socket ? socket->errorString() : "(null)")) << ")";
     ++nSocketErrors;
     do_disconnect();
 }

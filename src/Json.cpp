@@ -568,7 +568,7 @@ namespace {
     void bench() {
         const char * const dir = std::getenv("DATADIR");
         if (!dir) {
-            Warning() << "Json benchmark requires the DATADIR environment variable, which should be a directory on the "
+            qWarning() << "Json benchmark requires the DATADIR environment variable, which should be a directory on the "
                          "filesystem containing *.json files to use for the benchmark.";
             throw Exception("No DATADIR specified");
         }

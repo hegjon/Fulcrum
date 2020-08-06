@@ -388,19 +388,19 @@ void DownloadBlocksTask::do_get(unsigned int bnum)
                         ++q_ct;
                     }
                 } else if (!sizeOk) {
-                    Warning() << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
+                    qWarning() << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("bad size for height %1").arg(bnum);
                     emit errored();
                 } else {
-                    Warning() << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
+                    qWarning() << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("hash mismatch for height %1").arg(bnum);
                     emit errored();
                 }
             });
         } else {
-            Warning() << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
+            qWarning() << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
             errorCode = int(bnum);
             errorMessage = QString("invalid hash for height %1").arg(bnum);
             emit errored();
@@ -962,7 +962,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 // the blockchain.address.* methods not work. This warning will spam the log so hopefully it will not
                 // go unnoticed. I doubt anyone anytime soon will rename "main" or "test" or "regtest", but it pays
                 // to be safe.
-                Warning() << "Warning: Bitcoind reports chain: \"" << chain << "\", which is unknown to this software. "
+                qWarning() << "Warning: Bitcoind reports chain: \"" << chain << "\", which is unknown to this software. "
                           << "Some protocol methods such as \"blockchain.address.*\" will not work correctly. "
                           << "Please update your software and/or report this to the developers.";
             }
@@ -980,13 +980,13 @@ void Controller::process(bool beSilentIfUpToDate)
                     sm->state = State::SynchMempool; // now, move on to synch mempool
                 } else {
                     // height ok, but best block hash mismatch.. reorg
-                    Warning() << "We have bestBlock " << tipHash.toHex() << ", but bitcoind reports bestBlock " << task->info.bestBlockhash.toHex() << "."
+                    qWarning() << "We have bestBlock " << tipHash.toHex() << ", but bitcoind reports bestBlock " << task->info.bestBlockhash.toHex() << "."
                               << " Possible reorg, will rewind back 1 block and try again ...";
                     process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                     return;
                 }
             } else if (tip > sm->ht) {
-                Warning() << "We have height " << tip << ", but bitcoind reports height " << sm->ht << "."
+                qWarning() << "We have height " << tip << ", but bitcoind reports height " << sm->ht << "."
                           << " Possible reorg, will rewind back 1 block and try again ...";
                 process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                 return;
@@ -1003,7 +1003,7 @@ void Controller::process(bool beSilentIfUpToDate)
         // does so.
         if (Util::getTimeSecs() - sm->waitingTs > sm->simpleTaskTookTooLongSecs) {
             // this is very unlikely but is here in case bitcoind goes out to lunch so we can reset things and try again.
-            Warning() << "GetChainInfo task took longer than " << sm->simpleTaskTookTooLongSecs << " seconds to return a response. Trying again ...";
+            qWarning() << "GetChainInfo task took longer than " << sm->simpleTaskTookTooLongSecs << " seconds to return a response. Trying again ...";
             genericTaskErrored();
         } else { DebugM("Spurious Controller::process() call while waiting for the chain info task to complete, ignoring"); }
     } else if (sm->state == State::GetBlocks) {
@@ -1061,7 +1061,7 @@ void Controller::process(bool beSilentIfUpToDate)
             sm.reset();  // great success!
         }
         enablePollTimer = true;
-        Warning() << "bitcoind is in initial block download, will try again in 1 minute";
+        qWarning() << "bitcoind is in initial block download, will try again in 1 minute";
         polltimeout = 60 * 1000; // try again every minute
         emit synchFailure();
     } else if (sm->state == State::SynchMempool) {
@@ -1257,14 +1257,14 @@ void CtlTask::on_finished()
 
 void CtlTask::on_error(const RPC::Message &resp)
 {
-    Warning() << resp.method << ": error response: " << resp.toJsonUtf8();
+    qWarning() << resp.method << ": error response: " << resp.toJsonUtf8();
     errorCode = resp.errorCode();
     errorMessage = resp.errorMessage();
     emit errored();
 }
 void CtlTask::on_failure(const RPC::Message::Id &id, const QString &msg)
 {
-    Warning() << id << ": FAIL: " << msg;
+    qWarning() << id << ": FAIL: " << msg;
     errorCode = id.toInt();
     errorMessage = msg;
     emit errored();

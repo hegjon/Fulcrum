@@ -465,7 +465,7 @@ void App::parseArgs()
         const bool confIsSet = conf.hasValue(l);
         const auto envVar = env ? std::getenv(env) : nullptr;
         if ((cliIsSet || confIsSet) && envVar)
-            Warning() << "Warning: " << l <<  " is specified both via the " << (cliIsSet ? "CLI" : "config file")
+            qWarning() << "Warning: " << l <<  " is specified both via the " << (cliIsSet ? "CLI" : "config file")
                       << " and the environement (as " << env << "). The " << (cliIsSet ? "CLI arg" : "config file setting")
                       << " will take precendence.";
         if (((!cliIsSet && !confIsSet) || conf.value(l, parser.value(s)).isEmpty()) && (!env || !envVar))
@@ -638,7 +638,7 @@ void App::parseArgs()
         if (!iface.first.isLoopback()) {
             // print the warning later when logger is up
             Util::AsyncOnObject(this, [iface]{
-                Warning() << "Warning: Binding admin RPC port to non-loopback interface " << iface.first.toString() << ":" << iface.second << " is not recommended. Please ensure that this port is not globally reachable from the internet.";
+                qWarning() << "Warning: Binding admin RPC port to non-loopback interface " << iface.first.toString() << ":" << iface.second << " is not recommended. Please ensure that this port is not globally reachable from the internet.";
             });
         }
     }
@@ -919,7 +919,7 @@ void App::parseArgs()
     if (!options->hostName.has_value() && options->peerDiscovery && options->peerAnnounceSelf) {
         // do this when we return to event loop in case user is logging to -S (so it appears in syslog which gets set up after we return)
         Util::AsyncOnObject(this, []{
-            Warning() << "Warning: No 'hostname' variable defined in configuration. This server may not be peer-discoverable.";
+            qWarning() << "Warning: No 'hostname' variable defined in configuration. This server may not be peer-discoverable.";
         });
     }
 
@@ -1062,7 +1062,7 @@ Options::CertInfo App::makeCertInfo(const QObject *context, const QString &cert,
         const auto keyTypeName = (ret.key.type() == QSsl::KeyType::PrivateKey ? "private" : "public");
         qInfo() << "Loaded key type: " << keyTypeName << " algorithm: " << algoName;
         if (algo != QSsl::KeyAlgorithm::Rsa)
-            Warning() << "Warning: " << algoName << " key support is experimental."
+            qWarning() << "Warning: " << algoName << " key support is experimental."
                       << " Please consider switching your SSL certificate and key to use 2048-bit RSA.";
     });
 
@@ -1167,7 +1167,7 @@ void App::on_requestMaxBufferChange(int m)
     if (Options::isMaxBufferSettingInBounds(m))
         options->maxBuffer.store( Options::clampMaxBufferSetting(m) );
     else
-        Warning() << __func__ << ": " << m << " is out of range, ignoring new max_buffer setting";
+        qWarning() << __func__ << ": " << m << " is out of range, ignoring new max_buffer setting";
 }
 
 void App::on_bitcoindThrottleParamsChange(int hi, int lo, int decay)
@@ -1176,7 +1176,7 @@ void App::on_bitcoindThrottleParamsChange(int hi, int lo, int decay)
     if (p.isValid())
         options->bdReqThrottleParams.store(p);
     else
-        Warning() << __func__ << ": arguments out of range, ignoring new bitcoind_throttle setting";
+        qWarning() << __func__ << ": arguments out of range, ignoring new bitcoind_throttle setting";
 }
 
 /* static */ std::map<QString, std::function<void()>> App::registeredTests, App::registeredBenches;
@@ -1214,6 +1214,6 @@ void App::setCLocale()
         std::setlocale(LC_NUMERIC, "C");
         std::locale::global(std::locale::classic());
     } catch (const std::exception &e) {
-        Warning() << "Failed to set \"C\" locale: " << e.what();
+        qWarning() << "Failed to set \"C\" locale: " << e.what();
     }
 }

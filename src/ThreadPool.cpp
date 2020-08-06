@@ -82,7 +82,7 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
         return;
     }
     static const FailFunc defaultFail = [](const QString &msg) {
-            Warning() << "A ThreadPool job failed with the error message: " << msg;
+            qWarning() << "A ThreadPool job failed with the error message: " << msg;
     };
     const FailFunc & failFuncToUse (fail ? fail : defaultFail);
     Job *job = new Job(context, this, work, completion, failFuncToUse);
@@ -94,7 +94,7 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
         failFuncToUse(msg);
         if (&failFuncToUse != &defaultFail)
             // make sure log gets the error
-            Warning() << msg;
+            qWarning() << msg;
         return;
     } else if (UNLIKELY(njobs < 0)) {
         // should absolutely never happen.

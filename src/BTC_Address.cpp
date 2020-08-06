@@ -137,7 +137,7 @@ namespace BTC
 #endif
                 }
             } catch (const std::exception &e) {
-                Warning() << "Internal error decoding cash address " << legacyOrCash << ": " << e.what();
+                qWarning() << "Internal error decoding cash address " << legacyOrCash << ": " << e.what();
             }
             if (!ok) a = Address(); // clear it to save memory.
         }

@@ -95,7 +95,7 @@ void PeerMgr::startup()
             break;
     }
     if (!hasip4 && !hasip6)
-        Warning() << objectName() << ": Could not determine which protocols are available based on bind addresses.";
+        qWarning() << objectName() << ": Could not determine which protocols are available based on bind addresses.";
 
     start();
     // wait for thread to start before returning.
@@ -421,7 +421,7 @@ PeerClient * PeerMgr::newClient(const PeerInfo &pi)
 {
     PeerClient *client = clients.take(pi.hostName);
     if (client) {
-        Warning() << "Already had a client for " << pi.hostName << ", deleting ...";
+        qWarning() << "Already had a client for " << pi.hostName << ", deleting ...";
         client->deleteLater();
     }
     client = new PeerClient(options->peerAnnounceSelf, pi, newId(), this, 64*1024);
@@ -624,9 +624,9 @@ auto PeerMgr::headerToVerifyWithPeer() const -> std::optional<HeightHeaderPair>
             if ( optHdr.value_or(Storage::Header{}).length() == BTC::GetBlockHeaderSize() ) {
                 ret.emplace(height, optHdr.value());
             } else
-                Warning() << "PeerMgr: Failed to retrieve header " << height << ": " << err;
+                qWarning() << "PeerMgr: Failed to retrieve header " << height << ": " << err;
         } else {
-            Warning() << "PeerMgr: Block height is not greater than " << cutoff << ", cannot verify peer header";
+            qWarning() << "PeerMgr: Block height is not greater than " << cutoff << ", cannot verify peer header";
         }
     }
     return ret;
@@ -661,7 +661,7 @@ PeerClient::PeerClient(bool announce, const PeerInfo &pi, IdMixin::Id id_, PeerM
     if (socket) {
         socketConnectSignals();
     } else {
-        Warning() << "!ssl && !tcp for " << pi.hostName << "! FIXME!";
+        qWarning() << "!ssl && !tcp for " << pi.hostName << "! FIXME!";
     }
 
     connect(this, &RPC::ConnectionBase::gotMessage, this, &PeerClient::handleReply);
@@ -753,7 +753,7 @@ void PeerClient::handleReply(IdMixin::Id, const RPC::Message & reply)
     auto Bad = [this](const QString & reason = QString()) {
         QString res = reason;
         if (res.isNull()) res = "Got an unexpected or malformed response from peer";
-        Warning() << info.hostName <<": " << res;
+        qWarning() << info.hostName <<": " << res;
         info.failureReason = res;
         emit bad(this);
     };
@@ -837,7 +837,7 @@ void PeerClient::handleReply(IdMixin::Id, const RPC::Message & reply)
             // this should never happen -- but if it does, get its peers.subscribe list and just keep going.
             // next time around we should have a header ready if we reach this very strange corner case where
             // we have no headers.  (This branch is entirely in the interests of defensive programming and should never really be taken).
-            Warning() << info.hostName << ": our db returned no header to verify against peer; proceeding anyway with peer.  "
+            qWarning() << info.hostName << ": our db returned no header to verify against peer; proceeding anyway with peer.  "
                       << "If this keeps happening, please contact the developers.";
             emit sendRequest(newId(), "server.peers.subscribe");
         }

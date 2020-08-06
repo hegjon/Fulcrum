@@ -239,7 +239,7 @@ void BitcoinDMgr::refreshBitcoinDNetworkInfo()
                         return res.isBchd;
                     } else {
                         bitcoinDInfo.version = Version();
-                        Warning() << "Failed to parse version info from bitcoind";
+                        qWarning() << "Failed to parse version info from bitcoind";
                     }
                     return false;
                 }();

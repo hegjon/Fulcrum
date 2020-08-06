@@ -145,7 +145,7 @@ void AbstractTcpServer::pvt_on_newConnection()
         // The below is to prevent malicious clients from choking the event loop.
         // We only process 10 connections at a time, then call ourselves again asynchronously.
         if (ctr >= 9 && hasPendingConnections()) {
-            Warning() << __func__ << ": nextPendingConnection yielding to event loop after 10 connections processed, will try again shortly.";
+            qWarning() << __func__ << ": nextPendingConnection yielding to event loop after 10 connections processed, will try again shortly.";
             Util::AsyncOnObject(this, [this]{pvt_on_newConnection();});
             return;
         }
@@ -252,7 +252,7 @@ void SimpleHttpServer::on_newConnection(QTcpSocket *sock)
                 throw Exception("too much data, closing connection");
 
         } catch (const std::exception &e) {
-            Warning() << "Client: " << sockName << "; " << e.what();
+            qWarning() << "Client: " << sockName << "; " << e.what();
             sock->abort();
             sock->deleteLater();
         }
@@ -281,7 +281,7 @@ void SimpleHttpServer::on_newConnection(QTcpSocket *sock)
 void SimpleHttpServer::addEndpoint(const QString &endPoint, const Lambda &callback)
 {
     if (!endPoint.startsWith("/") && endPoint != "*")
-        Warning() << __func__ << " endPoint " << endPoint << " does not start with '/' -- it will never be reached!  FIXME!";
+        qWarning() << __func__ << " endPoint " << endPoint << " does not start with '/' -- it will never be reached!  FIXME!";
     endPoints[endPoint] = callback;
 }
 
@@ -495,7 +495,7 @@ bool ServerBase::startWebSocketHandshake(QTcpSocket *socket)
     });
     const auto peerName = ws->peerAddress().toString() + ":" + QString::number(ws->peerPort());
     *tmpConnections += connect(ws, &WebSocket::Wrapper::handshakeFailed, this, [ws, peerName](const QString &reason) {
-        Warning() << "WebSocket handshake failed for " << peerName << ", reason: " << (reason.length() > 60 ? (reason.left(49) + QStringLiteral(u"…") + reason.right(10)) : reason);
+        qWarning() << "WebSocket handshake failed for " << peerName << ", reason: " << (reason.length() > 60 ? (reason.left(49) + QStringLiteral(u"…") + reason.right(10)) : reason);
         ws->deleteLater();
     });
     if (!ws->startServerHandshake()) {
@@ -670,7 +670,7 @@ void ServerBase::onPeerError(IdMixin::Id clientId, const QString &what)
     DebugM("onPeerError, client ", clientId, " error: ", what);
     if (Client *c = getClient(clientId); c) {
         if (++c->info.errCt - c->info.nRequestsRcv >= kMaxErrorCount) {
-            Warning() << "Excessive errors (" << kMaxErrorCount << ") for: " << c->prettyName() << ", disconnecting";
+            qWarning() << "Excessive errors (" << kMaxErrorCount << ") for: " << c->prettyName() << ", disconnecting";
             killClient(c);
             return;
         }
@@ -752,7 +752,7 @@ void ServerBase::generic_async_to_bitcoind(Client *c, const RPC::Message::Id & r
 {
     if (UNLIKELY(QThread::currentThread() != c->thread())) {
         // Paranoia, in case I or a future programmer forgets this rule.
-        Warning() << __func__ << " is meant to be called from the Client thread only. The current thread is not the"
+        qWarning() << __func__ << " is meant to be called from the Client thread only. The current thread is not the"
                   << " Client thread. This may cause problems if the Client is deleted while submitting the request. FIXME!";
     }
     // Throttling support
@@ -854,7 +854,7 @@ QVariant Server::stats() const
         v = m;
     } else {
         // runtime catch if we introduce a change to the stats map layout that breaks the above assumptions
-        Warning()  << "Expected ServerBase::stats to return a map with a single sub-map in it. Unable to insert "
+        qWarning()  << "Expected ServerBase::stats to return a map with a single sub-map in it. Unable to insert "
                    << "\"" << ServerMisc::kBloomFiltersKey << "\" key into stats map. FIXME!";
     }
     return v;
@@ -1385,7 +1385,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
                 // Not white-listed .. unsubscribe and throw an error.
                 if (const auto now = Util::getTimeSecs(); now - c->lastWarnedAboutSubsLimit > ServerMisc::kMaxSubsPerIPWarningsRateLimitSecs /* 1.0 secs */) {
                     // message spam throttled to once per second
-                    Warning() << c->prettyName(false, false) << " exceeded per-IP subscribe limit with " << nShSubs
+                    qWarning() << c->prettyName(false, false) << " exceeded per-IP subscribe limit with " << nShSubs
                               << " subs, denying subscribe request";
                     c->lastWarnedAboutSubsLimit = now;
                 }
@@ -1397,7 +1397,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
                         --c->perIPData->nShSubs;
                     } else
                         // This should never happen but we'll print debug/warning info if it does.
-                        Warning() << c->prettyName(false, false) << " failed to unsubscribe client from a scripthash we just subscribed him to! FIXME!";
+                        qWarning() << c->prettyName(false, false) << " failed to unsubscribe client from a scripthash we just subscribed him to! FIXME!";
                 }
                 throw RPCError("Subscription limit reached", RPC::Code_App_LimitExceeded); // send error to client
             }
@@ -1452,7 +1452,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
     } catch (const SubsMgr::LimitReached &e) {
         if (Util::getTimeSecs() - lastSubsWarningPrintTime > ServerMisc::kMaxSubsWarningsRateLimitSecs /* ~250 ms */) {
             // rate limit printing
-            Warning() << "Exception from SubsMgr: " << e.what() << " (while serving subscribe request for " << c->prettyName(false, false) << ")";
+            qWarning() << "Exception from SubsMgr: " << e.what() << " (while serving subscribe request for " << c->prettyName(false, false) << ")";
             lastSubsWarningPrintTime = Util::getTimeSecs();
         }
         emit globalSubsLimitReached(); // connected to the SrvMgr, which will loop through all IPs and kick all clients for the most-subscribed IP
@@ -1959,7 +1959,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     socket->setSslConfiguration(sslConfiguration);
     const auto peerName = QStringLiteral("%1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
     if (socket->state() != QAbstractSocket::SocketState::ConnectedState || socket->isEncrypted()) {
-        Warning() << peerName << " socket had unexpected state (must be both connected and unencrypted), deleting socket";
+        qWarning() << peerName << " socket had unexpected state (must be both connected and unencrypted), deleting socket";
         delete socket;
         return;
     }
@@ -1968,7 +1968,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     timer->setSingleShot(true);
     static const auto kTimedOutPropertyName = "ServerSSL_Handshake_Timed_Out";
     connect(timer, &QTimer::timeout, this, [socket, timer, peerName]{
-        Warning() << peerName << " SSL handshake timed out after " << QString::number(timer->interval()/1e3, 'f', 1) << " secs, deleting socket";
+        qWarning() << peerName << " SSL handshake timed out after " << QString::number(timer->interval()/1e3, 'f', 1) << " secs, deleting socket";
         socket->setProperty(kTimedOutPropertyName, true);
         socket->abort();
         socket->deleteLater();
@@ -2003,7 +2003,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     *tmpConnections +=
     connect(socket, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), this, [socket, peerName](const QList<QSslError> & errors) {
         for (const auto & e : errors)
-            Warning() << peerName << " SSL error: " << e.errorString();
+            qWarning() << peerName << " SSL error: " << e.errorString();
         DebugM(peerName, " Aborting connection due to SSL errors");
         socket->deleteLater();
     });
