@@ -67,7 +67,7 @@ void SrvMgr::startup()
     if (servers.empty()) {
         startServers();
     } else {
-        Error() << __PRETTY_FUNCTION__ << " called with servers already active! FIXME!";
+        qCritical() << __PRETTY_FUNCTION__ << " called with servers already active! FIXME!";
     }
 }
 
@@ -218,7 +218,7 @@ void SrvMgr::clientConnected(IdMixin::Id cid, const QHostAddress &addr)
                 break;
             default:
                 // This should never happen.
-                Error() << "Invalid WhiteListState " << int(wlstate) << " for Client " << cid << " from " << addr.toString() << ". FIXME!";
+                qCritical() << "Invalid WhiteListState " << int(wlstate) << " for Client " << cid << " from " << addr.toString() << ". FIXME!";
             }
         } else {
             clientWillDieAnyway = true;

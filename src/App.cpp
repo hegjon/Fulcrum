@@ -71,7 +71,7 @@ App::App(int argc, char *argv[])
         parseArgs();
     } catch (const std::exception &e) {
         options->syslogMode = true; // suppress timestamp stuff
-        Error() << e.what();
+        qCritical("%s", e.what());
         qInfo() << "Use the -h option to show help.";
         std::exit(1);
     }
@@ -392,7 +392,7 @@ void App::parseArgs()
             std::exit(0);
     } catch (const std::exception & e) {
         // bench or test execution failed with an exception
-        Error(Log::Color::Magenta) << "Caught exception: " << e.what();
+        qCritical("Caught exception: %s", e.what());
         std::exit(1);
     }
 
@@ -1142,6 +1142,7 @@ void App::miscPreAppFixups()
     if(qEnvironmentVariableIsSet("JOURNAL_STREAM")) {
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     } else {
+        qputenv("QT_MESSAGE_PATTERN", "[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{message}");
         //qInstallMessageHandler(customMessageHandler);
     }
 #ifdef Q_OS_DARWIN
@@ -1186,13 +1187,13 @@ void App::registerTestBenchCommon(const char *fname, const char *brief, NameFunc
                                   const NameFuncMap::key_type &name, const NameFuncMap::mapped_type &func)
 {
     if (_globalInstance) {
-        Error() << fname << " cannot be called after the app has already started!"
+        qCritical() << fname << " cannot be called after the app has already started!"
                 << " Ignoring request to register " << brief << " \"" << name << "\"";
         return;
     }
     const auto & [_, inserted] = map.insert({name, func});
     if (!inserted)
-        Error() << fname << ": ignoring duplicate " << brief << " \"" << name << "\"";
+        qCritical() << fname << ": ignoring duplicate " << brief << " \"" << name << "\"";
 }
 /* static */
 auto App::registerTest(const QString &name, const std::function<void()> &func) -> RegisteredTest

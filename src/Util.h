@@ -174,7 +174,7 @@ public:
 /** \brief Stream-like class to print an error message to the app's logging facility
     Example:
    \code
-        Error() << "This is an ERROR message!!"; // would print an error message to the logging facility
+        qCritical() << "This is an ERROR message!!"; // would print an error message to the logging facility
    \endcode
  */
 class Error : public Log
@@ -210,7 +210,7 @@ public:
 #endif
 };
 
-/// Like Error(), except it will enqueue a qApp->exit(1) after logging the message
+/// Like qCritical(), except it will enqueue a qApp->exit(1) after logging the message
 class Fatal : public Log
 {
 public:
@@ -227,7 +227,7 @@ public:
 // Now add these macros for symmetry
 #define LogM(...) (qInfo()(__VA_ARGS__))
 #define WarningM(...) (qWarning()(__VA_ARGS__))
-#define ErrorM(...) (Error()(__VA_ARGS__))
+#define ErrorM(...) (qCritical()(__VA_ARGS__))
 #define FatalM(...) (Fatal()(__VA_ARGS__))
 
 #define FatalAssert(b,...)                                            \

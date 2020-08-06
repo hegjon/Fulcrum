@@ -267,10 +267,10 @@ void BitcoinDMgr::refreshBitcoinDNetworkInfo()
         },
         // error
         [](const RPC::Message &msg) {
-            Error() << "getnetworkinfo error, code: " << msg.errorCode() << ", error: " << msg.errorMessage();
+            qCritical() << "getnetworkinfo error, code: " << msg.errorCode() << ", error: " << msg.errorMessage();
         },
         // failure
-        [](const RPC::Message::Id &, const QString &reason){ Error() << "getnetworkinfo failed: " << reason; }
+        [](const RPC::Message::Id &, const QString &reason){ qCritical() << "getnetworkinfo failed: " << reason; }
     );
 }
 
@@ -304,22 +304,22 @@ void BitcoinDMgr::refreshBitcoinDGenesisHash()
                 // quit the app here. But in the spirit of never giving up and never surrendering,
                 // we will just power through this situation with some error messages.
                 if (changed)
-                    Error() << "Error: bitcoind reports that the genesis hash has changed! Old hash: " << oldHash.toHex()
+                    qCritical() << "Error: bitcoind reports that the genesis hash has changed! Old hash: " << oldHash.toHex()
                             << ", new hash: " << newHash.toHex();
                 else
-                    Error() << "Error: Failed to parse genesis hash from bitcoind: " << reply.result().toString();
+                    qCritical() << "Error: Failed to parse genesis hash from bitcoind: " << reply.result().toString();
             } else {
                 DebugM("Refreshed genesis hash from bitcoind: ", newHash.toHex());
             }
         },
         // error
         [](const RPC::Message &msg){
-            Error() << "getblockhash error when attempting to get genesis hash, code: " << msg.errorCode()
+            qCritical() << "getblockhash error when attempting to get genesis hash, code: " << msg.errorCode()
                     << ", error: " << msg.errorMessage();
         },
         // failure
         [](const RPC::Message::Id &, const QString &reason){
-            Error() << "getblockhash failed when attempting to get genesis hash: " << reason;
+            qCritical() << "getblockhash failed when attempting to get genesis hash: " << reason;
         }
     );
 }
@@ -421,7 +421,7 @@ void BitcoinDMgr::submitRequest(QObject *sender, const RPC::Message::Id &rid, co
                 // remove context from table and also check it's what we expect
                 if (const auto ref = reqContextTable.take(rid).lock(); ref && ref.get() != context) {
                     // this should never happen
-                    Error() << "Context in table with rid " << rid << " differs from what we expected! FIXME!";
+                    qCritical() << "Context in table with rid " << rid.toString() << " differs from what we expected! FIXME!";
                 }
                 if constexpr (debugDeletes)
                     DebugM(__func__, " - req context table size now: ", reqContextTable.size());
@@ -595,7 +595,7 @@ void BitcoinD::on_started()
             SetTimer();
         });
         conns += connect(this, &BitcoinD::authFailure, this, [SetTimer, this] {
-            Error() << "Authentication to bitcoind rpc failed. Please check the rpcuser and rpcpass are correct and restart!";
+            qCritical() << "Authentication to bitcoind rpc failed. Please check the rpcuser and rpcpass are correct and restart!";
             badAuth = true;
             SetTimer();
         });

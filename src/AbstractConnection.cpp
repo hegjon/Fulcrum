@@ -169,7 +169,7 @@ bool AbstractConnection::do_write(const QByteArray & data)
         err = " called from another thread! FIXME!";
     }
     if (!err.isEmpty()) {
-        Error() << __func__ << " (" << objectName() << ") " << err << " id=" << id;
+        qCritical() << __func__ << " (" << objectName() << ") " << err << " id=" << id;
         return false;
     }
     if (writeBackLog > MAX_BUFFER) {
@@ -184,7 +184,7 @@ bool AbstractConnection::do_write(const QByteArray & data)
     writeBackLog += n2write;
     const qint64 written = socket->write(data);
     if (UNLIKELY(written < 0)) {
-        Error() << __func__ << ": " << prettyName() << " -- error on write " << socket->error() << " (" << socket->errorString() << ")";
+        qCritical() << __func__ << ": " << prettyName() << " -- error on write " << socket->error() << " (" << socket->errorString() << ")";
         do_disconnect();
         return false;
     } else if (UNLIKELY(written < n2write)) {
@@ -193,7 +193,7 @@ bool AbstractConnection::do_write(const QByteArray & data)
         // however, in case some day this predicate is violated by a Qt API change.
         //
         // See: https://code.woboq.org/qt5/qtbase/src/network/socket/qabstractsocket.cpp.html#_ZN15QAbstractSocket9writeDataEPKcx
-        Error() << __func__ << ": " << prettyName() << " -- short write count; expected to write " << n2write
+        qCritical() << __func__ << ": " << prettyName() << " -- short write count; expected to write " << n2write
                 << " bytes, but wrote " << written << " bytes instead. This should never happen! FIXME!";
         return false;
     }

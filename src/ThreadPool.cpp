@@ -99,7 +99,7 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
         return;
     } else if (UNLIKELY(njobs < 0)) {
         // should absolutely never happen.
-        Error() << "FIXME: njobs " << njobs << " < 0!";
+        qCritical() << "FIXME: njobs " << njobs << " < 0!";
     } else if (njobs > extantMaxSeen)
         // FIXME: this isn't entirely atomic but this value is for diagnostic purposes and doesn't need to be strictly correct
         extantMaxSeen = njobs;

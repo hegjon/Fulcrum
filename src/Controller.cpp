@@ -249,7 +249,7 @@ void GetChainInfoTask::process()
 
             emit success();
         } catch (const Exception & e) {
-            Error() << "INTERNAL ERROR: " << e.what();
+            qCritical() << "INTERNAL ERROR: " << e.what();
             emit errored();
         }
     });
@@ -470,12 +470,12 @@ void SynchMempoolTask::process()
         try {
             processResults();
         } catch (const std::exception & e) {
-            Error() << "Caught exception when processing mempool tx's: " << e.what();
+            qCritical() << "Caught exception when processing mempool tx's: " << e.what();
             emit errored();
             return;
         }
     } else {
-        Error() << "Unexpected state in " << __PRETTY_FUNCTION__ << ". FIXME!";
+        qCritical() << "Unexpected state in " << __PRETTY_FUNCTION__ << ". FIXME!";
         emit errored();
         return;
     }
@@ -521,7 +521,7 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
 void SynchMempoolTask::processResults()
 {
     if (txsDownloaded.size() != expectedNumTxsDownloaded) {
-        Error() << __PRETTY_FUNCTION__ << ": Expected to downlaod " << expectedNumTxsDownloaded << ", instead got " << txsDownloaded.size() << ". FIXME!";
+        qCritical() << __PRETTY_FUNCTION__ << ": Expected to downlaod " << expectedNumTxsDownloaded << ", instead got " << txsDownloaded.size() << ". FIXME!";
         emit errored();
         return;
     }
@@ -663,7 +663,7 @@ void SynchMempoolTask::doDLNextTx()
 {
     Mempool::TxRef tx;
     if (auto it = txsNeedingDownload.begin(); it == txsNeedingDownload.end()) {
-        Error() << "FIXME -- txsNeedingDownload is empty in " << __func__;
+        qCritical() << "FIXME -- txsNeedingDownload is empty in " << __func__;
         emit errored();
         return;
     } else {
@@ -678,11 +678,11 @@ void SynchMempoolTask::doDLNextTx()
         const int expectedLen = txdata.length() / 2;
         txdata = Util::ParseHexFast(txdata);
         if (txdata.length() != expectedLen) {
-            Error() << "Received tx data is of the wrong length -- bad hex? FIXME";
+            qCritical() << "Received tx data is of the wrong length -- bad hex? FIXME";
             emit errored();
             return;
         } else if (BTC::HashRev(txdata) != tx->hash) {
-            Error() << "Received tx data appears to not match requested tx! FIXME!!";
+            qCritical() << "Received tx data appears to not match requested tx! FIXME!!";
             emit errored();
             return;
         }
@@ -726,7 +726,7 @@ void SynchMempoolTask::doGetRawMempool()
             const auto txidHex = var.toString().trimmed().toLower();
             const TxHash hash = Util::ParseHexFast(txidHex.toUtf8());
             if (hash.length() != HashLen) {
-                Error() << resp.method << ": got an empty tx hash";
+                qCritical() << resp.method << ": got an empty tx hash";
                 emit errored();
                 return;
             }
@@ -862,7 +862,7 @@ void Controller::rmTask(CtlTask *t)
         tasks.erase(it); // will delete object immediately
         return;
     }
-    Error() << __func__ << ": Task '" << t->objectName() << "' not found! FIXME!";
+    qCritical() << __func__ << ": Task '" << t->objectName() << "' not found! FIXME!";
 }
 
 bool Controller::isTaskDeleted(CtlTask *t) const { return tasks.count(t) == 0; }
@@ -879,7 +879,7 @@ void Controller::add_DLHeaderTask(unsigned int from, unsigned int to, size_t nTa
     connect(t, &CtlTask::errored, this, [t, this]{
         if (UNLIKELY(!sm || isTaskDeleted(t))) return; // task was stopped from underneath us, this is stale.. abort.
         if (sm->state == StateMachine::State::Failure) return; // silently ignore if we are already in failure
-        Error() << "Task errored: " << t->objectName() << ", error: " << t->errorMessage;
+        qCritical() << "Task errored: " << t->objectName() << ", error: " << t->errorMessage;
         genericTaskErrored();
     });
 }
@@ -1044,7 +1044,7 @@ void Controller::process(bool beSilentIfUpToDate)
         AGAIN();
     } else if (sm->state == State::Failure) {
         // We will try again later via the pollTimer
-        Error() << "Failed to synch blocks and/or mempool";
+        qCritical() << "Failed to synch blocks and/or mempool";
         {
             std::lock_guard g(smLock);
             sm.reset();

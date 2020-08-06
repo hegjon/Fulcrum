@@ -703,7 +703,7 @@ bool parse(QVariant &out, const QByteArray &bytes)
                 if (top->typ == VType::Obj) {
                     // paranoia
                     if (UNLIKELY(top->entries.empty())) {
-                        ::Error() << "Json Parser ERROR: Obj 'entries' is empty; FIXME!";
+                        ::qCritical() << "Json Parser ERROR: Obj 'entries' is empty; FIXME!";
                         return false;
                     }
                     // /paranoia
@@ -795,7 +795,7 @@ bool parse(QVariant &out, const QByteArray &bytes)
             if (top->typ == VType::Obj) {
                 // paranoia
                 if (UNLIKELY(top->entries.empty())) {
-                    ::Error() << "Json Parser ERROR: Obj 'entries' is empty when parsing a keyword; FIXME!";
+                    ::qCritical() << "Json Parser ERROR: Obj 'entries' is empty when parsing a keyword; FIXME!";
                     return false;
                 }
                 // /paranoia
@@ -819,7 +819,7 @@ bool parse(QVariant &out, const QByteArray &bytes)
             if (top->typ == VType::Obj) {
                 // paranoia
                 if (UNLIKELY(top->entries.empty())) {
-                    ::Error() << "Json Parser ERROR: Obj 'entries' is empty when parsing a number; FIXME!";
+                    ::qCritical() << "Json Parser ERROR: Obj 'entries' is empty when parsing a number; FIXME!";
                     return false;
                 }
                 // /paranoia
@@ -850,7 +850,7 @@ bool parse(QVariant &out, const QByteArray &bytes)
                 if (top->typ == VType::Obj) {
                     // paranoia
                     if (UNLIKELY(top->entries.empty())) {
-                        ::Error() << "Json Parser ERROR: Obj 'entries' is empty when parsing a string; FIXME!";
+                        ::qCritical() << "Json Parser ERROR: Obj 'entries' is empty when parsing a string; FIXME!";
                         return false;
                     }
                     // /paranoia

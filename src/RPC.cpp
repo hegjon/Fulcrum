@@ -278,7 +278,7 @@ namespace RPC {
         }
         const QByteArray jsonData = Message::makeRequest(reqid, method, params, v1).toJsonUtf8();
         if (jsonData.isEmpty()) {
-            Error() << __func__ << " method: " << method << "; Unable to generate request JSON! FIXME!";
+            qCritical() << __func__ << " method: " << method << "; Unable to generate request JSON! FIXME!";
             return;
         }
         if (idMethodMap.size() >= MAX_UNANSWERED_REQUESTS) {  // prevent memory leaks in case of misbehaving peer
@@ -307,11 +307,11 @@ namespace RPC {
         } else if (params.canConvert<QVariantList>()) {
             json = Message::makeNotification(method, params.toList(), v1).toJsonUtf8();
         } else {
-            Error() << __func__ << " method: " << method << "; Notification requires either a QVarantList or a QVariantMap as its argument! FIXME!";
+            qCritical() << __func__ << " method: " << method << "; Notification requires either a QVarantList or a QVariantMap as its argument! FIXME!";
             return;
         }
         if (json.isEmpty()) {
-            Error() << __func__ << " method: " << method << "; Unable to generate notification JSON! FIXME!";
+            qCritical() << __func__ << " method: " << method << "; Unable to generate notification JSON! FIXME!";
             return;
         }
         TraceM("Sending json: ", Util::Ellipsify(json));
@@ -346,7 +346,7 @@ namespace RPC {
         }
         const QByteArray json = Message::makeResponse(reqid, result, v1).toJsonUtf8();
         if (json.isEmpty()) {
-            Error() << __func__ << ": Unable to generate result JSON! FIXME!";
+            qCritical() << __func__ << ": Unable to generate result JSON! FIXME!";
             return;
         }
         TraceM("Sending result json: ", Util::Ellipsify(json));
@@ -473,13 +473,13 @@ namespace RPC {
                 doDisconnect = false; // if was true, already enqueued graceful disconnect after error reply, if was false, no-op here
             }
             if (doDisconnect) {
-                Error() << "Error reading/parsing data coming in: " << (lastPeerError=e.what());
+                qCritical() << "Error reading/parsing data coming in: " << (lastPeerError=e.what());
                 do_disconnect();
                 status = Bad;
             }
         } catch (const std::exception &e) {
             // Other low-level error such as bad_alloc, etc. This is very unlikely. We simply disconnect and give up.
-            Error() << prettyName(false, true) << ": Low-level error reading/parsing data coming in: " << (lastPeerError=e.what());
+            qCritical() << prettyName(false, true) << ": Low-level error reading/parsing data coming in: " << (lastPeerError=e.what());
             do_disconnect();
             status = Bad;
         } // end try/catch
@@ -558,7 +558,7 @@ namespace RPC {
     {
 #ifndef NDEBUG
         if (this->thread() != QThread::currentThread()) {
-            Error() << __func__ << ": ERROR -- called from a thread outside this object's thread! FIXME!";
+            qCritical() << __func__ << ": ERROR -- called from a thread outside this object's thread! FIXME!";
             return;
         }
 #endif
@@ -587,7 +587,7 @@ namespace RPC {
         };
         memoryWasteThreshold = MAX_BUFFER;
         if (memoryWasteThreshold < 0) {
-            Error() << __func__ << ": MAX_BUFFER is < 0 -- fix me!";
+            qCritical() << __func__ << ": MAX_BUFFER is < 0 -- fix me!";
             return;
         }
         // DoS protection logic below for memory exhaustion attacks.  If a client connects from many IPs and with
@@ -661,7 +661,7 @@ namespace RPC {
             sm = std::unique_ptr<StateMachine, SMDel>(new StateMachine, [](StateMachine *sm) { delete sm; });
         if (!socket) {
             // this should never happen. here for paranoia.
-            Error() << "on_readyRead with socket == nullptr -- were we called from a defunct timer? FIXME";
+            qCritical() << "on_readyRead with socket == nullptr -- were we called from a defunct timer? FIXME";
             return;
         }
         using St = StateMachine::State;
@@ -774,7 +774,7 @@ namespace RPC {
                 if (sm->content.length() > sm->contentLength) {
                     // this shouldn't happen. if we get here, likely below code will fail with nonsense and connection will be killed. this is here
                     // just as a sanity check.
-                    Error() << "Content buffer has extra stuff at the end. Bug in code. FIXME! Crud was: '"
+                    qCritical() << "Content buffer has extra stuff at the end. Bug in code. FIXME! Crud was: '"
                             << sm->content.mid(sm->contentLength) << "'";
                 }
                 if (bool trace = Trace::isEnabled(); sm->logBad && !trace)
@@ -797,7 +797,7 @@ namespace RPC {
                 throw Exception( QString("Peer backbuffer exceeded %1 bytes! Bad peer?").arg(MAX_BUFFER) );
             }
         } catch (const Exception & e) {
-            Error() << prettyName() << " fatal error: " << e.what();
+            qCritical() << prettyName() << " fatal error: " << e.what();
             do_disconnect();
             status = Bad;
             if (sm) sm->clear(); // ensure state machine is "fresh" if we get here

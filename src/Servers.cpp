@@ -123,7 +123,7 @@ void AbstractTcpServer::on_finished()
 
 void AbstractTcpServer::on_acceptError(QAbstractSocket::SocketError e)
 {
-    Error() << objectName() << "; error acceptError, code: " << int(e);
+    qCritical() << objectName() << "; error acceptError, code: " << int(e);
 }
 
 /*static*/
@@ -450,7 +450,7 @@ bool ServerBase::attachPerIPDataAndCheckLimits(QTcpSocket *socket)
         }
     } else {
         // this should never happen
-        Error() << "INTERNAL ERROR: Could not create per-IP data object in " << __func__ << " -- invalid peer address!";
+        qCritical() << "INTERNAL ERROR: Could not create per-IP data object in " << __func__ << " -- invalid peer address!";
         ok = false;
     }
     if (!ok) {
@@ -472,7 +472,7 @@ SockType *ServerBase::createSocketFromDescriptorAndCheckLimits(qintptr socketDes
         /// this check here simply for defensive programming.  Note: We don't go to the trouble of trying to close() the
         /// fd because it's an opaque type that isn't guaranteed to be an int, so we must let it leak.  However, if
         /// this branch is taken we already have bigger problems.
-        Error() << __func__ << ": setSocketDescriptor returned false! Socket fd will now leak. Error was: " << socket->errorString();
+        qCritical() << __func__ << ": setSocketDescriptor returned false! Socket fd will now leak. Error was: " << socket->errorString();
         delete socket;
         return nullptr;
     }
@@ -501,7 +501,7 @@ bool ServerBase::startWebSocketHandshake(QTcpSocket *socket)
     });
     if (!ws->startServerHandshake()) {
         // This shouldn't normally happen unless we somehow misuse the WebSocket::Wrapper class in some future use of this code.
-        Error() << "Unable to start WebSocket handshake for " << peerName << ", closing socket";
+        qCritical() << "Unable to start WebSocket handshake for " << peerName << ", closing socket";
         ws->deleteLater(); // we must use deleteLater to be safe.
         return false;
     }
@@ -536,7 +536,7 @@ ServerBase::newClient(QTcpSocket *sock)
     ret->perIPData = Client::PerIPDataHolder_Temp::take(sock); // take ownership of the PerIPData ref, implicitly delete the temp holder attacked to the socket
     if (UNLIKELY(!ret->perIPData)) {
         // This branch should never happen.  But we left it in for defensive programming.
-        Error() << "INTERNAL ERROR: Tcp Socket " << sock->peerAddress().toString() << ":" << sock->peerPort() << " had no PerIPData! FIXME!";
+        qCritical() << "INTERNAL ERROR: Tcp Socket " << sock->peerAddress().toString() << ":" << sock->peerPort() << " had no PerIPData! FIXME!";
         // FUDGE it.
         ret->perIPData = srvmgr->getOrCreatePerIPData(addr);
         ++ret->perIPData->nClients; // increment client counter now
@@ -551,16 +551,16 @@ ServerBase::newClient(QTcpSocket *sock)
         if (const auto client = clientsById.take(clientId); client) {
             // purge from map
             if (UNLIKELY(client != c))
-                Error() << " client != passed-in pointer to on_destroy in " << __FILE__ << " line " << __LINE__  << " client " << clientId << ". FIXME!";
+                qCritical() << " client != passed-in pointer to on_destroy in " << __FILE__ << " line " << __LINE__  << " client " << clientId << ". FIXME!";
             DebugM("client id ", clientId, " purged from map");
         }
         assert(c->perIPData);
         if (UNLIKELY(c->nShSubs < 0))
-            Error() << "nShSubs for client " << c->id << " is " << c->nShSubs << ". FIXME!";
+            qCritical() << "nShSubs for client " << c->id << " is " << c->nShSubs << ". FIXME!";
         // decrement per-IP subs ctr for this client.
         const auto nSubsIP = c->perIPData->nShSubs -= c->nShSubs;
         if (UNLIKELY(nSubsIP < 0))
-            Error() << "nShSubs for IP " << addr.toString() << " is " << nSubsIP << ". FIXME!";
+            qCritical() << "nShSubs for IP " << addr.toString() << " is " << nSubsIP << ". FIXME!";
         if (nSubsIP == 0 && c->nShSubs)
             DebugM("PerIP: ", addr.toString(), " is no longer subscribed to any scripthashes");
         --c->perIPData->nClients; // decrement client counter
@@ -638,7 +638,7 @@ void ServerBase::onMessage(IdMixin::Id clientId, const RPC::Message &m)
     if (Client *c = getClient(clientId); c) {
         const auto member = dispatchTable.value(m.method);
         if (!member)
-            Error() << "Unknown method: \"" << m.method << "\". This shouldn't happen. FIXME! Json: " << m.toJsonUtf8();
+            qCritical() << "Unknown method: \"" << m.method << "\". This shouldn't happen. FIXME! Json: " << m.toJsonUtf8();
         else {
             // indicate a good request, accepted request
             ++c->info.nRequestsRcv;
@@ -743,7 +743,7 @@ void ServerBase::generic_do_async(Client *c, const RPC::Message::Id &reqId, cons
             priority
         );
     } else
-        Error() << "INTERNAL ERROR: work must be valid! FIXME!";
+        qCritical() << "INTERNAL ERROR: work must be valid! FIXME!";
 }
 
 void ServerBase::generic_async_to_bitcoind(Client *c, const RPC::Message::Id & reqId, const QString &method,
@@ -934,7 +934,7 @@ QVariantMap Server::makeFeaturesDictForConnection(AbstractConnection *c, const Q
     QVariantMap r;
     if (!c) {
         // paranoia
-        Error() << __func__ << ": called with a nullptr for AbstractConnection FIXME!";
+        qCritical() << __func__ << ": called with a nullptr for AbstractConnection FIXME!";
         return r;
     }
     r["pruning"] = QVariant(); // null
@@ -1150,7 +1150,7 @@ void Server::rpc_blockchain_block_headers(Client *c, const RPC::Message &m)
             const auto & hdr = hdrs[i];
             if (UNLIKELY(hdr.size() != int(hdrSz))) { // ensure header looks the right size
                 // this should never happen.
-                Error() << "Header size from db height " << i + height << " is not " << hdrSz << " bytes! Database corruption likely! FIXME!";
+                qCritical() << "Header size from db height " << i + height << " is not " << hdrSz << " bytes! Database corruption likely! FIXME!";
                 throw RPCError("Server header store invalid", RPC::Code_InternalError);
             }
             // fast, in-place conversion to hex

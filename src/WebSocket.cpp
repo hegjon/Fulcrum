@@ -903,7 +903,7 @@ namespace WebSocket
         setSocketError(socket->error());
 
         if (socket->state() != ConnectedState) {
-            ::Error() << "WebSocket Wrapper may only be used with an already-connected socket";
+            ::qCritical() << "WebSocket Wrapper may only be used with an already-connected socket";
         }
 
         // on handshake success, setup the auto-ping interval
@@ -1046,7 +1046,7 @@ namespace WebSocket
         try {
             res = socket->write(Ser::wrapText(data, isMasked()));
         } catch (const std::exception & e) {
-            ::Error() << "Wrapper::sendText caught exception: " << e.what();
+            ::qCritical() << "Wrapper::sendText caught exception: " << e.what();
         }
         if (res > -1) {
             emit bytesWritten(data.size());
@@ -1061,7 +1061,7 @@ namespace WebSocket
         try {
             res = socket->write(Ser::wrapBinary(data, isMasked()));
         } catch (const std::exception & e) {
-            ::Error() << "Wrapper::sendBinary caught exception: " << e.what();
+            ::qCritical() << "Wrapper::sendBinary caught exception: " << e.what();
         }
         if (res > -1) {
             emit bytesWritten(data.size());
