@@ -35,6 +35,7 @@
 #include <QSslCipher>
 #include <QSslEllipticCurve>
 #include <QSslSocket>
+#include <QtDebug>
 
 #include <array>
 #include <clocale>

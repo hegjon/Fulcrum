@@ -25,6 +25,8 @@
 #include <QPointer>
 #include <QSslConfiguration>
 #include <QSslSocket>
+#include <QtDebug>
+
 
 #include <mutex>
 

@@ -19,6 +19,8 @@
 #include "Merkle.h"
 #include "Util.h"
 
+#include <QtDebug>
+
 #include <algorithm>
 #include <list>
 

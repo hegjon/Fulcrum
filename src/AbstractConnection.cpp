@@ -24,6 +24,7 @@
 #include <QSslSocket>
 #include <QHostAddress>
 #include <QNetworkProxy>
+#include <QtDebug>
 
 #include <algorithm>
 #include <cassert>

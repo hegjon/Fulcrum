@@ -36,6 +36,8 @@
 #  include <windows.h>
 #endif
 
+#include <QtDebug>
+
 #include <iostream>
 #include <thread>
 

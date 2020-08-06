@@ -31,6 +31,7 @@
 #include <QFile>
 #include <QMetaType>
 #include <QVariant>
+#include <QtDebug>
 
 #include <algorithm>
 #include <array>

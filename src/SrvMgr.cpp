@@ -28,6 +28,8 @@
 #include "SubsMgr.h"
 #include "Util.h"
 
+#include <QtDebug>
+
 #include <mutex>
 #include <utility>
 

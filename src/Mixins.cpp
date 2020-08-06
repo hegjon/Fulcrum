@@ -19,6 +19,8 @@
 #include "App.h"
 #include "Mixins.h"
 
+#include <QtDebug>
+
 QObjectMixin::~QObjectMixin() {}
 QObject *QObjectMixin::qobj() const
 {

@@ -34,6 +34,7 @@
 #include <QtEndian>
 #include <QTimer>
 #include <QUrl>
+#include <QtDebug>
 
 #include <algorithm>
 #include <cassert>

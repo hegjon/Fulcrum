@@ -22,6 +22,7 @@
 #include "bitcoin/hash.h"
 
 #include <QRandomGenerator>
+#include <QtDebug>
 
 #include <algorithm>
 #include <cmath>

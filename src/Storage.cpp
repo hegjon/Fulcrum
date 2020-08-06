@@ -35,6 +35,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QVector> // we use this for the Height2Hash cache to save on memcopies since it's implicitly shared.
+#include <QtDebug>
 
 #include <algorithm>
 #include <atomic>

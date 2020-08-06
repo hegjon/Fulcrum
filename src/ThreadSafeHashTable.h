@@ -24,6 +24,7 @@
 #include <QHash>
 #include <QPointer>
 #include <QObject>
+#include <QtDebug>
 
 #include <atomic>
 #include <cassert>

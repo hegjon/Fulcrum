@@ -29,6 +29,8 @@
 #include "bitcoin/transaction.h"
 #include "robin_hood/robin_hood.h"
 
+#include <QtDebug>
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -1264,7 +1266,7 @@ void CtlTask::on_error(const RPC::Message &resp)
 }
 void CtlTask::on_failure(const RPC::Message::Id &id, const QString &msg)
 {
-    qWarning() << id << ": FAIL: " << msg;
+    qWarning() << id.toString() << ": FAIL: " << msg;
     errorCode = id.toInt();
     errorMessage = msg;
     emit errored();

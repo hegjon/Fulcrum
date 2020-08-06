@@ -21,6 +21,7 @@
 #include "ByteView.h"
 #include "Common.h"
 #include <QtCore>
+#include <QtDebug>
 
 #include <algorithm>
 #include <atomic>

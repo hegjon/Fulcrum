@@ -22,6 +22,7 @@
 
 #include <QHostAddress>
 #include <QSslSocket>
+#include <QtDebug>
 
 #include <type_traits>
 

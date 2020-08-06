@@ -32,6 +32,7 @@
 #include <QVariant>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QtDebug>
 
 #include <array>
 #include <cerrno>

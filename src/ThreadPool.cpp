@@ -20,6 +20,7 @@
 #include "Util.h"
 
 #include <QThreadPool>
+#include <QtDebug>
 
 namespace {
     constexpr bool debugPrt = false;

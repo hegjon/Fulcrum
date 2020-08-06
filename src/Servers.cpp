@@ -41,6 +41,7 @@
 #include <QTextCodec>
 #include <QTextStream>
 #include <QTimer>
+#include <QtDebug>
 
 #include <algorithm>
 #include <cassert>

@@ -32,6 +32,7 @@
 #include <QSslSocket>
 #include <QTcpSocket>
 #include <QVector>
+#include <QtDebug>
 
 #include <list>
 #include <utility>

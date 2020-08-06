@@ -27,6 +27,7 @@
 
 #include <QHash>
 #include <QHashFunctions>
+#include <QtDebug>
 
 #ifdef QT_DEBUG
 #include <QRandomGenerator>
