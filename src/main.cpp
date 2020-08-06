@@ -16,7 +16,6 @@
 // along with this program (see LICENSE.txt).  If not, see
 // <https://www.gnu.org/licenses/>.
 //
-#include <QCoreApplication>
 #include "App.h"
 
 int main(int argc, char *argv[])
