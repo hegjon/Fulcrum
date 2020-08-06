@@ -169,11 +169,11 @@ void App::cleanup_WaitForThreadPoolWorkers()
         qInfo() << "Waiting for extant thread pool workers ...";
     const bool res = tpool->shutdownWaitForJobs(timeout);
     if (!res) {
-        Warning("After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
+        qWarning("After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
                 qRound(double(t0.elapsed())/1e3), nJobs, Util::Pluralize("worker", nJobs).toUtf8().constData(),
                 qAbs(nJobs) == 1 ? "is" : "are");
     } else if (nJobs) {
-        Debug("Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
+        qDebug("Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
               Util::Pluralize("worker", nJobs).toUtf8().constData(), t0.elapsed()/1e3);
     }
 }
@@ -1124,9 +1124,6 @@ void App::customMessageHandler(QtMsgType type, const QMessageLogContext &context
         break;
     case QtInfoMsg:
         Log("[Qt] %s (%s:%d, %s)", umsg.constData(), file, context.line, function);
-        break;
-    case QtWarningMsg:
-        Warning("[Qt Warning] %s (%s:%d, %s)", umsg.constData(), file, context.line, function);
         break;
     case QtCriticalMsg:
         Error("[Qt Critical] %s (%s:%d, %s)", umsg.constData(), file, context.line, function);

@@ -173,7 +173,7 @@ bool AbstractConnection::do_write(const QByteArray & data)
         return false;
     }
     if (writeBackLog > MAX_BUFFER) {
-        Warning(Log::Magenta) << __func__ << ": " << prettyName() << " -- MAX_BUFFER reached on write (" << MAX_BUFFER << "), disconnecting client";
+        qWarning() << __func__ << ": " << prettyName() << " -- MAX_BUFFER reached on write (" << MAX_BUFFER << "), disconnecting client";
         do_disconnect();
         return false;
     }

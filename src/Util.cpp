@@ -428,12 +428,6 @@ Error::~Error()
 }
 
 
-Warning::~Warning()
-{
-    level = Logger::Level::Warning;
-    if (!colorOverridden) color = Yellow;
-}
-
 Fatal::~Fatal()
 {
     level = Logger::Level::Fatal;

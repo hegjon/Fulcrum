@@ -1838,7 +1838,7 @@ auto Storage::getHistory(const HashX & hashX, bool conf, bool unconf) const -> H
             }
         }
     } catch (const std::exception &e) {
-        Warning(Log::Magenta) << __func__ << ": " << e.what();
+        qWarning("%s: %s", __func__, e.what());
     }
     return ret;
 }
@@ -1954,7 +1954,7 @@ auto Storage::listUnspent(const HashX & hashX) const -> UnspentItems
             // between capacity and size, it's fine.
             ret.shrink_to_fit();
     } catch (const std::exception &e) {
-        Warning(Log::Magenta) << __func__ << ": " << e.what();
+        qWarning("%s: %s", __func__, e.what());
     }
     return ret;
 }
@@ -2027,7 +2027,7 @@ auto Storage::getBalance(const HashX &hashX) const -> std::pair<bitcoin::Amount,
             }
         }
     } catch (const std::exception &e) {
-        Warning(Log::Magenta) << __func__ << ": " << e.what();
+        qWarning("%s: %s", __func__, e.what());
     }
     return ret;
 }

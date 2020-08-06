@@ -603,8 +603,7 @@ namespace RPC {
                 memoryWasteTimerActive = false;
                 const qint64 avail = socket ? socket->bytesAvailable() : 0;
                 if (avail >= memoryWasteThreshold) {
-                    Warning(Log::Magenta)
-                            << "Client " << this->id << " from " << this->peerAddress().toString()
+                    qWarning() << "Client " << this->id << " from " << this->peerAddress().toString()
                             << " exceeded its \"memory waste threshold\" by filling our receive buffer with "
                             << avail << " bytes for longer than "
                             << QString::number(memoryWasteTimeout/1e3, 'f', 1) << " seconds -- kicking client!";

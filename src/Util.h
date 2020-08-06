@@ -190,25 +190,6 @@ public:
 #endif
 };
 
-/** \brief Stream-like class to print a warning message to the app's logging facility
-
-    Example:
-  \code
-        qWarning() << "This is a warning message..."; // would print a warning message to the logging facility
-   \endcode
-*/
-class Warning : public Log
-{
-public:
-    using Log::Log; // inherit c'tor
-    virtual ~Warning();
-
-#if defined(__GNUC__) && !defined(__clang__)
-    // Grr.. GCC doesn't fully implement C++ 17 so we must do this. :(
-    template <typename ...Args>
-    explicit Warning(Args && ...args) : Log(std::forward<Args>(args)...) {}
-#endif
-};
 
 /// Like qCritical(), except it will enqueue a qApp->exit(1) after logging the message
 class Fatal : public Log
