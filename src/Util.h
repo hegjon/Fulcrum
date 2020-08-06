@@ -171,25 +171,6 @@ public:
             Trace()(__VA_ARGS__);  \
     } while (0)
 
-/** \brief Stream-like class to print an error message to the app's logging facility
-    Example:
-   \code
-        qCritical() << "This is an ERROR message!!"; // would print an error message to the logging facility
-   \endcode
- */
-class Error : public Log
-{
-public:
-    using Log::Log; // inherit c'tor
-    virtual ~Error();
-
-#if defined(__GNUC__) && !defined(__clang__)
-    // Grr.. GCC doesn't fully implement C++ 17 so we must do this. :(
-    template <typename ...Args>
-    explicit Error(Args && ...args) : Log(std::forward<Args>(args)...) {}
-#endif
-};
-
 
 // Now add these macros for symmetry
 #define LogM(...) (qInfo()(__VA_ARGS__))

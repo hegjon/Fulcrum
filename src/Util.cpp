@@ -421,12 +421,6 @@ bool Trace::isEnabled() {
             || (ourApp && ourApp->options && ourApp->options->verboseTrace && ourApp->options->verboseDebug); // both trace and debug must be on
 }
 
-Error::~Error()
-{
-    level = Logger::Level::Critical;
-    if (!colorOverridden) color = BrightRed;
-}
-
 
 #ifdef ENABLE_TESTS
 #include "bitcoin/utilstrencodings.h"

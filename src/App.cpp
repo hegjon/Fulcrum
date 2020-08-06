@@ -1115,23 +1115,6 @@ void App::customMessageHandler(QtMsgType type, const QMessageLogContext &context
     // /suppressions
 
     const QByteArray umsg = msg.toUtf8();
-    const char *file = context.file ? context.file : "";
-    const char *function = context.function ? context.function : "";
-
-    switch (type) {
-    case QtDebugMsg:
-        DebugM("[Qt] ", umsg.constData(), " (", file, ":", context.line, ", ", function, ")");
-        break;
-    case QtInfoMsg:
-        Log("[Qt] %s (%s:%d, %s)", umsg.constData(), file, context.line, function);
-        break;
-    case QtCriticalMsg:
-        Error("[Qt Critical] %s (%s:%d, %s)", umsg.constData(), file, context.line, function);
-        break;
-    case QtFatalMsg:
-        Error("[Qt Fatal] %s (%s:%d, %s)", umsg.constData(), file, context.line, function);
-        break;
-    }
 }
 
 void App::miscPreAppFixups()

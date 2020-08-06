@@ -1012,7 +1012,7 @@ void Storage::loadCheckUTXOsInDB()
                     throw DatabaseError(msg);
                 }
                 if (0 == ++p->utxoCt % 100000) {
-                    *(0 == p->utxoCt % 2500000 ? std::make_unique<Log>() : std::make_unique<Debug>()) << "CheckDB: Verified " << p->utxoCt << " utxos ...";
+                    (0 == p->utxoCt % 2500000 ? qInfo() : qDebug()) << "CheckDB: Verified " << p->utxoCt << " utxos ...";
                 }
             }
 

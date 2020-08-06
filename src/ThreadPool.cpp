@@ -42,7 +42,7 @@ Job::Job(QObject *context, ThreadPool *pool, const VoidFunc & work, const VoidFu
     : QObject(nullptr), pool(pool), work(work), weakContextRef(context ? context : pool)
 {
     if (!context && (completion || fail))
-        Debug(Log::Magenta) << "Warning: use of ThreadPool jobs without a context is not recommended, FIXME!";
+        qDebug() << "Warning: use of ThreadPool jobs without a context is not recommended, FIXME!";
     if (completion)
         connect(this, &Job::completed, context ? context : pool, [completion]{ completion(); });
     if (fail)

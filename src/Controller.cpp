@@ -74,7 +74,7 @@ void Controller::startup()
             lostConn = true;
             stopTimer(pollTimerName);
             stopTimer(callProcessTimer);
-            callOnTimerSoon(msgPeriod, waitTimer, []{ Log("Waiting for bitcoind..."); return true; }, false, Qt::TimerType::VeryCoarseTimer);
+            callOnTimerSoon(msgPeriod, waitTimer, []{ qInfo("Waiting for bitcoind..."); return true; }, false, Qt::TimerType::VeryCoarseTimer);
         };
         waitForBitcoinD();
         conns += connect(bitcoindmgr.get(), &BitcoinDMgr::allConnectionsLost, this, waitForBitcoinD);
@@ -505,8 +505,7 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
     double now = Util::getTimeSecs();
     std::lock_guard g(mut);
     if (force || (newSize > 0 && (oldSize != newSize || oldNumAddresses != numAddresses) && now - lastTS >= interval)) {
-        std::unique_ptr<Log> logger(isDebug ? new Debug : new Log);
-        Log & log(*logger);
+        auto log = isDebug ? qDebug() : qInfo();
         log << newSize << Util::Pluralize(" mempool tx", newSize) << " involving " << numAddresses
             << Util::Pluralize(" address", numAddresses);
         if (!force) {
