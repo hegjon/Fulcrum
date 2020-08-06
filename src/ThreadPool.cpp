@@ -53,7 +53,7 @@ Job::~Job() {}
 void Job::run() {
     emit started();
     if (UNLIKELY(pool->isShuttingDown())) {
-        Debug() << objectName() << ": blockNewWork = true, exiting early without doing any work";
+        qDebug() << objectName() << ": blockNewWork = true, exiting early without doing any work";
         return;
 
     } else if (UNLIKELY(!weakContextRef)) {
@@ -79,7 +79,7 @@ void Job::run() {
 void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidFunc & completion, const FailFunc & fail, int priority)
 {
     if (blockNewWork) {
-        Debug() << __func__ << ": Ignoring new work submitted because blockNewWork = true";
+        qDebug() << __func__ << ": Ignoring new work submitted because blockNewWork = true";
         return;
     }
     static const FailFunc defaultFail = [](const QString &msg) {
@@ -108,13 +108,13 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
     job->setObjectName(QStringLiteral("Job %1 for '%2'").arg(num).arg( context ? context->objectName() : QStringLiteral("<no context>")));
     if constexpr (debugPrt) {
         QObject::connect(job, &Job::started, this, [n=job->objectName()]{
-            Debug() << n << " -- started";
+            qDebug() << n << " -- started";
         }, Qt::DirectConnection);
         QObject::connect(job, &Job::completed, this, [n=job->objectName()]{
-            Debug() << n << " -- completed";
+            qDebug() << n << " -- completed";
         }, Qt::DirectConnection);
         QObject::connect(job, &Job::failed, this, [n=job->objectName()](const QString &msg){
-            Debug() << n << " -- failed: " << msg;
+            qDebug() << n << " -- failed: " << msg;
         }, Qt::DirectConnection);
     }
     pool->start(job, priority);
@@ -124,7 +124,7 @@ bool ThreadPool::shutdownWaitForJobs(int timeout_ms)
 {
     blockNewWork = true;
     if constexpr (debugPrt) {
-        Debug() << __func__ << ": waiting for jobs ...";
+        qDebug() << __func__ << ": waiting for jobs ...";
     }
     pool->clear();
     return pool->waitForDone(timeout_ms);

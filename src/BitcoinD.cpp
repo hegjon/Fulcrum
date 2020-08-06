@@ -141,7 +141,7 @@ void BitcoinDMgr::cleanup() {
     }
     goodSet.clear();
 
-    Debug() << "BitcoinDMgr cleaned up";
+    qDebug() << "BitcoinDMgr cleaned up";
 }
 
 auto BitcoinDMgr::stats() const -> Stats

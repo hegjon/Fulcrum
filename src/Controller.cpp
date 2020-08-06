@@ -595,7 +595,7 @@ void SynchMempoolTask::processResults()
                     sh = prevInfo.hashX;
                     tx->hashXs[sh].unconfirmedSpends[prevTXO] = prevInfo;
                     prevTxRef->hashXs[sh].utxo.erase(prevN); // remove this spend from utxo set for prevTx in mempool
-                    if (TRACE) Debug() << hash.toHex() << " unconfirmed spend: " << prevTXO.toString() << " " << prevInfo.amount.ToString().c_str();
+                    if (TRACE) qDebug() << hash.toHex() << " unconfirmed spend: " << prevTXO.toString() << " " << prevInfo.amount.ToString().c_str();
                 } else {
                     // prev is a confirmed tx
                     const auto optTXOInfo = storage->utxoGetFromDB(prevTXO, false); // this may also throw on low-level db error
@@ -620,7 +620,7 @@ void SynchMempoolTask::processResults()
                     }
                     // end memory saving hack
                     hxit->second.confirmedSpends[prevTXO] = prevInfo;
-                    if (TRACE) Debug() << hash.toHex() << " confirmed spend: " << prevTXO.toString() << " " << prevInfo.amount.ToString().c_str();
+                    if (TRACE) qDebug() << hash.toHex() << " confirmed spend: " << prevTXO.toString() << " " << prevInfo.amount.ToString().c_str();
                 }
                 tx->fee += prevInfo.amount;
                 assert(sh == prevInfo.hashX);
@@ -689,7 +689,7 @@ void SynchMempoolTask::doDLNextTx()
         tx->sizeBytes = unsigned(expectedLen); // save size now -- this is needed later to calculate fees and for everything else.
 
         if (TRACE)
-            Debug() << "got reply for tx: " << hashHex << " " << txdata.length() << " bytes";
+            qDebug() << "got reply for tx: " << hashHex << " " << txdata.length() << " bytes";
 
         {
             // tmp mutable object will be moved into CTransactionRef below via a move constructor
@@ -733,9 +733,9 @@ void SynchMempoolTask::doGetRawMempool()
             static const QVariantList EmptyList; // avoid constructng this for each iteration
             if (auto it = mempool.txs.find(hash); it != mempool.txs.end()) {
                 droppedTxs.erase(hash); // mark this tx as "not dropped" since it was in the mempool before and is in the mempool now.
-                if (TRACE) Debug() << "Existing mempool tx: " << hash.toHex();
+                if (TRACE) qDebug() << "Existing mempool tx: " << hash.toHex();
             } else {
-                if (TRACE) Debug() << "New mempool tx: " << hash.toHex();
+                if (TRACE) qDebug() << "New mempool tx: " << hash.toHex();
                 ++newCt;
                 Mempool::TxRef tx = std::make_shared<Mempool::Tx>();
                 tx->hashXs.max_load_factor(1.0); // hopefully this will save some memory by expicitly setting it to 1.0

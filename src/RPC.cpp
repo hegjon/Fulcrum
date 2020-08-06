@@ -861,7 +861,7 @@ namespace RPC {
         // Sanity check to ensure we estimated the size correctly. This branch is compiled-out of release builds.
         if constexpr (!isReleaseBuild()) {
             if (const auto actualSize = payload.size(); reserveSize != actualSize && Debug::isEnabled())
-                Debug() << "reserveSize: " << reserveSize << " != actualSize: " << actualSize
+                qDebug() << "reserveSize: " << reserveSize << " != actualSize: " << actualSize
                         << " (this leads to extra mallocs) for: \"" << payload.left(80) << "\" ... ";
         }
 
@@ -882,36 +882,36 @@ namespace RPC {
     /* static */ void HttpConnection::Test()
     {
         std::shared_ptr<HttpConnection> h(new HttpConnection(MethodMap{}, 1), [](HttpConnection *h){
-            Debug() << "Calling h->deleteLater...";
+            qDebug() << "Calling h->deleteLater...";
             h->deleteLater();
         });
-        connect(h.get(), &QObject::destroyed, qApp, [](QObject*){Debug() << "HttpConnection deleted! yay!";});
+        connect(h.get(), &QObject::destroyed, qApp, [](QObject*){qDebug() << "HttpConnection deleted! yay!";});
         h->setV1(true);
         h->errorPolicy = ErrorPolicyDisconnect;
         h->setAuth("CalinsNads", "ENTER PASSWORD HERE");
         h->socket = new QTcpSocket(h.get());
         // below will create circular refs until socket is deleted...
         connect(h->socket, &QAbstractSocket::connected, h.get(), [h]{
-            Debug() << h->prettyName() << " connected";
+            qDebug() << h->prettyName() << " connected";
             h->connectedConns.push_back(
                 connect(h.get(), &RPC::ConnectionBase::gotMessage, h.get(),
                         [h](qint64 id_in, const RPC::Message &m)
                     {
-                        Debug() << "Got message from server: id: " << id_in << " json: " << m.toJsonString();
+                        qDebug() << "Got message from server: id: " << id_in << " json: " << m.toJsonString();
                     })
             ); // connection will be auto-disconnected on socket disconnect in superclass  on_disconnected impl.
             h->connectedConns.push_back(
                 connect(h.get(), &RPC::ConnectionBase::gotErrorMessage, h.get(),
                         [](qint64 id_in, const RPC::Message &m)
                     {
-                        Debug() << "Got ERROR message from server: id: " << id_in << " json: " << m.toJsonString();
+                        qDebug() << "Got ERROR message from server: id: " << id_in << " json: " << m.toJsonString();
                     })
             ); // connection will be auto-disconnected on socket disconnect in superclass  on_disconnected impl.
             connect(h.get(), &AbstractConnection::lostConnection, h.get(),
                     [](AbstractConnection *a)
             {
                 if (auto h = dynamic_cast<HttpConnection *>(a)) {
-                    Debug() << "lost connection, deleting socket. We should also die sometime later...";
+                    qDebug() << "lost connection, deleting socket. We should also die sometime later...";
                     if (h->socket) { h->socket->deleteLater(); h->socket = nullptr; }
                 }
             }, Qt::QueuedConnection);
@@ -928,7 +928,7 @@ namespace RPC {
                });
                const auto randHeight = rgen.bounded(1, 1000000);
                QTimer::singleShot(0, h.get(), [h, randHeight]{
-                   Debug() << "Sending getblockstats " << randHeight << "...";
+                   qDebug() << "Sending getblockstats " << randHeight << "...";
                    emit h->sendRequest(newId(), "getblockstats", {randHeight});
                });
             }

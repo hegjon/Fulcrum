@@ -69,7 +69,7 @@ void AbstractTcpServer::resetName()
 
 AbstractTcpServer::~AbstractTcpServer()
 {
-    Debug() << __func__;
+    qDebug() << __func__;
     stop();
 }
 
@@ -106,9 +106,9 @@ void AbstractTcpServer::on_started()
     if (!listen(addr, port)) {
         result = errorString();
         result = result.isEmpty() ? "Error binding/listening for connections" : QString("Could not bind to %1: %2").arg(hostPort()).arg(result);
-        Debug() << __func__ << " listen failed";
+        qDebug() << __func__ << " listen failed";
     } else {
-        Debug() << "started ok";
+        qDebug() << "started ok";
     }
     chan.put(result);
 }
@@ -117,7 +117,7 @@ void AbstractTcpServer::on_finished()
 {
     close(); /// stop listening
     chan.put("finished");
-    Debug() << objectName() << " finished.";
+    qDebug() << objectName() << " finished.";
     ThreadObjectMixin::on_finished();
 }
 
@@ -1518,7 +1518,7 @@ void Server::impl_sh_unsubscribe(Client *c, const RPC::Message &m, const HashX &
 void Server::LogFilter::Broadcast::operator()(bool isSuccess, const QByteArray &logLine, const QByteArray &key)
 {
     // The below scheme checks the appropriate bloom filter based on `isSuccess` for key (if key is not empty)
-    // and if it's in the filter, it logs to Debug(), otherwise it logs to qInfo()
+    // and if it's in the filter, it logs to qDebug(), otherwise it logs to qInfo()
     auto [doLog, isDebug] = [&]() -> std::pair<bool, bool> {
         std::unique_lock g(lock);
         auto & which = isSuccess ? success : fail;
@@ -1536,7 +1536,7 @@ void Server::LogFilter::Broadcast::operator()(bool isSuccess, const QByteArray &
         if (!isDebug)
             qInfo() << QString(logLine);
         else
-            Debug() << QString(logLine);
+            qDebug() << QString(logLine);
     }
 }
 QVariantMap Server::LogFilter::Broadcast::stats() const {
@@ -1618,7 +1618,7 @@ void Server::rpc_blockchain_transaction_broadcast(Client *c, const RPC::Message 
                 // tx's over and over again.  So we simply take the first 1024 bytes of the tx, hash that and use a
                 // rolling bloom filter to keep track of tx's we've seen (bloom filter size: 16384).  In this way, we
                 // don't produce duplicate log messages in the default qInfo() for the same tx broadcast failure. (But we
-                // do still produce Debug() log messages, if debug logging is enabled).
+                // do still produce qDebug() log messages, if debug logging is enabled).
                 QByteArray logLine;
                 QTextStream{&logLine, QIODevice::WriteOnly}
                     << "Broadcast fail for client " << c->id << ": " << errorMessage.left(120);

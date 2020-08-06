@@ -256,7 +256,7 @@ namespace {
                 }
             } else {
                 if (UNLIKELY(acceptExtraBytesAtEndOfData))
-                    Debug() << "Warning:  Caller misuse of function '" << __func__
+                    qDebug() << "Warning:  Caller misuse of function '" << __func__
                             << "'. 'acceptExtraBytesAtEndOfData=true' is ignored when deserializing using QDataStream.";
                 bool ok;
                 ret.emplace( Deserialize<RetType>(FromSlice(datum), &ok) );
@@ -538,7 +538,7 @@ Storage::Storage(const std::shared_ptr<const Options> & options_)
     _thread.setObjectName(objectName());
 }
 
-Storage::~Storage() { Debug() << __func__; cleanup(); }
+Storage::~Storage() { qDebug() << __func__; cleanup(); }
 
 void Storage::startup()
 {
@@ -890,7 +890,7 @@ void Storage::loadCheckHeadersInDB()
                                       .arg(num));
         // verify headers: hashPrevBlock must match what we actually read from db
         if (num) {
-            Debug() << "Verifying " << num << " " << Util::Pluralize("header", num) << " ...";
+            qDebug() << "Verifying " << num << " " << Util::Pluralize("header", num) << " ...";
             QString err;
             hVec = headersFromHeight_nolock_nocheck(0, num, &err);
             if (!err.isEmpty() || hVec.size() != num)
@@ -914,7 +914,7 @@ void Storage::loadCheckHeadersInDB()
     if (num) {
         const auto elapsed = Util::getTimeNS();
 
-        Debug() << "Read & verified " << num << " " << Util::Pluralize("header", num) << " from db in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
+        qDebug() << "Read & verified " << num << " " << Util::Pluralize("header", num) << " from db in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
     }
 
     if (!p->merkleCache->isInitialized() && !hVec.empty())
@@ -927,7 +927,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
     // may throw.
     p->txNumsFile = std::make_unique<RecordFile>(options->datadir + QDir::separator() + "txnum2txhash", HashLen, 0x000012e2);
     p->txNumNext = p->txNumsFile->numRecords();
-    Debug() << "Read TxNumNext from file: " << p->txNumNext.load();
+    qDebug() << "Read TxNumNext from file: " << p->txNumNext.load();
     TxNum ct = 0;
     if (const int height = latestTip().first; height >= 0)
     {
@@ -1023,7 +1023,7 @@ void Storage::loadCheckUTXOsInDB()
 
         }
         const auto elapsed = Util::getTimeNS();
-        Debug() << "CheckDB: Verified utxos in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
+        qDebug() << "CheckDB: Verified utxos in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
 
     } else {
         p->utxoCt = readUtxoCtFromDB();
@@ -1053,7 +1053,7 @@ void Storage::loadCheckEarliestUndo()
         }
     }
     if (ctr) {
-        Debug() << "Undo db contains " << ctr << " entries, earliest is " << p->earliestUndoHeight.load() << ", "
+        qDebug() << "Undo db contains " << ctr << " entries, earliest is " << p->earliestUndoHeight.load() << ", "
                 << QString::number((Util::getTimeNS() - t0)/1e6, 'f', 2) << " msec elapsed.";
     }
 }
@@ -1193,7 +1193,7 @@ std::optional<TXOInfo> Storage::utxoGet(const TXO &txo)
                     if (auto hxInfoIt = tx->hashXs.find(hxTxIt->first); LIKELY(hxInfoIt != tx->hashXs.end())) {
                         const auto & ioinfo = hxInfoIt->second;
                         if (ioinfo.confirmedSpends.count(txo)) {
-                            //Debug() << "TXO: " << txo.toString() << " was in DB but is spent in mempool";
+                            //qDebug() << "TXO: " << txo.toString() << " was in DB but is spent in mempool";
                             // DB hit, but was spent in mempool, reset ret so that caller knows it was spent.
                             ret.reset();
                             break; // enclosing ranged for()
@@ -1302,7 +1302,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                         const auto & out = ppb->outputs[oidx];
                         if (out.spentInInputIndex.has_value()) {
                             if constexpr (debugPrt)
-                                Debug() << "Skipping output #: " << oidx << " for " << ppb->txInfos[out.txIdx].hash.toHex() << " (was spent in same block tx: " << ppb->txInfos[ppb->inputs[*out.spentInInputIndex].txIdx].hash.toHex() << ")";
+                                qDebug() << "Skipping output #: " << oidx << " for " << ppb->txInfos[out.txIdx].hash.toHex() << " (was spent in same block tx: " << ppb->txInfos[ppb->inputs[*out.spentInInputIndex].txIdx].hash.toHex() << ")";
                             continue;
                         }
                         const TxHash & hash = ppb->txInfos[out.txIdx].hash;
@@ -1333,7 +1333,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                     } else if (in.parentTxOutIdx.has_value()) {
                         // was an input that was spent in this block so it's ok to skip.. we never added it to utxo set
                         if constexpr (debugPrt)
-                            Debug() << "Skipping input " << txo.toString() << ", spent in this block (output # " << *in.parentTxOutIdx << ")";
+                            qDebug() << "Skipping input " << txo.toString() << ", spent in this block (output # " << *in.parentTxOutIdx << ")";
                     } else if (const auto opt = utxoGetFromDB(txo); opt.has_value()) {
                         const auto & info = *opt;
                         if (info.confirmedHeight.has_value() && *info.confirmedHeight != ppb->height) {
@@ -1388,7 +1388,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             }
 
             if constexpr (debugPrt)
-                Debug() << "utxoset size: " << utxoSetSize() << " block: " << ppb->height;
+                qDebug() << "utxoset size: " << utxoSetSize() << " block: " << ppb->height;
         }
 
         {
@@ -1456,19 +1456,19 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
 
             if constexpr (debugPrt) {
                 // testing undo ser/deser
-                Debug() << "Undo info 1: " << undo->toDebugString();
+                qDebug() << "Undo info 1: " << undo->toDebugString();
                 QByteArray ba = Serialize(*undo);
-                Debug() << "Undo info 1 serSize: " << ba.length();
+                qDebug() << "Undo info 1 serSize: " << ba.length();
                 bool ok;
                 auto undo2 = Deserialize<UndoInfo>(ba, &ok);
                 ba.fill('z'); // ensure no shallow copies of buffer exist in deserialized object. if they do below tests will fail
                 FatalAssert(ok && undo2.isValid(), "Deser of undo info failed!");
-                Debug() << "Undo info 2: " << undo2.toDebugString();
-                Debug() << "Undo info 1 == undo info 2: " << (*undo == undo2);
+                qDebug() << "Undo info 2: " << undo2.toDebugString();
+                qDebug() << "Undo info 1 == undo info 2: " << (*undo == undo2);
             } else {
                 const auto elapsedms = (Util::getTimeNS() - t0)/1e6;
                 const size_t nTx = undo->blkInfo.nTx, nSH = undo->scriptHashes.size();
-                Debug() << "Saved undo for block " << undo->height << ", "
+                qDebug() << "Saved undo for block " << undo->height << ", "
                         << nTx << " " << Util::Pluralize("transaction", nTx)
                         << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
                         << ", in " << QString::number(elapsedms, 'f', 2) << " msec.";
@@ -1485,7 +1485,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             static const QString errPrefix("Error deleting old/stale undo info from undo db");
             GenericDBDelete(p->db.undo.get(), uint32_t(expireUndoHeight), errPrefix, p->db.defWriteOpts);
             p->earliestUndoHeight = unsigned(expireUndoHeight + 1);
-            if constexpr (debugPrt) Debug() << "Deleted undo for block " << expireUndoHeight << ", earliest now " << p->earliestUndoHeight.load();
+            if constexpr (debugPrt) qDebug() << "Deleted undo for block " << expireUndoHeight << ", earliest now " << p->earliestUndoHeight.load();
         }
 
         appendHeader(rawHeader, ppb->height);

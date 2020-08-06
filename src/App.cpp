@@ -87,7 +87,7 @@ App::App(int argc, char *argv[])
 
 App::~App()
 {
-    Debug() << "App d'tor";
+    qDebug() << "App d'tor";
     qInfo() << "Shudown complete";
     _globalInstance = nullptr;
     /// child objects will be auto-deleted, however most are already gone in cleanup() at this point.
@@ -105,9 +105,9 @@ void App::startup()
     qInfo() << getBannerWithTimeStamp() << " - starting up ...";
 
     if ( ! Util::isClockSteady() ) {
-        Debug() << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
+        qDebug() << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
     } else {
-        Debug() << "High resolution clock: isSteady = true";
+        qDebug() << "High resolution clock: isSteady = true";
     }
     try {
         BTC::CheckBitcoinEndiannessAndOtherSanityChecks();
@@ -149,7 +149,7 @@ void App::startup()
 
 void App::cleanup()
 {
-    Debug() << __PRETTY_FUNCTION__ ;
+    qDebug() << __PRETTY_FUNCTION__ ;
     quitting = true;
     cleanup_WaitForThreadPoolWorkers();
     if (!httpServers.isEmpty()) {
@@ -525,13 +525,13 @@ void App::parseArgs()
             throw BadArgs(QString("The specified path \"%1\" already exists but is not a directory").arg(path));
         if (!fi.isReadable() || !fi.isExecutable() || !fi.isWritable())
             throw BadArgs(QString("Bad permissions for path \"%1\" (must be readable, writable, and executable)").arg(path));
-        Util::AsyncOnObject(this, [path]{ Debug() << "datadir: " << path; }); // log this after return to event loop so it ends up in syslog (if -S mode)
+        Util::AsyncOnObject(this, [path]{ qDebug() << "datadir: " << path; }); // log this after return to event loop so it ends up in syslog (if -S mode)
     } else { // !exists
         if (!QDir().mkpath(options->datadir))
             throw BadArgs(QString("Unable to create directory: %1").arg(options->datadir));
         path = QFileInfo(options->datadir).canonicalFilePath();
         // log this after return to event loop so it ends up in syslog (in case user specified -S mode)
-        Util::AsyncOnObject(this, [path]{ Debug() << "datadir: Created directory " << path; });
+        Util::AsyncOnObject(this, [path]{ qDebug() << "datadir: Created directory " << path; });
     }
 
     // parse bitcoind - conf.value is always unset if parser.value is set, hence this strange constrcution below (parser.value takes precedence)
@@ -540,7 +540,7 @@ void App::parseArgs()
     if ((options->bitcoindUsesTls = parser.isSet("bitcoind-tls") || conf.boolValue("bitcoind-tls"))) {
         // check that Qt actually supports SSL since we now know that we require it to proceed
         checkSupportsSsl();
-        Util::AsyncOnObject(this, []{ Debug() << "config: bitcoind-tls = true"; });
+        Util::AsyncOnObject(this, []{ qDebug() << "config: bitcoind-tls = true"; });
     }
     // grab rpcuser
     options->rpcuser = conf.value("rpcuser", parser.isSet("u") ? parser.value("u") : std::getenv(RPCUSER));
@@ -701,7 +701,7 @@ void App::parseArgs()
             throw BadArgs(QString("max_clients_per_ip parse error: cannot parse '%1' as an integer").arg(val));
         // log this later in case we are in syslog mode
         Util::AsyncOnObject(this, [this]{
-            Debug() << "config: max_clients_per_ip = "
+            qDebug() << "config: max_clients_per_ip = "
                     << (options->maxClientsPerIP > 0 ? QString::number(options->maxClientsPerIP) : "Unlimited");
         });
     }
@@ -720,7 +720,7 @@ void App::parseArgs()
         }
         // log this later in case we are in syslog mode
         Util::AsyncOnObject(this, [parsed]{
-            Debug() << "config: subnets_to_exclude_from_per_ip_limits = " << (parsed.isEmpty() ? "None" : parsed.join(", "));
+            qDebug() << "config: subnets_to_exclude_from_per_ip_limits = " << (parsed.isEmpty() ? "None" : parsed.join(", "));
         });
     }
     if (conf.hasValue("max_history")) {
@@ -731,7 +731,7 @@ void App::parseArgs()
                           .arg(options->maxHistoryMin).arg(options->maxHistoryMax));
         options->maxHistory = mh;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mh]{ Debug() << "config: max_history = " << mh; });
+        Util::AsyncOnObject(this, [mh]{ qDebug() << "config: max_history = " << mh; });
     }
     if (conf.hasValue("max_buffer")) {
         bool ok;
@@ -741,7 +741,7 @@ void App::parseArgs()
                           .arg(options->maxBufferMin).arg(options->maxBufferMax));
         options->maxBuffer.store( mb );
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mb]{ Debug() << "config: max_buffer = " << mb; });
+        Util::AsyncOnObject(this, [mb]{ qDebug() << "config: max_buffer = " << mb; });
     }
     // pick up 'workqueue' and 'worker_threads' optional conf params
     if (conf.hasValue("workqueue")) {
@@ -753,7 +753,7 @@ void App::parseArgs()
             throw BadArgs(QString("workqueue: Unable to set workqueue to %1; SetExtantJobLimit returned false.").arg(val));
         options->workQueue = val; // save advisory value for stats(), etc code
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [this]{ Debug() << "config: workqueue = " << tpool->extantJobLimit(); });
+        Util::AsyncOnObject(this, [this]{ qDebug() << "config: workqueue = " << tpool->extantJobLimit(); });
     } else
         options->workQueue = tpool->extantJobLimit(); // so stats() knows what was auto-configured
     if (conf.hasValue("worker_threads")) {
@@ -768,7 +768,7 @@ void App::parseArgs()
             throw BadArgs(QString("worker_threads: Unable to set worker threads to %1").arg(val));
         options->workerThreads = val; // save advisory value for stats(), etc code
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [val,this]{ Debug() << "config: worker_threads = " << val << " (configured: " << tpool->maxThreadCount() << ")"; });
+        Util::AsyncOnObject(this, [val,this]{ qDebug() << "config: worker_threads = " << val << " (configured: " << tpool->maxThreadCount() << ")"; });
     } else
         options->workerThreads = tpool->maxThreadCount(); // so stats() knows what was auto-configured
     // max_pending_connections
@@ -780,7 +780,7 @@ void App::parseArgs()
                           .arg(options->minMaxPendingConnections).arg(options->maxMaxPendingConnections));
         options->maxPendingConnections = val;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [val]{ Debug() << "config: max_pending_connections = " << val; });
+        Util::AsyncOnObject(this, [val]{ qDebug() << "config: max_pending_connections = " << val; });
     }
 
     // handle tor-related params: tor_hostname, tor_banner, tor_tcp_port, tor_ssl_port, tor_proxy, tor_user, tor_pass
@@ -788,12 +788,12 @@ void App::parseArgs()
         options->torHostName = thn;
         if (!thn.endsWith(".onion"))
             throw BadArgs(QString("Bad tor_hostname specified: must end with .onion: %1").arg(thn));
-        Util::AsyncOnObject(this, [thn]{ Debug() << "config: tor_hostname = " << thn; });
+        Util::AsyncOnObject(this, [thn]{ qDebug() << "config: tor_hostname = " << thn; });
     }
     if (conf.hasValue("tor_banner")) {
         const auto banner = conf.value("tor_banner");
         options->torBannerFile = banner;
-        Util::AsyncOnObject(this, [banner]{ Debug() << "config: tor_banner = " << banner; });
+        Util::AsyncOnObject(this, [banner]{ qDebug() << "config: tor_banner = " << banner; });
     }
     if (conf.hasValue("tor_tcp_port")) {
         bool ok = false;
@@ -803,7 +803,7 @@ void App::parseArgs()
         if (!val) options->torTcp.reset();
         else {
             options->torTcp = val;
-            Util::AsyncOnObject(this, [val]{ Debug() << "config: tor_tcp_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qDebug() << "config: tor_tcp_port = " << val; });
         }
     }
     if (conf.hasValue("tor_ssl_port")) {
@@ -814,7 +814,7 @@ void App::parseArgs()
         if (!val) options->torSsl.reset();
         else {
             options->torSsl = val;
-            Util::AsyncOnObject(this, [val]{ Debug() << "config: tor_ssl_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qDebug() << "config: tor_ssl_port = " << val; });
         }
     }
     if (conf.hasValue("tor_ws_port")) {
@@ -825,7 +825,7 @@ void App::parseArgs()
         if (!val) options->torWs.reset();
         else {
             options->torWs = val;
-            Util::AsyncOnObject(this, [val]{ Debug() << "config: tor_ws_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qDebug() << "config: tor_ws_port = " << val; });
         }
     }
     if (conf.hasValue("tor_wss_port")) {
@@ -836,20 +836,20 @@ void App::parseArgs()
         if (!val) options->torWss.reset();
         else {
             options->torWss = val;
-            Util::AsyncOnObject(this, [val]{ Debug() << "config: tor_wss_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qDebug() << "config: tor_wss_port = " << val; });
         }
     }
     if (conf.hasValue("tor_proxy")) {
         options->torProxy = parseInterface(conf.value("tor_proxy"), true); // may throw if bad
-        Util::AsyncOnObject(this, [val=options->torProxy]{ Debug() << "config: tor_proxy = " << val.first.toString() << ":" << val.second; });
+        Util::AsyncOnObject(this, [val=options->torProxy]{ qDebug() << "config: tor_proxy = " << val.first.toString() << ":" << val.second; });
     }
     if (conf.hasValue("tor_user")) {
         options->torUser = conf.value("tor_user");
-        Util::AsyncOnObject(this, [val=options->torUser]{ Debug() << "config: tor_user = " << val; });
+        Util::AsyncOnObject(this, [val=options->torUser]{ qDebug() << "config: tor_user = " << val; });
     }
     if (conf.hasValue("tor_pass")) {
         options->torUser = conf.value("tor_pass");
-        Util::AsyncOnObject(this, []{ Debug() << "config: tor_pass = <hidden>"; });
+        Util::AsyncOnObject(this, []{ qDebug() << "config: tor_pass = <hidden>"; });
     }
     // /Tor params
 
@@ -871,7 +871,7 @@ void App::parseArgs()
             throw BadArgs("Failed to parse \"bitcoind_throttle\" -- out of range or invalid format. Please specify 3 positive integers in range.");
         options->bdReqThrottleParams.store(p);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [p]{ Debug() << "config: bitcoind_throttle = " << QString("(hi: %1, lo: %2, decay: %3)").arg(p.hi).arg(p.lo).arg(p.decay); });
+        Util::AsyncOnObject(this, [p]{ qDebug() << "config: bitcoind_throttle = " << QString("(hi: %1, lo: %2, decay: %3)").arg(p.hi).arg(p.lo).arg(p.decay); });
     }
     if (conf.hasValue("max_subs_per_ip")) {
         bool ok;
@@ -881,7 +881,7 @@ void App::parseArgs()
                           .arg(options->maxSubsPerIPMin).arg(options->maxSubsPerIPMax));
         options->maxSubsPerIP = subs;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [subs]{ Debug() << "config: max_subs_per_ip = " << subs; });
+        Util::AsyncOnObject(this, [subs]{ qDebug() << "config: max_subs_per_ip = " << subs; });
     }
     if (conf.hasValue("max_subs")) {
         bool ok;
@@ -891,7 +891,7 @@ void App::parseArgs()
                           .arg(options->maxSubsGloballyMin).arg(options->maxSubsGloballyMax));
         options->maxSubsGlobally = subs;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [subs]{ Debug() << "config: max_subs = " << subs; });
+        Util::AsyncOnObject(this, [subs]{ qDebug() << "config: max_subs = " << subs; });
     }
 
     // DB options
@@ -903,7 +903,7 @@ void App::parseArgs()
                           .arg(options->db.maxOpenFilesMin).arg(options->db.maxOpenFilesMax));
         options->db.maxOpenFiles = int(mof);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mof]{ Debug() << "config: db_max_open_files = " << mof; });
+        Util::AsyncOnObject(this, [mof]{ qDebug() << "config: db_max_open_files = " << mof; });
     }
     if (conf.hasValue("db_keep_log_file_num")) {
         bool ok;
@@ -913,7 +913,7 @@ void App::parseArgs()
                           .arg(options->db.minKeepLogFileNum).arg(options->db.maxKeepLogFileNum));
         options->db.keepLogFileNum = unsigned(klfn);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [klfn]{ Debug() << "config: db_keep_log_file_num = " << klfn; });
+        Util::AsyncOnObject(this, [klfn]{ qDebug() << "config: db_keep_log_file_num = " << klfn; });
     }
 
     // warn user that no hostname was specified if they have peerDiscover turned on
@@ -1033,14 +1033,14 @@ Options::CertInfo App::makeCertInfo(const QObject *context, const QString &cert,
                     cipherStr += ciph.name();
                 }
                 if (cipherStr.isEmpty()) cipherStr = "(None)";
-                Debug() << "Supported ciphers: " << cipherStr;
+                qDebug() << "Supported ciphers: " << cipherStr;
                 QString curvesStr;
                 for (const auto & curve : QSslConfiguration::supportedEllipticCurves()) {
                     if (!curvesStr.isEmpty()) curvesStr += ", ";
                     curvesStr += curve.longName();
                 }
                 if (curvesStr.isEmpty()) curvesStr = "(None)";
-                Debug() << "Supported curves: " << curvesStr;
+                qDebug() << "Supported curves: " << curvesStr;
             }
         });
     }

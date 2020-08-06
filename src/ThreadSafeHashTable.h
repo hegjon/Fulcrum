@@ -67,7 +67,7 @@ public:
     ~ThreadSafeHashTable() override {
         isDeleted = true;
         if constexpr (debugPrt) {
-            Debug() << objectName() << ": Checking table...";
+            qDebug() << objectName() << ": Checking table...";
             for (auto it = table.begin(); it != table.end(); ++it) {
                 if (!it.value().expired())
                     Error() << objectName() << " d'tor: a weak ref was still alive for " << ToString(it.key()) << ". FIXME!";
@@ -90,7 +90,7 @@ public:
             // ugh, we need to do it this way to avoid unused lambda capture warnings in the !debugPrt branch
             if constexpr (debugPrt)
                 return [&key, &ret, me] {
-                    Debug() << me->objectName() << ": " << ToString(key) << " found existing with refct: " << ret.use_count();
+                    qDebug() << me->objectName() << ": " << ToString(key) << " found existing with refct: " << ret.use_count();
                 };
             else return [] {};
         };
@@ -126,7 +126,7 @@ public:
                         // ugh, we need to do it this way to avoid unused lambda capture warnings in the !debugPrt branch
                         if constexpr (debugPrt)
                             return [&p, &myname, &key] {
-                                Debug() << myname << ": entry for " << ToString(key) << " DELETED!";
+                                qDebug() << myname << ": entry for " << ToString(key) << " DELETED!";
                                 delete p; p = nullptr;
                             };
                         else
@@ -142,7 +142,7 @@ public:
                     }
                     if (UNLIKELY(me->isDeleted)) {
                         if constexpr (debugPrt)
-                            Debug() << myname << ": is cleaing up, skipping remove-from-table for " << ToString(key);
+                            qDebug() << myname << ": is cleaing up, skipping remove-from-table for " << ToString(key);
                         return;
                     }
                     // Common-case -- above checks pass, remove from table. Note that if the predicate that we live
@@ -166,7 +166,7 @@ public:
                                 }
                             }
                             if constexpr (debugPrt)
-                                Debug() << myname << ": Removed entry from table for " << ToString(key) << ", table-size now " << me->table.size();
+                                qDebug() << myname << ": Removed entry from table for " << ToString(key) << ", table-size now " << me->table.size();
                         }
                     } else {
                         // this should never happen
@@ -175,7 +175,7 @@ public:
                 });
                 table.insert(key, DataWeakRef{ret}); // Note: QHash::insert overwrites existing, unlike std::unordered_map::insert!
                 if constexpr (debugPrt)
-                    Debug() << objectName() << ": entry for " << ToString(key) << " CREATED!";
+                    qDebug() << objectName() << ": entry for " << ToString(key) << " CREATED!";
             } else
                 // was inserted by somebody else in the meantime..
                 debugPrtFoundExisting();
