@@ -1142,7 +1142,7 @@ void App::miscPreAppFixups()
     if(qEnvironmentVariableIsSet("JOURNAL_STREAM")) {
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     } else {
-        qInstallMessageHandler(customMessageHandler);
+        //qInstallMessageHandler(customMessageHandler);
     }
 #ifdef Q_OS_DARWIN
     // workaround for annoying macos keychain access prompt. see: https://doc.qt.io/qt-5/qsslsocket.html#setLocalCertificate
