@@ -191,30 +191,15 @@ public:
 };
 
 
-/// Like qCritical(), except it will enqueue a qApp->exit(1) after logging the message
-class Fatal : public Log
-{
-public:
-    using Log::Log;
-    virtual ~Fatal();
-
-#if defined(__GNUC__) && !defined(__clang__)
-    // Grr.. GCC doesn't fully implement C++ 17 so we must do this. :(
-    template <typename ...Args>
-    explicit Fatal(Args && ...args) : Log(std::forward<Args>(args)...) {}
-#endif
-};
-
 // Now add these macros for symmetry
 #define LogM(...) (qInfo()(__VA_ARGS__))
 #define WarningM(...) (qWarning()(__VA_ARGS__))
 #define ErrorM(...) (qCritical()(__VA_ARGS__))
-#define FatalM(...) (Fatal()(__VA_ARGS__))
 
-#define FatalAssert(b,...)                                            \
+#define FatalAssert(b, message)                                       \
     do {                                                              \
         if (!(b))                                                     \
-            FatalM("ASSERTION FAILED: \"", #b, "\" - ", __VA_ARGS__); \
+            qFatal("ASSERTION FAILED: \"%s\" - %s", #b, message); \
     } while (0)
 
 namespace Util {

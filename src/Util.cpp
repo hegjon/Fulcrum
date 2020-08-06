@@ -428,14 +428,6 @@ Error::~Error()
 }
 
 
-Fatal::~Fatal()
-{
-    level = Logger::Level::Fatal;
-    str = QString("FATAL: ") + str;
-    if (!colorOverridden) color = BrightRed;
-}
-
-
 #ifdef ENABLE_TESTS
 #include "bitcoin/utilstrencodings.h"
 #include "Json.h"

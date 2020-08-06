@@ -107,7 +107,7 @@ void Controller::startup()
         if (connPtr) disconnect(*connPtr);
         if (!srvmgr) {
             if (!origThread) {
-                Fatal() << "INTERNAL ERROR: Controller's creation thread is null; cannot start SrvMgr, exiting!";
+                qFatal("INTERNAL ERROR: Controller's creation thread is null; cannot start SrvMgr, exiting!");
                 return;
             }
 
@@ -123,7 +123,7 @@ void Controller::startup()
                     srvmgr->startup(); // may throw Exception, waits for servers to bind
                 } catch (const Exception & e) {
                     // exit app on bind/listen failure.
-                    Fatal() << e.what();
+                    qFatal("%s", e.what());
                 }
             }); // wait for srvmgr's thread (usually the main thread)
 
@@ -169,9 +169,9 @@ void Controller::cleanup()
     stopFlag = true;
     stop();
     tasks.clear(); // deletes all tasks asap
-    if (srvmgr) { Log("Stopping SrvMgr ... "); srvmgr->cleanup(); srvmgr.reset(); }
-    if (bitcoindmgr) { Log("Stopping BitcoinDMgr ... "); bitcoindmgr->cleanup(); bitcoindmgr.reset(); }
-    if (storage) { Log("Closing storage ..."); storage->cleanup(); storage.reset(); }
+    if (srvmgr) { qInfo("Stopping SrvMgr ... "); srvmgr->cleanup(); srvmgr.reset(); }
+    if (bitcoindmgr) { qInfo("Stopping BitcoinDMgr ... "); bitcoindmgr->cleanup(); bitcoindmgr.reset(); }
+    if (storage) { qInfo("Closing storage ..."); storage->cleanup(); storage.reset(); }
     sm.reset();
 }
 
@@ -952,10 +952,10 @@ void Controller::process(bool beSilentIfUpToDate)
 
             if (const auto hashDaemon = bitcoindmgr->getBitcoinDGenesisHash(), hashDb = storage->genesisHash();
                     !hashDb.isEmpty() && !hashDaemon.isEmpty() && hashDb != hashDaemon) {
-                Fatal() << "Bitcoind reports genesis hash: \"" << hashDaemon.toHex() << "\", which differs from our "
-                        << "database: \"" << hashDb.toHex() << "\". You may have connected to the wrong bitcoind. "
-                        << "To fix this issue either connect to a different bitcoind or delete this program's datadir "
-                        << "to resynch.";
+                qFatal("Bitcoind reports genesis hash: \"%s\", which differs from our " \
+                        "database: \"%s\". You may have connected to the wrong bitcoind. " \
+                        "To fix this issue either connect to a different bitcoind or delete this program's datadir " \
+                        "to resynch.", qPrintable(hashDaemon.toHex()), qPrintable(hashDb.toHex()));
                 return;
             }
             sm->net = net;
@@ -1201,7 +1201,7 @@ bool Controller::process_VerifyAndAddBlock(PreProcessedBlockPtr ppb)
         return false;
     } catch (const std::exception & e) {
         // TODO: see about more graceful error and not a fatal exit. (although if we do get an error here it's pretty non-recoverable!)
-        Fatal() << e.what() << inconsistentStateSorry;
+        qFatal("%s %s", e.what(), qPrintable(inconsistentStateSorry));
         sm->state = StateMachine::State::Failure;
         // app will shut down after return to event loop.
         return false;
@@ -1221,7 +1221,7 @@ void Controller::process_DoUndoAndRetry()
         sm->state = StateMachine::State::Retry;
         AGAIN(); // schedule us again to do cleanup
     } catch (const std::exception & e) {
-        Fatal() << "Failed to rewind: " << e.what() << inconsistentStateSorry;
+        qFatal("%s %s", e.what(), qPrintable(inconsistentStateSorry));
         sm->state = StateMachine::State::Failure;
         // upon return to event loop, will shut down
     }

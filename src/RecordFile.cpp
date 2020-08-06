@@ -239,5 +239,5 @@ RecordFile::BatchAppendContext::~BatchAppendContext()
     QString errStr;
     rf.writeNewSizeToHeader(&errStr, true);
     if (!errStr.isEmpty())
-        Fatal() << errStr; // app will quit in main event loop after printing error.
+        qFatal("%s", qPrintable(errStr)); // app will quit in main event loop after printing error.
 }

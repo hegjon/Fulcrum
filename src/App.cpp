@@ -143,7 +143,7 @@ void App::startup()
         }
 
     } catch (const Exception & e) {
-        Fatal() << "Caught exception: " << e.what();
+        qFatal("Caught exception: %s", e.what());
     }
 }
 
@@ -153,11 +153,11 @@ void App::cleanup()
     quitting = true;
     cleanup_WaitForThreadPoolWorkers();
     if (!httpServers.isEmpty()) {
-        Log("Stopping Stats HTTP Servers ...");
+        qInfo("Stopping Stats HTTP Servers ...");
         for (auto h : httpServers) { h->stop(); }
         httpServers.clear(); // deletes shared pointers
     }
-    if (controller) { Log("Stopping Controller ... "); controller->cleanup(); controller.reset(); }
+    if (controller) { qInfo("Stopping Controller ... "); controller->cleanup(); controller.reset(); }
 }
 
 void App::cleanup_WaitForThreadPoolWorkers()

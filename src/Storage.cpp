@@ -785,7 +785,7 @@ void Storage::save_impl(SaveSpec override)
                 saveMeta_impl();
             }
         } catch (const std::exception & e) {
-            Fatal() << e.what(); // will abort app...
+            qFatal("%s", e.what()); // will abort app...
         }
     }
 }
@@ -956,7 +956,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
 // NOTE: this must be called *after* loadCheckTxNumsFileAndBlkInfo(), because it needs a valid p->txNumNext
 void Storage::loadCheckUTXOsInDB()
 {
-    FatalAssert(!!p->db.utxoset, __func__, ": Utxo set db is not open");
+    FatalAssert(!!p->db.utxoset, "Utxo set db is not open");
 
     if (options->doSlowDbChecks) {
         qInfo() << "CheckDB: Verifying utxo set (this may take some time) ...";
@@ -1036,7 +1036,7 @@ void Storage::loadCheckUTXOsInDB()
 
 void Storage::loadCheckEarliestUndo()
 {
-    FatalAssert(!!p->db.undo,  __func__, ": Undo db is not open");
+    FatalAssert(!!p->db.undo,  "Undo db is not open");
 
     const auto t0 = Util::getTimeNS();
     int ctr = 0;

@@ -393,7 +393,7 @@ void SubsMgr::removeZombies(bool forced)
     for (auto it = p->subs.begin(); it != p->subs.end(); /* */) {
         SubRef sub = it->second; // take a copy to increment refct so it doesn't get deleted before we unlock it (erase() below)...
         if (UNLIKELY(!sub)) { // paranoia
-            Fatal() << "A SubRef was null in " << __func__ << ". FIXME!";
+            qFatal("A SubRef was null in %s. FIXME!", __func__);
             return;
         }
         LockGuard g(sub->mut);
