@@ -176,7 +176,6 @@ SOURCES += \
     Controller.cpp \
     Json.cpp \
     Json_Parser.cpp \
-    Logger.cpp \
     main.cpp \
     Mempool.cpp \
     Merkle.cpp \
@@ -215,7 +214,6 @@ HEADERS += \
     CostCache.h \
     Json.h \
     Json_Parser.h \
-    Logger.h \
     Mempool.h \
     Merkle.h \
     Mgr.h \

@@ -21,7 +21,6 @@
 #include "Compat.h"
 #include "Controller.h"
 #include "Json.h"
-#include "Logger.h"
 #include "Servers.h"
 #include "ThreadPool.h"
 #include "Util.h"
@@ -65,8 +64,6 @@ App::App(int argc, char *argv[])
     setApplicationName(APPNAME);
     setApplicationVersion(QString("%1 %2").arg(VERSION).arg(VERSION_EXTRA));
 
-    _logger = std::make_unique<ConsoleLogger>(this);
-
     try {
         parseArgs();
     } catch (const std::exception &e) {
@@ -76,7 +73,7 @@ App::App(int argc, char *argv[])
         std::exit(1);
     }
     if (options->syslogMode) {
-        _logger = std::make_unique<SysLogger>(this);
+        //XXX set console out to 0;
     }
 
     connect(this, &App::aboutToQuit, this, &App::cleanup);

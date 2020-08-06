@@ -18,7 +18,6 @@
 //
 #include "App.h"
 #include "CityHash.h"
-#include "Logger.h"
 #include "Util.h"
 
 #include "bitcoin/hash.h"
@@ -336,16 +335,6 @@ Log::~Log()
             thrdStr = QStringLiteral("<%1> ").arg(thrdName);
         }
 
-        Logger *logger = ourApp ? ourApp->logger() : nullptr;
-
-        QString theString = tsStr + thrdStr + (logger && logger->isaTTY() ? colorize(str, color) : str);
-
-        if (logger) {
-            emit logger->log(level, theString);
-        } else {
-            // just print to console for now..
-            std::cerr << Q2C(theString) << std::endl << std::flush;
-        }
     }
 }
 
@@ -389,7 +378,6 @@ template <> Log & Log::operator<<(const std::string &t) { s << t.c_str(); return
 
 Debug::~Debug()
 {
-    level = Logger::Level::Debug;
     doprt = isEnabled();
     if (!doprt) return;
     if (!colorOverridden) color = Cyan;
@@ -406,7 +394,6 @@ bool Debug::isEnabled() {
 
 Trace::~Trace()
 {
-    level = Logger::Level::Debug;
     doprt = isEnabled();
     if (!doprt) return;
     if (!colorOverridden) color = Green;

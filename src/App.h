@@ -29,7 +29,6 @@
 #include "Options.h"
 
 class Controller;
-class Logger;
 class SimpleHttpServer;
 class ThreadPool;
 
@@ -42,8 +41,6 @@ public:
     ~App() override;
 
     static void miscPreAppFixups();
-
-    Logger *logger() const { return _logger.get(); }
 
     std::shared_ptr<Options> options;
 
@@ -93,7 +90,6 @@ private slots:
 private:
     std::atomic<quint64> globalId = 0;
     const std::unique_ptr<ThreadPool> tpool;
-    std::unique_ptr<Logger> _logger;
     std::unique_ptr<Controller> controller;
     QList<std::shared_ptr<SimpleHttpServer> > httpServers;
     std::atomic_bool quitting = false;
