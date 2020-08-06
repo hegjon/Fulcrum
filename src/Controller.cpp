@@ -1117,7 +1117,7 @@ void Controller::process_PrintProgress(unsigned height, size_t nTx, size_t nIns,
     sm->nProgIOs += nIns + nOuts;
     sm->nProgSH += nSH;
     if (UNLIKELY(height && !(height % sm->progressIntervalBlocks))) {
-        static const auto formatRate = [](double rate, const QString & thing, bool addComma = true) {
+        static const auto formatRate = [](double rate, const QString & thing) {
             QString unit = QStringLiteral("sec");
             if (rate < 1.0 && rate > 0.0) {
                 rate *= 60.0;
@@ -1128,7 +1128,8 @@ void Controller::process_PrintProgress(unsigned height, size_t nTx, size_t nIns,
                 unit = QStringLiteral("hour");
             }
             static const auto format = [](double rate) { return QString::number(rate, 'f', rate < 10. ? (rate < 1.0 ? 3 : 2) : 1); };
-            return rate > 0.0 ? QStringLiteral("%1%2 %3/%4").arg(addComma ? ", " : "").arg(format(rate)).arg(thing).arg(unit) : QString();
+            static const auto formatted = rate > 0.0 ? QStringLiteral("%1 %2/%3").arg(format(rate)).arg(thing).arg(unit) : QString();
+            return qPrintable(formatted);
         };
         const double now = Util::getTimeSecs();
         const double elapsed = std::max(now - sm->lastProgTs, 0.00001); // ensure no division by zero
@@ -1136,15 +1137,13 @@ void Controller::process_PrintProgress(unsigned height, size_t nTx, size_t nIns,
         const double rateBlocks = sm->nProgBlocks / elapsed;
         const double rateTx = sm->nProgTx / elapsed;
         const double rateSH = sm->nProgSH / elapsed;
-        qInfo().nospace().noquote() << "Processed height: " << height << ", " << pctDisplay << formatRate(rateBlocks, QStringLiteral("blocks"))
-              << formatRate(rateTx, QStringLiteral("txs"))  << formatRate(rateSH, QStringLiteral("addrs"));
 
-        qInfo("Processed height: %d, %s %s %s %s",
+        qInfo("Processed height: %d, %s, %s, %s, %s",
               height,
               qPrintable(pctDisplay),
-              qPrintable(formatRate(rateBlocks, QStringLiteral("blocks"))),
-              qPrintable(formatRate(rateTx, QStringLiteral("txs"))),
-              qPrintable(formatRate(rateSH, QStringLiteral("addrs"))));
+              formatRate(rateBlocks, QStringLiteral("blocks")),
+              formatRate(rateTx, QStringLiteral("txs")),
+              formatRate(rateSH, QStringLiteral("addrs")));
 
         // update/reset ts and counters
         sm->lastProgTs = now;
