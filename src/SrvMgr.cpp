@@ -100,7 +100,7 @@ void SrvMgr::startServers()
     _net = BTC::NetFromName(storage->getChain()); // set this now since server instances may need this information
 
     if (options->peerDiscovery) {
-        Log() << "SrvMgr: starting PeerMgr ...";
+        qInfo() << "SrvMgr: starting PeerMgr ...";
         peermgr = std::make_shared<PeerMgr>(this, storage, options);
         peermgr->startup(); // may throw
         connect(this, &SrvMgr::allServersStarted, peermgr.get(), &PeerMgr::on_allServersStarted);
@@ -118,7 +118,7 @@ void SrvMgr::startServers()
     const auto num =   options->interfaces.length() + options->sslInterfaces.length()
                      + options->wsInterfaces.length() + options->wssInterfaces.length()
                      + options->adminInterfaces.length();
-    Log() << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
+    qInfo() << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
     const auto firstSsl = options->interfaces.size(),
                firstWs = options->interfaces.size() + options->sslInterfaces.size(),
                firstWss = options->interfaces.size() + options->sslInterfaces.size() + options->wsInterfaces.size();
@@ -228,7 +228,7 @@ void SrvMgr::clientConnected(IdMixin::Id cid, const QHostAddress &addr)
     const bool banned = isIPBanned(addr, true);
 
     if (banned && !clientWillDieAnyway) {
-        Log() << "Rejecting client " << cid << " from " << addr.toString() << " (banned)";
+        qInfo() << "Rejecting client " << cid << " from " << addr.toString() << " (banned)";
         emit clientIsBanned(cid);
     }
 }
@@ -290,7 +290,7 @@ void SrvMgr::on_banPeersWithSuffix(const QString &hn)
         }
     }
     if (newBan)
-        Log() << "Peers with host names matching *" << suffix << " are now banned";
+        qInfo() << "Peers with host names matching *" << suffix << " are now banned";
     emit kickPeersWithSuffix(suffix); // tell peer mgr to kick peers it has with that name (if any)
 }
 
@@ -305,7 +305,7 @@ void SrvMgr::on_liftPeerSuffixBan(const QString &s)
         wasBanned = bannedPeerSuffixes.remove(suffix);
     }
     if (wasBanned)
-        Log() << "Peers matching suffix *" << suffix << " are no longer banned";
+        qInfo() << "Peers matching suffix *" << suffix << " are no longer banned";
 }
 
 void SrvMgr::on_banIP(const QHostAddress &addr)
@@ -328,7 +328,7 @@ void SrvMgr::on_banIP(const QHostAddress &addr)
     int kicks = addrIdMap.count(addr);
     emit kickByAddress(addr); // we must emit this regardless as the PeerMgr also listens for this, and we have no way of knowing from this class if it's connected to the peer in question or has it in queue, etc.
     if (wasNew || kicks)
-        Log() << addr.toString() << " is now banned"
+        qInfo() << addr.toString() << " is now banned"
               << (kicks ? QString(" (%1 %2 kicked)").arg(kicks).arg(Util::Pluralize("client", kicks)) : QString());
 }
 
@@ -360,7 +360,7 @@ void SrvMgr::on_liftIPBan(const QHostAddress &addr)
         wasBanned = banMap.remove(addr);
     }
     if (wasBanned)
-        Log() << "Address " << addr.toString() << " is no longer banned";
+        qInfo() << "Address " << addr.toString() << " is no longer banned";
 }
 
 auto SrvMgr::stats() const -> Stats
@@ -508,7 +508,7 @@ void SrvMgr::globalSubsLimitReached()
             // lock released at scope end
         }
         if (LIKELY(max > 0)) {
-            Log() << "Global subs limit reached, kicking all clients for IP " << maxIP.toString() << " (subs: " << max << ")";
+            qInfo() << "Global subs limit reached, kicking all clients for IP " << maxIP.toString() << " (subs: " << max << ")";
             emit kickByAddress(maxIP); // kick!
         } else {
             DebugM("Global subs limit reached, but could not find a client to kick (num per-IP-datas: ", tableSize, ")");

@@ -224,7 +224,7 @@ public:
 };
 
 // Now add these macros for symmetry
-#define LogM(...) (Log()(__VA_ARGS__))
+#define LogM(...) (qInfo()(__VA_ARGS__))
 #define WarningM(...) (Warning()(__VA_ARGS__))
 #define ErrorM(...) (Error()(__VA_ARGS__))
 #define FatalM(...) (Fatal()(__VA_ARGS__))

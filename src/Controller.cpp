@@ -90,7 +90,7 @@ void Controller::startup()
             auto now = Util::getTimeSecs();
             if (now-last >= 1.0) { // throttled to not spam log
                 last = now;
-                Log() << "bitcoind is still warming up: " << msg;
+                qInfo() << "bitcoind is still warming up: " << msg;
             }
         });
     }
@@ -480,7 +480,7 @@ void SynchMempoolTask::process()
 }
 
 
-/// takes locks, prints to Log() every 30 seconds if there were changes
+/// takes locks, prints to qInfo() every 30 seconds if there were changes
 void Controller::printMempoolStatusToLog() const
 {
     if (storage) {
@@ -973,7 +973,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 if (task->info.bestBlockhash == tipHash) { // no reorg
                     if (!beSilentIfUpToDate) {
                         storage->updateMerkleCache(unsigned(tip));
-                        Log() << "Block height " << tip << ", up-to-date";
+                        qInfo() << "Block height " << tip << ", up-to-date";
                         emit upToDate();
                         emit newHeader(unsigned(tip), tipHeader);
                     }
@@ -991,7 +991,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                 return;
             } else {
-                Log() << "Block height " << sm->ht << ", downloading new blocks ...";
+                qInfo() << "Block height " << sm->ht << ", downloading new blocks ...";
                 emit synchronizing();
                 sm->state = State::GetBlocks;
             }
@@ -1023,7 +1023,7 @@ void Controller::process(bool beSilentIfUpToDate)
         process_DownloadingBlocks();
     } else if (sm->state == State::FinishedDL) {
         size_t N = sm->endHeight - sm->startheight + 1;
-        Log() << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
+        qInfo() << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
               << " (" << sm->nIns << " " << Util::Pluralize("input", sm->nIns) << ", " << sm->nOuts << " " << Util::Pluralize("output", sm->nOuts)
               << ", " << sm->nSH << Util::Pluralize(" address", sm->nSH) << ")"
               << ", verified ok.";
@@ -1135,7 +1135,7 @@ void Controller::process_PrintProgress(unsigned height, size_t nTx, size_t nIns,
         const double rateBlocks = sm->nProgBlocks / elapsed;
         const double rateTx = sm->nProgTx / elapsed;
         const double rateSH = sm->nProgSH / elapsed;
-        Log() << "Processed height: " << height << ", " << pctDisplay << formatRate(rateBlocks, QStringLiteral("blocks"))
+        qInfo() << "Processed height: " << height << ", " << pctDisplay << formatRate(rateBlocks, QStringLiteral("blocks"))
               << formatRate(rateTx, QStringLiteral("txs"))  << formatRate(rateSH, QStringLiteral("addrs"));
         // update/reset ts and counters
         sm->lastProgTs = now;
@@ -1194,7 +1194,7 @@ bool Controller::process_VerifyAndAddBlock(PreProcessedBlockPtr ppb)
 
     } catch (const HeaderVerificationFailure & e) {
         DebugM("addBlock exception: ", e.what());
-        Log() << "Possible reorg detected at height " << ppb->height << ", rewinding 1 block and trying again ...";
+        qInfo() << "Possible reorg detected at height " << ppb->height << ", rewinding 1 block and trying again ...";
         process_DoUndoAndRetry();
         return false;
     } catch (const std::exception & e) {
@@ -1517,18 +1517,18 @@ void Controller::dumpScriptHashes(const QString &fileName) const
     QFile outFile(fileName);
     if (!outFile.open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Truncate))
         throw BadArgs(QString("Dump: Output file \"%1\" could not be opened for writing").arg(fileName));
-    Log() << "Dump: " << "writing all known script hashes from db to \"" << fileName << "\" (this may take some time) ...";
+    qInfo() << "Dump: " << "writing all known script hashes from db to \"" << fileName << "\" (this may take some time) ...";
     const auto t0 = Util::getTimeSecs();
     const auto count = storage->dumpAllScriptHashes(&outFile, 2, 0, [](size_t ctr){
         const QString text(QString("Dump: wrote %1 scripthashes so far ...").arg(ctr));
         if (ctr && !(ctr % 1000000))
-            Log() << text;
+            qInfo() << text;
         else
             DebugM(text);
     });
     outFile.flush();
     outFile.close();
-    Log() << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
+    qInfo() << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
           << " in " << QString::number(Util::getTimeSecs() - t0, 'f', 1) << " seconds"
           <<" (" << QString::number(outFile.size()/1e6, 'f', 3) << " MiB)";
     emit dumpScriptHashesComplete();

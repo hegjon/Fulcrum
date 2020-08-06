@@ -45,7 +45,7 @@ BitcoinDMgr::BitcoinDMgr(const QString &hostName, quint16 port, const QString &u
 BitcoinDMgr::~BitcoinDMgr() {  cleanup(); }
 
 void BitcoinDMgr::startup() {
-    Log() << objectName() << ": starting " << N_CLIENTS << " " << Util::Pluralize("bitcoin rpc client", N_CLIENTS) << " ...";
+    qInfo() << objectName() << ": starting " << N_CLIENTS << " " << Util::Pluralize("bitcoin rpc client", N_CLIENTS) << " ...";
 
     // As soon as a good BitcoinD is up, try and grab the network info (version, subversion, etc).  This must
     // happen early because the values in this info object determine which workarounds we may or may not apply to
@@ -101,7 +101,7 @@ void BitcoinDMgr::startup() {
 
     start();
 
-    Log() << objectName() << ": started ok";
+    qInfo() << objectName() << ": started ok";
 }
 
 void BitcoinDMgr::on_started()
@@ -589,7 +589,7 @@ void BitcoinD::on_started()
             });
         };
         conns += connect(this, &BitcoinD::lostConnection, this, [SetTimer]{
-            Log() << "Lost connection to bitcoind, will retry every 5 seconds ...";
+            qInfo() << "Lost connection to bitcoind, will retry every 5 seconds ...";
             SetTimer();
         });
         conns += connect(this, &BitcoinD::authFailure, this, [SetTimer, this] {

@@ -86,12 +86,12 @@ void AbstractTcpServer::tryStart(ulong timeout_ms)
 {
     if (!_thread.isRunning()) {
         ThreadObjectMixin::start(); // call super
-        Log() << "Starting listener service for " << prettyName() << " ...";
+        qInfo() << "Starting listener service for " << prettyName() << " ...";
         if (auto result = chan.get<QString>(timeout_ms); result != "ok") {
             result = result.isEmpty() ? "Startup timed out!" : result;
             throw TcpServerError(result);
         }
-        Log() << "Service started, listening for connections on " << hostPort();
+        qInfo() << "Service started, listening for connections on " << hostPort();
     } else {
         throw TcpServerError(prettyName() + " already started");
     }
@@ -444,7 +444,7 @@ bool ServerBase::attachPerIPDataAndCheckLimits(QTcpSocket *socket)
         // check limit immediately
         if (maxPerIP > 0 && !holder->perIPData->isWhitelisted() && holder->perIPData->nClients > maxPerIP) {
             // reject connection here
-            Log() << "Connection limit (" << maxPerIP << ") exceeded for " << addr.toString() << ", connection refused";
+            qInfo() << "Connection limit (" << maxPerIP << ") exceeded for " << addr.toString() << ", connection refused";
             ok = false;
         }
     } else {
@@ -1517,7 +1517,7 @@ void Server::impl_sh_unsubscribe(Client *c, const RPC::Message &m, const HashX &
 void Server::LogFilter::Broadcast::operator()(bool isSuccess, const QByteArray &logLine, const QByteArray &key)
 {
     // The below scheme checks the appropriate bloom filter based on `isSuccess` for key (if key is not empty)
-    // and if it's in the filter, it logs to Debug(), otherwise it logs to Log()
+    // and if it's in the filter, it logs to Debug(), otherwise it logs to qInfo()
     auto [doLog, isDebug] = [&]() -> std::pair<bool, bool> {
         std::unique_lock g(lock);
         auto & which = isSuccess ? success : fail;
@@ -1533,7 +1533,7 @@ void Server::LogFilter::Broadcast::operator()(bool isSuccess, const QByteArray &
     }();
     if (doLog) {
         if (!isDebug)
-            Log() << QString(logLine);
+            qInfo() << QString(logLine);
         else
             Debug() << QString(logLine);
     }
@@ -1616,7 +1616,7 @@ void Server::rpc_blockchain_transaction_broadcast(Client *c, const RPC::Message 
                 // spam from appearing in the log.  We basically observed that the Mist Miners keep spamming the same
                 // tx's over and over again.  So we simply take the first 1024 bytes of the tx, hash that and use a
                 // rolling bloom filter to keep track of tx's we've seen (bloom filter size: 16384).  In this way, we
-                // don't produce duplicate log messages in the default Log() for the same tx broadcast failure. (But we
+                // don't produce duplicate log messages in the default qInfo() for the same tx broadcast failure. (But we
                 // do still produce Debug() log messages, if debug logging is enabled).
                 QByteArray logLine;
                 QTextStream{&logLine, QIODevice::WriteOnly}
@@ -2313,7 +2313,7 @@ void AdminServer::rpc_shutdown(Client *c, const RPC::Message &m)
     auto app = qApp;
     // send the signal after 100ms to the QCoreApplication instance to quit.  this allows time for the result to be sent to the client, hopefully.
     Util::AsyncOnObject(app, [app] {
-        Log() << "Received 'stop' command from admin RPC, shutting down ...";
+        qInfo() << "Received 'stop' command from admin RPC, shutting down ...";
         app->quit();
     }, 100);
     emit c->sendResult(m.id, true);
@@ -2399,7 +2399,7 @@ Client::Client(const RPC::MethodMap & mm, IdMixin::Id id_in, QTcpSocket *sock, i
     errorPolicy = ErrorPolicySendErrorMessage;
     setObjectName(QStringLiteral("Client.%1").arg(id_in));
     on_connected();
-    Log() << "New " << prettyName(false, false) << ", " << N << Util::Pluralize(QStringLiteral(" client"), N) << " total";
+    qInfo() << "New " << prettyName(false, false) << ", " << N << Util::Pluralize(QStringLiteral(" client"), N) << " total";
 }
 
 Client::~Client()

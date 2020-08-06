@@ -541,7 +541,7 @@ Storage::~Storage() { Debug() << __func__; cleanup(); }
 
 void Storage::startup()
 {
-    Log() << "Loading database ...";
+    qInfo() << "Loading database ...";
 
     if (UNLIKELY(!subsmgr || !options))
         throw BadArgs("Storage instance constructed with nullptr for `options` and/or `subsmgr` -- FIXME!");
@@ -611,7 +611,7 @@ void Storage::startup()
             p->meta = m_db;
             Debug () << "Read meta from db ok";
             if (!p->meta.chain.isEmpty())
-                Log() << "Chain: " << p->meta.chain;
+                qInfo() << "Chain: " << p->meta.chain;
         } else {
             // ok, did not exist .. write a new one to db
             saveMeta_impl();
@@ -734,7 +734,7 @@ void Storage::setChain(const QString &chain)
         LockGuard l(p->metaLock);
         p->meta.chain = chain;
     }
-    Log() << "Chain: " << chain;
+    qInfo() << "Chain: " << chain;
     save(SaveItem::Meta);
 }
 
@@ -878,7 +878,7 @@ void Storage::loadCheckHeadersInDB()
     assert(p->blockHeaderSize() > 0);
     p->headersFile = std::make_unique<RecordFile>(options->datadir + QDir::separator() + "headers", size_t(p->blockHeaderSize()), 0x00f026a1); // may throw
 
-    Log() << "Verifying headers ...";
+    qInfo() << "Verifying headers ...";
     uint32_t num = unsigned(p->headersFile->numRecords());
     std::vector<QByteArray> hVec;
     const auto t0 = Util::getTimeNS();
@@ -931,7 +931,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
     if (const int height = latestTip().first; height >= 0)
     {
         p->blkInfos.reserve(std::min(size_t(height+1), MAX_HEADERS));
-        Log() << "Checking tx counts ...";
+        qInfo() << "Checking tx counts ...";
         for (int i = 0; i <= height; ++i) {
             static const QString errMsg("Failed to read a blkInfo from db, the database may be corrupted");
             const auto blkInfo = GenericDBGetFailIfMissing<BlkInfo>(p->db.blkinfo.get(), uint32_t(i), errMsg, false, p->db.defReadOpts);
@@ -943,7 +943,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
             p->blkInfos.emplace_back(blkInfo);
             p->blkInfosByTxNum[blkInfo.txNum0] = unsigned(p->blkInfos.size()-1);
         }
-        Log() << ct << " total transactions";
+        qInfo() << ct << " total transactions";
     }
     if (ct != p->txNumNext) {
         throw DatabaseFormatError(QString("BlkInfo txNums do not add up to expected value of %1 != %2."
@@ -958,7 +958,7 @@ void Storage::loadCheckUTXOsInDB()
     FatalAssert(!!p->db.utxoset, __func__, ": Utxo set db is not open");
 
     if (options->doSlowDbChecks) {
-        Log() << "CheckDB: Verifying utxo set (this may take some time) ...";
+        qInfo() << "CheckDB: Verifying utxo set (this may take some time) ...";
 
         const auto t0 = Util::getTimeNS();
         {
@@ -1029,7 +1029,7 @@ void Storage::loadCheckUTXOsInDB()
     }
 
     if (const auto ct = utxoSetSize(); ct)
-        Log() << "UTXO set: "  << ct << Util::Pluralize(" utxo", ct)
+        qInfo() << "UTXO set: "  << ct << Util::Pluralize(" utxo", ct)
               << ", " << QString::number(utxoSetSizeMiB(), 'f', 3) << " MiB";
 }
 
@@ -1641,7 +1641,7 @@ BlockHeight Storage::undoLatestBlock(bool notifySubs)
 
         const size_t nTx = undo.blkInfo.nTx, nSH = undo.scriptHashes.size();
         const auto elapsedms = (Util::getTimeNS() - t0) / 1e6;
-        Log() << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
+        qInfo() << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
               << nTx << " " << Util::Pluralize("transaction", nTx)
               << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
               << ", in " << QString::number(elapsedms, 'f', 2) << " msec, new height now: " << prevHeight;

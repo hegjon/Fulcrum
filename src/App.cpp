@@ -71,7 +71,7 @@ App::App(int argc, char *argv[])
     } catch (const std::exception &e) {
         options->syslogMode = true; // suppress timestamp stuff
         Error() << e.what();
-        Log() << "Use the -h option to show help.";
+        qInfo() << "Use the -h option to show help.";
         std::exit(1);
     }
     if (options->syslogMode) {
@@ -87,7 +87,7 @@ App::App(int argc, char *argv[])
 App::~App()
 {
     Debug() << "App d'tor";
-    Log() << "Shudown complete";
+    qInfo() << "Shudown complete";
     _globalInstance = nullptr;
     /// child objects will be auto-deleted, however most are already gone in cleanup() at this point.
 }
@@ -101,7 +101,7 @@ void App::startup()
         } return ret;
     };
     // print banner to log now
-    Log() << getBannerWithTimeStamp() << " - starting up ...";
+    qInfo() << getBannerWithTimeStamp() << " - starting up ...";
 
     if ( ! Util::isClockSteady() ) {
         Debug() << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
@@ -114,7 +114,7 @@ void App::startup()
         auto gotsig = [](int sig) {
             static int ct = 0;
             if (!ct++) {
-                Log() << "Got signal: " << sig << ", exiting ...";
+                qInfo() << "Got signal: " << sig << ", exiting ...";
                 app()->exit(sig);
             } else if (ct < 5) {
                 std::printf("Duplicate signal %d already being handled, ignoring\n", sig);
@@ -135,7 +135,7 @@ void App::startup()
 
         if (!options->statsInterfaces.isEmpty()) {
             const auto num = options->statsInterfaces.count();
-            Log() << "Stats HTTP: starting " << num << " " << Util::Pluralize("server", num) << " ...";
+            qInfo() << "Stats HTTP: starting " << num << " " << Util::Pluralize("server", num) << " ...";
             // start 'stats' http servers, if any
             for (const auto & i : options->statsInterfaces)
                 start_httpServer(i); // may throw
@@ -165,7 +165,7 @@ void App::cleanup_WaitForThreadPoolWorkers()
     QElapsedTimer t0; t0.start();
     const int nJobs = tpool->extantJobs();
     if (nJobs)
-        Log() << "Waiting for extant thread pool workers ...";
+        qInfo() << "Waiting for extant thread pool workers ...";
     const bool res = tpool->shutdownWaitForJobs(timeout);
     if (!res) {
         Warning("After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
@@ -372,7 +372,7 @@ void App::parseArgs()
                 auto it = registeredTests.find(tname);
                 if (it == registeredTests.end())
                     throw BadArgs(QString("No such test: %1").arg(tname));
-                Log() << "Running test: " << it->first << " ...";
+                qInfo() << "Running test: " << it->first << " ...";
                 it->second();
             }
         }
@@ -383,7 +383,7 @@ void App::parseArgs()
                 auto it = registeredBenches.find(tname);
                 if (it == registeredBenches.end())
                     throw BadArgs(QString("No such bench: %1").arg(tname));
-                Log() << "Running benchmark: " << it->first << " ...";
+                qInfo() << "Running benchmark: " << it->first << " ...";
                 it->second();
             }
         }
@@ -416,7 +416,7 @@ void App::parseArgs()
     // first warn user about dupes
     for (const auto & opt : allOptions) {
         static const auto DupeMsg = [](const QString &arg) {
-            Log() << "'" << arg << "' specified both via the CLI and the configuration file. The CLI arg will take precedence.";
+            qInfo() << "'" << arg << "' specified both via the CLI and the configuration file. The CLI arg will take precedence.";
         };
         for (const auto & name : opt.names()) {
             if (name.length() == 1) continue;
@@ -949,7 +949,7 @@ void App::parseArgs()
     // --tls-disallow-deprecated from CLI and/or tls-disallow-deprecated from conf
     if (parser.isSet("tls-disallow-deprecated") || conf.boolValue("tls-disallow-deprecated")) {
         options->tlsDisallowDeprecated = true;
-        Util::AsyncOnObject(this, []{ Log() << "TLS restricted to non-deprecated versions (version 1.2 or above)"; });
+        Util::AsyncOnObject(this, []{ qInfo() << "TLS restricted to non-deprecated versions (version 1.2 or above)"; });
     }
 
     // parse --dump-*
@@ -1021,7 +1021,7 @@ Options::CertInfo App::makeCertInfo(const QObject *context, const QString &cert,
 #else
             name = ret.cert.subjectInfo(QSslCertificate::Organization).join(", ");
 #endif
-            Log() << "Loaded SSL certificate: " << name << " "
+            qInfo() << "Loaded SSL certificate: " << name << " "
                   << ret.cert.subjectInfo(QSslCertificate::SubjectInfo::EmailAddress).join(",")
                   //<< " self-signed: " << (options->sslCert.isSelfSigned() ? "YES" : "NO")
                   << " expires: " << (ret.cert.expiryDate().toString("ddd MMMM d yyyy hh:mm:ss"));
@@ -1060,7 +1060,7 @@ Options::CertInfo App::makeCertInfo(const QObject *context, const QString &cert,
         const auto algo = ret.key.algorithm();
         const auto algoName = KeyAlgoStr(algo);
         const auto keyTypeName = (ret.key.type() == QSsl::KeyType::PrivateKey ? "private" : "public");
-        Log() << "Loaded key type: " << keyTypeName << " algorithm: " << algoName;
+        qInfo() << "Loaded key type: " << keyTypeName << " algorithm: " << algoName;
         if (algo != QSsl::KeyAlgorithm::Rsa)
             Warning() << "Warning: " << algoName << " key support is experimental."
                       << " Please consider switching your SSL certificate and key to use 2048-bit RSA.";
@@ -1138,7 +1138,11 @@ void App::customMessageHandler(QtMsgType type, const QMessageLogContext &context
 
 void App::miscPreAppFixups()
 {
-    qInstallMessageHandler(customMessageHandler);
+    if(qEnvironmentVariableIsSet("JOURNAL_STREAM")) {
+        qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
+    } else {
+        qInstallMessageHandler(customMessageHandler);
+    }
 #ifdef Q_OS_DARWIN
     // workaround for annoying macos keychain access prompt. see: https://doc.qt.io/qt-5/qsslsocket.html#setLocalCertificate
     setenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1", 1);

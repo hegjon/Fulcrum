@@ -357,7 +357,7 @@ void PeerMgr::retryFailedPeers(bool useBadMap)
                 // optimization to not waste memory on defunct peers and is not a requirement for correctness.
                 // Keeping the seedPeers around indefinitely even if 'failed' does very little harm since the seedPeer
                 // list is bounded and small, and it does good (in the case of an extended connectivity outage).
-                Log() << "Purging failed peer " << pi.hostName << " because it has been unavailable for " <<  failureHoursString(pi);
+                qInfo() << "Purging failed peer " << pi.hostName << " because it has been unavailable for " <<  failureHoursString(pi);
                 continue;
             }
             auto it = queued.insert(pi.hostName, pi);
@@ -443,7 +443,7 @@ PeerClient * PeerMgr::newClient(const PeerInfo &pi)
         PeerClient *client = dynamic_cast<PeerClient *>(c);
         DebugM((client ? client->info.hostName : QString{"???"}), ": Socket disconnect");
         if (client && client->verified) {
-            Log() << "Peer " << client->info.hostName << " connection lost";
+            qInfo() << "Peer " << client->info.hostName << " connection lost";
         }
         c->deleteLater();
     });
@@ -519,7 +519,7 @@ void PeerMgr::on_kickByAddress(const QHostAddress &addr)
         }
     }
     if (const auto uniqs = hostnames.size(); uniqs)
-        Log() << uniqs << Util::Pluralize(" entry", uniqs) << " matching IP " << addr.toString() << " removed from the PeerMgr";
+        qInfo() << uniqs << Util::Pluralize(" entry", uniqs) << " matching IP " << addr.toString() << " removed from the PeerMgr";
 }
 
 void PeerMgr::on_kickBySuffix(const QString &suffix)
@@ -552,7 +552,7 @@ void PeerMgr::on_kickBySuffix(const QString &suffix)
         }
     }
     if (const auto uniqs = hostnames.size(); uniqs)
-        Log() << "Removed " << uniqs << Util::Pluralize(" entry", uniqs) << " matching *" << suffix;
+        qInfo() << "Removed " << uniqs << Util::Pluralize(" entry", uniqs) << " matching *" << suffix;
 }
 
 auto PeerMgr::stats() const -> Stats
@@ -891,7 +891,7 @@ void PeerClient::handleReply(IdMixin::Id, const RPC::Message & reply)
             verified = true;
             info.clearFailureTs(); // make sure all failure timestamps are cleared
             mgr->needUpdateSoon();
-            Log() << "Verified peer " << info.hostName << " (" << info.addr.toString() << ")";
+            qInfo() << "Verified peer " << info.hostName << " (" << info.addr.toString() << ")";
         }
     } else
         Bad();
