@@ -67,13 +67,13 @@ App::App(int argc, char *argv[])
     try {
         parseArgs();
     } catch (const std::exception &e) {
-        options->syslogMode = true; // suppress timestamp stuff
+        qputenv("QT_MESSAGE_PATTERN", "%{message}"); // suppress timestamp stuff
         qCritical("%s", e.what());
         qInfo() << "Use the -h option to show help.";
         std::exit(1);
     }
     if (options->syslogMode) {
-        //XXX set console out to 0;
+        qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     }
 
     connect(this, &App::aboutToQuit, this, &App::cleanup);
