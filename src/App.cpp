@@ -1119,7 +1119,7 @@ void App::miscPreAppFixups()
     if(qEnvironmentVariableIsSet("JOURNAL_STREAM")) {
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     } else {
-        qputenv("QT_MESSAGE_PATTERN", "[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{message}");
+        qputenv("QT_MESSAGE_PATTERN", "[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{if-category}[%{category}] %{endif}%{message}");
         //qInstallMessageHandler(customMessageHandler);
     }
 #ifdef Q_OS_DARWIN

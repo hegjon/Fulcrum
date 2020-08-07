@@ -101,6 +101,8 @@ protected slots:
     void on_putBlock(CtlTask *, PreProcessedBlockPtr);
 
 private:
+    const QLoggingCategory category = QLoggingCategory("fulcrum.controller");
+
     friend class CtlTask;
     /// \brief newTask - Create a specific task using this template factory function. The task will be auto-started the
     ///        next time this thread enters the event loop, via a QTimer::singleShot(0,...).
