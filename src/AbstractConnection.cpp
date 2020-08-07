@@ -121,7 +121,12 @@ void AbstractConnection::setMaxBuffer(qint64 maxBytes)
     MAX_BUFFER = Options::clampMaxBufferSetting(int(maxBytes));
     if (socket && thread() == QThread::currentThread()) {
         socket->setReadBufferSize(MAX_BUFFER);
-        DebugM(prettyName(), " set max_buffer to ", MAX_BUFFER, ", socket says: ", socket->readBufferSize());
+        qCDebug(category).noquote()
+            << prettyName()
+            << "set max_buffer to"
+            << MAX_BUFFER
+            << ", socket says:"
+            << socket->readBufferSize();
     }
 }
 
