@@ -173,7 +173,6 @@ public:
 
 
 // Now add these macros for symmetry
-#define LogM(...) (qInfo()(__VA_ARGS__))
 #define WarningM(...) (qWarning()(__VA_ARGS__))
 #define ErrorM(...) (qCritical()(__VA_ARGS__))
 
