@@ -92,14 +92,11 @@ App::~App()
 
 void App::startup()
 {
-    static const auto getBannerWithTimeStamp = [] {
-        QString ret; {
-            QTextStream ts(&ret, QIODevice::WriteOnly|QIODevice::Truncate);
-            ts << applicationName() << " " << applicationVersion() << " - " << QDateTime::currentDateTime().toString("ddd MMM d, yyyy hh:mm:ss.zzz t");
-        } return ret;
-    };
-    // print banner to log now
-    qInfo() << getBannerWithTimeStamp() << " - starting up ...";
+    qInfo().noquote()
+            << applicationName()
+            << applicationVersion()
+            << "-" << QDateTime::currentDateTime().toString("ddd MMM d, yyyy hh:mm:ss.zzz t")
+            << "- starting up ...";
 
     if ( ! Util::isClockSteady() ) {
         qDebug() << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
