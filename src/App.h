@@ -119,6 +119,8 @@ private:
     /// Call this at app init and/or after the App object is initialized to undo the locale damage that Qt does
     /// for the C library for number formatting. Previous to this, this could break the JSON serializer.
     static void setCLocale();
+
+    QLoggingCategory category = QLoggingCategory("fulcrum.app");
 };
 
 inline App *app() { return App::globalInstance(); }

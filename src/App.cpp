@@ -92,16 +92,16 @@ App::~App()
 
 void App::startup()
 {
-    qInfo().noquote()
+    qCInfo(category).noquote()
             << applicationName()
             << applicationVersion()
             << "-" << QDateTime::currentDateTime().toString("ddd MMM d, yyyy hh:mm:ss.zzz t")
             << "- starting up ...";
 
     if ( ! Util::isClockSteady() ) {
-        qDebug() << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
+        qCDebug(category) << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
     } else {
-        qDebug() << "High resolution clock: isSteady = true";
+        qCDebug(category) << "High resolution clock: isSteady = true";
     }
     try {
         BTC::CheckBitcoinEndiannessAndOtherSanityChecks();
@@ -143,15 +143,15 @@ void App::startup()
 
 void App::cleanup()
 {
-    qDebug() << __PRETTY_FUNCTION__ ;
+    qCDebug(category) << __PRETTY_FUNCTION__ ;
     quitting = true;
     cleanup_WaitForThreadPoolWorkers();
     if (!httpServers.isEmpty()) {
-        qInfo("Stopping Stats HTTP Servers ...");
+        qCInfo(category) << "Stopping Stats HTTP Servers ...";
         for (auto h : httpServers) { h->stop(); }
         httpServers.clear(); // deletes shared pointers
     }
-    if (controller) { qInfo("Stopping Controller ... "); controller->cleanup(); controller.reset(); }
+    if (controller) { qCInfo(category, "Stopping Controller ..."); controller->cleanup(); controller.reset(); }
 }
 
 void App::cleanup_WaitForThreadPoolWorkers()
@@ -160,14 +160,14 @@ void App::cleanup_WaitForThreadPoolWorkers()
     QElapsedTimer t0; t0.start();
     const int nJobs = tpool->extantJobs();
     if (nJobs)
-        qInfo() << "Waiting for extant thread pool workers ...";
+        qCInfo(category) << "Waiting for extant thread pool workers ...";
     const bool res = tpool->shutdownWaitForJobs(timeout);
     if (!res) {
-        qWarning("After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
+        qCWarning(category, "After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
                 qRound(double(t0.elapsed())/1e3), nJobs, Util::Pluralize("worker", nJobs).toUtf8().constData(),
                 qAbs(nJobs) == 1 ? "is" : "are");
     } else if (nJobs) {
-        qDebug("Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
+        qCDebug(category, "Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
               Util::Pluralize("worker", nJobs).toUtf8().constData(), t0.elapsed()/1e3);
     }
 }
@@ -367,7 +367,7 @@ void App::parseArgs()
                 auto it = registeredTests.find(tname);
                 if (it == registeredTests.end())
                     throw BadArgs(QString("No such test: %1").arg(tname));
-                qInfo() << "Running test: " << it->first << " ...";
+                qCInfo(category) << "Running test: " << it->first << " ...";
                 it->second();
             }
         }
@@ -378,7 +378,7 @@ void App::parseArgs()
                 auto it = registeredBenches.find(tname);
                 if (it == registeredBenches.end())
                     throw BadArgs(QString("No such bench: %1").arg(tname));
-                qInfo() << "Running benchmark: " << it->first << " ...";
+                qCInfo(category) << "Running benchmark: " << it->first << " ...";
                 it->second();
             }
         }
