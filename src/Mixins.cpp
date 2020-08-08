@@ -42,7 +42,7 @@ ThreadObjectMixin::~ThreadObjectMixin()
 
 bool ThreadObjectMixin::isLifecyclePrint() const
 {
-    if (threadObjectDebugLifecycle)
+    if (trace().isDebugEnabled())
         return true;
     App *a = app();
     return a && a->isQuitting();

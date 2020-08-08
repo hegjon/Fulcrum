@@ -921,7 +921,6 @@ void Controller::process(bool beSilentIfUpToDate)
     using State = StateMachine::State;
     if (sm->state == State::Begin) {
         auto task = newTask<GetChainInfoTask>(true, this);
-        task->threadObjectDebugLifecycle = trace().isDebugEnabled(); // suppress debug prints here unless we are in trace mode
         sm->mostRecentGetChainInfoTask = task; // reentrancy defense mechanism for ignoring all but the most recent getchaininfo reply from bitcoind
         sm->waitingTs = Util::getTimeSecs();
         sm->state = State::WaitingForChainInfo; // more reentrancy prevention paranoia -- in case we get a spurious call to process() in the future
@@ -1065,7 +1064,6 @@ void Controller::process(bool beSilentIfUpToDate)
     } else if (sm->state == State::SynchMempool) {
         // ...
         auto task = newTask<SynchMempoolTask>(true, this, storage, masterNotifySubsFlag);
-        task->threadObjectDebugLifecycle = trace().isDebugEnabled(); // suppress verbose lifecycle prints unless trace mode
         connect(task, &CtlTask::success, this, [this, task]{
             if (UNLIKELY(!sm || isTaskDeleted(task) || sm->state != State::SynchingMempool))
                 // task was stopped from underneath us and/or this response is stale.. so return and ignore

@@ -58,10 +58,6 @@ public:
     ThreadObjectMixin();
     virtual ~ThreadObjectMixin();
 
-    /// If true (default), and if in qDebug() mode, object lifecycle info (thread start, object d'tor, etc) will be
-    /// printed to log via qDebug()
-    bool threadObjectDebugLifecycle = true;
-
 protected:
     QThread _thread, *origThread = nullptr;
     Util::VariantChannel chan;
