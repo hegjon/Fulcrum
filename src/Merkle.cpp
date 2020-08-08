@@ -214,7 +214,7 @@ namespace Merkle {
         depthHigher = Merkle::treeDepth(length) / 2;
         level = getLevel(hashes);
         initialized = true;
-        DebugM("Merkle cache initialized to length ", length);
+        qCDebug(category) << "Merkle cache initialized to length" << length;
     }
 
     HashVec Cache::getLevel(const HashVec &hashes) const {
@@ -237,7 +237,7 @@ namespace Merkle {
         level.reserve(level.size() + vec.size());
         level.insert(level.end(), vec.begin(), vec.end());
         length = l;
-        DebugM("Merkle cache extended to length ", length);
+        qCDebug(category) << "Merkle cache extended to length" << length;
     }
 
     HashVec Cache::levelFor(unsigned l) const
@@ -308,7 +308,7 @@ namespace Merkle {
             qWarning() << "limit > levelSize in merkle cache truncate. FIXME!";
         }
         level.erase(level.begin()+limit, level.end());
-        DebugM("Merkle cache truncated to length ", length);
+        qCDebug(category) << "Merkle cache truncated to length" << length;
     }
 
 

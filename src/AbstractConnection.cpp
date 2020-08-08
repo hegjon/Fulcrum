@@ -220,7 +220,7 @@ void AbstractConnection::on_connected()
     connectedConns.push_back(connect(socket, &QTcpSocket::bytesWritten, this, &AbstractConnection::on_bytesWritten));
     connectedConns.push_back(
         connect(socket, &QAbstractSocket::disconnected, this, [this]{
-            DebugM(prettyName(), " socket disconnected");
+            qCDebug(category) << prettyName() << "socket disconnected";
             for (const auto & connection : connectedConns) {
                 QObject::disconnect(connection);
             }
@@ -250,7 +250,7 @@ void AbstractConnection::on_disconnected()
 
 void AbstractConnection::on_socketState(QAbstractSocket::SocketState s)
 {
-    DebugM(prettyName(), " socket state: ",  int(s));
+    qCDebug(category) << prettyName() << "socket state:" << int(s);
     switch (s) {
     case QAbstractSocket::ConnectedState:
         status = Connected;
@@ -279,7 +279,6 @@ void AbstractConnection::on_bytesWritten(qint64 nBytes)
 void AbstractConnection::do_ping()
 {
     qCDebug(category) << __func__ << prettyName() << "stub ...";
-    DebugM(__func__, " ", prettyName(), " stub ...");
 }
 
 void AbstractConnection::on_error(QAbstractSocket::SocketError err)
