@@ -110,7 +110,6 @@ protected:
     qint64 writeBackLog = 0; ///< if this grows beyond a certain size, we should kill the connection
     QString lastSocketError; ///< the last socket error seen.
     QList<QMetaObject::Connection> connectedConns; /// signal/slot connections for the connected state. this gets populated when the socket connects in on_connected. signal connections will be disconnected on socket disconnect.
-    const QLoggingCategory category = QLoggingCategory("fulcrum.connection");
 
     virtual QString prettyName(bool dontTouchSocket=false, bool showId=true) const; ///< called only from our thread otherwise it may crash because it touches 'socket'
 

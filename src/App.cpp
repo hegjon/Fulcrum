@@ -75,6 +75,13 @@ App::App(int argc, char *argv[])
     if (options->syslogMode) {
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     }
+    if(options->verboseDebug) {
+        QLoggingCategory::setFilterRules("fulcrum.debug=true");
+    }
+    if(options->verboseTrace) {
+        QLoggingCategory::setFilterRules("fulcrum.debug=true\n"
+                                         "fulcrum.verbose.debug=true");
+    }
 
     connect(this, &App::aboutToQuit, this, &App::cleanup);
     connect(this, &App::setVerboseDebug, this, &App::on_setVerboseDebug);
@@ -84,8 +91,8 @@ App::App(int argc, char *argv[])
 
 App::~App()
 {
-    qDebug() << "App d'tor";
-    qInfo() << "Shudown complete";
+    qCDebug(category) << "App d'tor";
+    qCInfo(category) << "Shudown complete";
     _globalInstance = nullptr;
     /// child objects will be auto-deleted, however most are already gone in cleanup() at this point.
 }
@@ -130,7 +137,7 @@ void App::startup()
 
         if (!options->statsInterfaces.isEmpty()) {
             const auto num = options->statsInterfaces.count();
-            qInfo() << "Stats HTTP: starting " << num << " " << Util::Pluralize("server", num) << " ...";
+            qCInfo(category).noquote() << "Stats HTTP: starting" << num << Util::Pluralize("server", num) << "...";
             // start 'stats' http servers, if any
             for (const auto & i : options->statsInterfaces)
                 start_httpServer(i); // may throw

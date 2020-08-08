@@ -135,11 +135,11 @@ void AbstractConnection::do_disconnect(bool graceful)
     status = status == Bad ? Bad : NotConnected;  // try and keep Bad status around so PeerMgr can decide when to reconnect based on it? TODO: remove this concept from the codebase
     if (socket) {
         if (!graceful) {
-            DebugM(__func__, " (abort) ", id);
+            qCDebug(category).noquote() << __func__ << "(abort)" << id;
             socket->abort();  // this will set status too because state change, but we set it first above to be paranoid
         } else {
             socket->disconnectFromHost();
-            DebugM(__func__, " (graceful) ", id);
+            qCDebug(category) << __func__ << "(graceful)" << id;
         }
     }
 }
@@ -211,7 +211,7 @@ void AbstractConnection::slot_on_readyRead() { on_readyRead(); }
 void AbstractConnection::on_connected()
 {
     // runs in our thread's context
-    DebugM(__func__, " ", id);
+    qCDebug(category) << __func__ << id;
     connectedTS = Util::getTime();
     setSockOpts(socket); // ensure nagling disabled
     socket->setReadBufferSize(MAX_BUFFER); // ensure memory exhaustion from peer can't happen in case we're too busy to read.
@@ -269,21 +269,22 @@ void AbstractConnection::on_socketState(QAbstractSocket::SocketState s)
 
 void AbstractConnection::on_bytesWritten(qint64 nBytes)
 {
-    TraceM(__func__);
+    qCDebug(trace) << __func__;
     writeBackLog -= nBytes;
     if (writeBackLog > 0 && status == Connected && socket) {
-        DebugM(prettyName(), " writeBackLog size: ", writeBackLog, " (wrote just now: ", nBytes, ")");
+        qCDebug(category) << prettyName() << "writeBackLog size:" << writeBackLog << " (wrote just now: " << nBytes << ")";
     }
 }
 
 void AbstractConnection::do_ping()
 {
+    qCDebug(category) << __func__ << prettyName() << "stub ...";
     DebugM(__func__, " ", prettyName(), " stub ...");
 }
 
 void AbstractConnection::on_error(QAbstractSocket::SocketError err)
 {
-    qWarning() << prettyName() << ": error " << err << " (" << (lastSocketError = (socket ? socket->errorString() : "(null)")) << ")";
+    qCWarning(category) << prettyName() << ": error" << err << "(" << (lastSocketError = (socket ? socket->errorString() : "(null)")) << ")";
     ++nSocketErrors;
     do_disconnect();
 }
