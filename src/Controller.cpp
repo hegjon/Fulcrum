@@ -245,7 +245,7 @@ void GetChainInfoTask::process()
             info.pruned = map.value("pruned").toBool(); // error ok
             info.warnings = map.value("warnings").toString(); // error ok
 
-            TraceM(info.toString());
+            qCDebug(trace) << info.toString();
 
             emit success();
         } catch (const Exception & e) {

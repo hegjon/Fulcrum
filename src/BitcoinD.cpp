@@ -500,7 +500,7 @@ void BitcoinDMgr::handleMessageCommon(const RPC::Message &msg, ReqCtxResultsOrEr
 
 void BitcoinDMgr::on_Message(quint64 bid, const RPC::Message &msg)
 {
-    TraceM("Msg from: ", bid, " (reqId: ", msg.id, " method: ", msg.method, ")");
+    qCDebug(trace) << "Msg from:" << bid << "(reqId:" << msg.id.toString() << "method:" << msg.method << ")";
 
     // handle the messsage by looking up the context in the table and emitting the proper signal
     handleMessageCommon(msg, &BitcoinDMgrHelper::ReqCtxObj::results);

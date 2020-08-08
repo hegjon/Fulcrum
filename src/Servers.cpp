@@ -187,7 +187,7 @@ void SimpleHttpServer::on_newConnection(QTcpSocket *sock)
                     auto toks = line.split(' ');
                     if (toks.length() != 3 || (toks[0] != "GET" && toks[1] != "POST") || toks[2] != "HTTP/1.1")
                         throw Exception(QString("Invalid request: %1").arg(line));
-                    TraceM(sockName, " ", line);
+                    qCDebug(trace) << sockName << line;
                     sock->setProperty("req-loc", toks[1]);
                     sock->setProperty("req-meth", toks[0]);
                     sock->setProperty("req-ver", toks[2]);
@@ -267,7 +267,7 @@ void SimpleHttpServer::on_newConnection(QTcpSocket *sock)
             DebugM(sockName, " wrote ", nWrit, "/", n2write, " bytes, disconnecting");
             sock->disconnectFromHost();
         } else {
-            TraceM(sockName, " wrote: ", bytes, " bytes");
+            qCDebug(trace) << sockName << "wrote:" << bytes << "bytes";
         }
     });
     if (TIME_LIMIT > 0) {
@@ -634,7 +634,7 @@ void ServerBase::applyMaxBufferToAllClients(int newMax)
 
 void ServerBase::onMessage(IdMixin::Id clientId, const RPC::Message &m)
 {
-    TraceM("onMessage: ", clientId, " json: ", m.toJsonUtf8());
+    qCDebug(trace) << "onMessage:" << clientId << "json:" << m.toJsonUtf8();
     if (Client *c = getClient(clientId); c) {
         const auto member = dispatchTable.value(m.method);
         if (!member)
@@ -660,7 +660,7 @@ void ServerBase::onMessage(IdMixin::Id clientId, const RPC::Message &m)
 }
 void ServerBase::onErrorMessage(IdMixin::Id clientId, const RPC::Message &m)
 {
-    TraceM("onErrorMessage: ", clientId, " json: ", m.toJsonUtf8());
+    qCDebug(trace) << "onErrorMessage:" << clientId << "json:" << m.toJsonUtf8();
     if (Client *c = getClient(clientId); c) {
         // we never expect client to send us errors. Always return invalid request, disconnect client.
         emit c->sendError(true, RPC::Code_InvalidRequest, "Not a valid request object");
@@ -1981,7 +1981,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
         socket->deleteLater();
     });
     *tmpConnections += connect(socket, &QSslSocket::encrypted, this, [this, timer, tmpConnections, socket, peerName] {
-        TraceM(peerName, " SSL ready");
+        qCDebug(trace) << peerName << "SSL ready";
         timer->stop();
         timer->deleteLater();
         if (tmpConnections) {

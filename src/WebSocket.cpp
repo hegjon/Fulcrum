@@ -676,7 +676,7 @@ namespace WebSocket
                      .arg(host.trimmed())
                      .arg(origin.trimmed().isEmpty() ? QString() : QStringLiteral("Origin: %1\r\n").arg(origin.trimmed()))
                      .arg(QString::fromLatin1(secKey)).toLatin1();
-                TraceM("Sending header:\n", header.constData());
+                qCDebug(trace).noquote() << "Sending header:\n" << header.constData();
                 sock->write(header);
             } // end function ClientSide::start
 
@@ -699,7 +699,7 @@ namespace WebSocket
                             headersFinished = true;
                             break;
                         }
-                        TraceM("Got line: ", line.constData());
+                        qCDebug(trace).noquote() << "Got line:" << line.constData();
                         if (expectingStatusLine) {
                             // parse status line
                             QString reasonPhrase;
@@ -707,7 +707,7 @@ namespace WebSocket
                             if (!parseStatusLine(line, &major, &minor, &code, &reasonPhrase)
                                     || major < 1 || minor < 1 || code != 101)
                                 Fail(QString(kBadHttpLine).arg(QString(line)));
-                            TraceM("Got HTTP status 101 ok");
+                            qCDebug(trace) <<("Got HTTP status 101 ok");
                             expectingStatusLine = false;
                         } else {
                             // expecting Header: value
@@ -797,7 +797,7 @@ namespace WebSocket
                             headersFinished = true;
                             break;
                         }
-                        TraceM("Got line: ", line.constData());
+                        qCDebug(trace) << "Got line:" << line.constData();
                         if (expectingReqLine) {
                             // parse status line
                             QString method;
@@ -805,7 +805,7 @@ namespace WebSocket
                             if (!parseReqLine(line, &major, &minor, &method, &reqResource)
                                     || major < 1 || minor < 1 || method != "GET")
                                 Fail(QString(kBadHttpLine).arg(QString(line)));
-                            TraceM("HTTP GET for: ", reqResource.toUtf8().constData());
+                            qCDebug(trace) << "HTTP GET for:" << reqResource.toUtf8().constData();
                             expectingReqLine = false;
                         } else {
                             // expecting Header: value
@@ -815,7 +815,7 @@ namespace WebSocket
                             const QString key = QString::fromLatin1(parts.front().trimmed().toLower()),
                                           value = QString::fromLatin1(parts.mid(1).join(':').trimmed());
                             headers[key] = value;
-                            //TraceM("[Added header: ", key, "=", value, "]");
+                            //qCDebug(trace) <<("[Added header: ", key, "=", value, "]");
                         }
                     } // while
                     if (headersFinished) {
@@ -846,7 +846,7 @@ namespace WebSocket
                                  .arg(serverAgent.trimmed().isEmpty() ? QString() : QStringLiteral("Server: %1\r\n").arg(serverAgent.trimmed()))
                                  .arg(GetHTTPDate())
                                  .toLatin1();
-                            TraceM("Sending response header:\n", header.constData());
+                            qCDebug(trace) << "Sending response header:\n" << header.constData();
                             sock->write(header);
                         }
 
@@ -1023,25 +1023,25 @@ namespace WebSocket
     qint64 Wrapper::sendClose(quint16 code, const QByteArray &reason)
     {
         sentclose = true;
-        TraceM("sending CLOSE");
+        qCDebug(trace) <<("sending CLOSE");
         return socket->write(Ser::makeCloseFrame(isMasked(), CloseCode(code), reason));
     }
 
     qint64 Wrapper::sendPong(const QByteArray &data)
     {
-        TraceM("sending PONG ", data.size(), " bytes");
+        qCDebug(trace) << "sending PONG" << data.size() << "bytes";
         return socket->write(Ser::makePongFrame(data, isMasked()));
     }
 
     qint64 Wrapper::sendPing(const QByteArray &data)
     {
-        TraceM("sending PING ", data.size(), " bytes");
+        qCDebug(trace) << "sending PING" << data.size() << "bytes";
         return socket->write(Ser::makePingFrame(isMasked(), data));
     }
 
     qint64 Wrapper::sendText(const QByteArray &data)
     {
-        TraceM("sending TEXT ", data.size(), " bytes");
+        qCDebug(trace) << "sending TEXT" << data.size() << "bytes";
         qint64 res = -1;
         try {
             res = socket->write(Ser::wrapText(data, isMasked()));
@@ -1056,7 +1056,7 @@ namespace WebSocket
     }
     qint64 Wrapper::sendBinary(const QByteArray &data)
     {
-        TraceM("sending BINARY ", data.size(), " bytes");
+        qCDebug(trace) << "sending BINARY" << data.size() << "bytes";
         qint64 res = -1;
         try {
             res = socket->write(Ser::wrapBinary(data, isMasked()));
@@ -1097,23 +1097,23 @@ namespace WebSocket
                 } else {
                     if (f.type == FrameType::Ctl_Close) {
                         const Deser::CloseFrameInfo info(f);
-                        TraceM("Got CLOSE ", info.code.value_or(0), " ", info.reason);
+                        qCDebug(trace) << "Got CLOSE" << info.code.value_or(0) << info.reason;
                         gotclose = true;
                         emit closeFrameReceived(info.code.value_or(0), info.reason);
                         if (!sentclose) {
                             sendClose();
                         } else {
-                            TraceM("disconnectFromHost received Close reply");
+                            qCDebug(trace) <<("disconnectFromHost received Close reply");
                         }
                         socket->disconnectFromHost();
                     } else if (f.type == FrameType::Ctl_Ping) {
-                        TraceM("Got PING ", f.payload.size(), " bytes");
+                        qCDebug(trace) << "Got PING" << f.payload.size() << "bytes";
                         if (autopingreply && !gotclose) {
                             sendPong(f.payload);
                         }
                         emit pingFrameReceived(f.payload);
                     } else if (f.type == FrameType::Ctl_Pong) {
-                        TraceM("Got PONG ", f.payload.size(), " bytes");
+                        qCDebug(trace) << "Got PONG" << f.payload.size() << "bytes";
                         lastPongRecvd = Util::getTime();
                         emit pongFrameReceived(f.payload);
                     }

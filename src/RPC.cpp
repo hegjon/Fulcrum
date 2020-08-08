@@ -288,7 +288,7 @@ namespace RPC {
         }
         idMethodMap[reqid] = method; // remember method sent out to associate it back.
 
-        TraceM("Sending json: ", Util::Ellipsify(jsonData));
+        qCDebug(trace) << "Sending json:" << Util::Ellipsify(jsonData);
         ++nRequestsSent;
         // below send() ends up calling do_write immediately (which is connected to send)
         emit send( wrapForSend(jsonData) );
@@ -314,7 +314,7 @@ namespace RPC {
             qCritical() << __func__ << " method: " << method << "; Unable to generate notification JSON! FIXME!";
             return;
         }
-        TraceM("Sending json: ", Util::Ellipsify(json));
+        qCDebug(trace) << "Sending json:" << Util::Ellipsify(json);
         ++nNotificationsSent;
         // below send() ends up calling do_write immediately (which is connected to send)
         emit send( wrapForSend(json) );
@@ -328,7 +328,7 @@ namespace RPC {
             return;
         }
         const QByteArray json = Message::makeError(code, msg, reqId, v1).toJsonUtf8();
-        TraceM("Sending json: ", Util::Ellipsify(json));
+        qCDebug(trace) << "Sending json:" << Util::Ellipsify(json);
         ++nErrorsSent;
         // below send() ends up calling do_write immediately (which is connected to send)
         emit send( wrapForSend(json) );
@@ -349,7 +349,7 @@ namespace RPC {
             qCritical() << __func__ << ": Unable to generate result JSON! FIXME!";
             return;
         }
-        TraceM("Sending result json: ", Util::Ellipsify(json));
+        qCDebug(trace) << "Sending result json:" << Util::Ellipsify(json);
         ++nResultsSent;
         // below send() ends up calling do_write immediately (which is connected to send)
         emit send( wrapForSend(json) );
@@ -517,7 +517,7 @@ namespace RPC {
 
     void ElectrumConnection::on_readyRead()
     {
-        TraceM(__func__);
+        qCDebug(trace) << __func__;
         WebSocket::Wrapper * const ws = checkSetGetWebSocket();
         assert(!ws || ws == socket);  // If `ws` is not null, then `ws` and `socket` must point to the same object.
 
@@ -535,8 +535,8 @@ namespace RPC {
             // /pause check
             auto data = ws ? ws->readNextMessage() : socket->readLine();
             nReceived += data.length();
-            // may be slow, so use the efficient TraceM
-            TraceM("Got: ", (!ws ? data.trimmed() : data));
+            // may be slow, so use the efficient qCDebug(trace) <<
+            qCDebug(trace) << "Got:" << (!ws ? data.trimmed() : data);
             processJson(data);
         }
         if (isBad()) { // this may have been set again by processJson() above
@@ -670,7 +670,7 @@ namespace RPC {
                 QByteArray data = socket->readLine();
                 nReceived += data.size();
                 data = data.simplified();
-                TraceM(__func__, " Got: ", data);
+                qCDebug(trace) << __func__ << "Got:" << data;
                 if (sm->state == St::BEGIN) {
                     // read "HTTP/1.1 200 OK" line
                     auto toks = data.split(' ');
@@ -696,7 +696,7 @@ namespace RPC {
                             emit authFailure(this);
                     }
                     sm->statusMsg = QString::fromUtf8(msg);
-                    TraceM("Status message: ", sm->statusMsg);
+                    qCDebug(trace) << "Status message:" << sm->statusMsg;
                     sm->state = St::HEADER;
                 } else if (sm->state == St::HEADER) {
                     // read header, line by line
@@ -732,7 +732,7 @@ namespace RPC {
                                 throw Exception(QString("Peer wants to send us more than %1 bytes of data, exceeding our buffer limit!").arg(MAX_BUFFER));
                             }
                             sm->gotLength = true;
-                            TraceM("Content length: ", sm->contentLength);
+                            qCDebug(trace) << "Content length:" << sm->contentLength;
                         } else if (name == s_connection) {
                             // we tolerate "Connection: keep-alive", for everything else warn or print a debug message
                             if (const auto lowerVal = value.toLower(); lowerVal != s_keep_alive) {
