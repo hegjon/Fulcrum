@@ -1237,7 +1237,7 @@ CtlTask::CtlTask(Controller *ctl, const QString &name)
 }
 
 CtlTask::~CtlTask() {
-    if (isLifecyclePrint()) DebugM(__func__, " (", objectName(), ")");
+    qCDebug(trace) << __func__ << "(" << objectName() << ")";
     stop();
 }
 
