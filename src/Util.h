@@ -144,28 +144,6 @@ public:
             Debug()(__VA_ARGS__);  \
     } while (0)
 
-/** \brief Stream-like class to print a trace message to the app's logging facility
-    Example:
-   \code
-        Trace() << "This is a trace debug message"; // would print a trace message to the logging facility
-   \endcode
- */
-class Trace : public Log
-{
-public:
-    using Log::Log; // inherit c'tor
-    virtual ~Trace();
-
-    static bool isEnabled();
-    static bool forceEnable; ///< defaults false -- set to true if there is not App and you want Trace() to work.
-
-#if defined(__GNUC__) && !defined(__clang__)
-    // Grr.. GCC doesn't fully implement C++ 17 so we must do this. :(
-    template <typename ...Args>
-    explicit Trace(Args && ...args) : Log(std::forward<Args>(args)...) {}
-#endif
-};
-
 // Now add these macros for symmetry
 #define WarningM(...) (qWarning()(__VA_ARGS__))
 #define ErrorM(...) (qCritical()(__VA_ARGS__))

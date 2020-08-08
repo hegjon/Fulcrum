@@ -18,6 +18,7 @@
 //
 #include "RPC.h"
 #include "WebSocket.h"
+#include "Util.h"
 #include <QtCore>
 
 #include <QHostAddress>
@@ -690,7 +691,7 @@ namespace RPC {
                     }
                     if (sm->status != 200 && sm->status != 500) { // bitcoind sends 200 on results= and 500 on error= RPC messages. Everything else is unexpected.
                         qWarning() << "Got HTTP status " << sm->status << " " << msg
-                                  << (!Trace::isEnabled() ? "; will log the rest of this HTTP response" : "");
+                                  << (!trace().isDebugEnabled() ? "; will log the rest of this HTTP response" : "");
                         sm->logBad = true;
                         if (sm->status == 401) // 401 status indicates other side didn't like our auth cookie or we need an auth cookie.
                             emit authFailure(this);
@@ -700,7 +701,7 @@ namespace RPC {
                     sm->state = St::HEADER;
                 } else if (sm->state == St::HEADER) {
                     // read header, line by line
-                    if (sm->logBad && !Trace::isEnabled()) {
+                    if (sm->logBad && !trace().isDebugEnabled()) {
                         qWarning() << sm->status << " (header): " << data;
                     }
                     if (data != "") {
@@ -718,7 +719,7 @@ namespace RPC {
                         if (name == s_content_type) {
                             sm->contentType = QString::fromUtf8(value);
                             if (sm->contentType.compare(s_application_json, Qt::CaseInsensitive) != 0) {
-                                qWarning() << "Got unexpected content type: " << sm->contentType << (!Trace::isEnabled() ? "; will log the rest of this HTTP response" : "");
+                                qWarning() << "Got unexpected content type: " << sm->contentType << (!trace().isDebugEnabled() ? "; will log the rest of this HTTP response" : "");
                                 sm->logBad = true;
                             }
                         } else if (name == s_content_length) {
@@ -776,10 +777,10 @@ namespace RPC {
                     qCritical() << "Content buffer has extra stuff at the end. Bug in code. FIXME! Crud was: '"
                             << sm->content.mid(sm->contentLength) << "'";
                 }
-                if (bool trace = Trace::isEnabled(); sm->logBad && !trace)
-                    qWarning() << sm->status << " (content): " << json.trimmed();
-                else if (trace)
-                    Trace() << "cl: " << sm->contentLength << " inbound JSON: " << json.trimmed();
+                if (bool trace2 = trace().isDebugEnabled(); sm->logBad && !trace2)
+                    qWarning() << sm->status << "(content):" << json.trimmed();
+                else if (trace2)
+                    qDebug(trace) << "cl:" << sm->contentLength << "inbound JSON:" << json.trimmed();
                 sm->clear(); // reset back to BEGIN state, empty buffers, clean slate.
                 processJson(json);
                 // If bytesAvailable .. schedule a callback to this function again since we did a partial read just now,

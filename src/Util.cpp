@@ -396,23 +396,6 @@ bool Debug::isEnabled() {
 }
 
 
-Trace::~Trace()
-{
-    doprt = isEnabled();
-    if (!doprt) return;
-    if (!colorOverridden) color = Green;
-    str = QStringLiteral("(Trace) ") + str;
-}
-
-bool Trace::forceEnable = false;
-
-bool Trace::isEnabled() {
-    auto ourApp = app();
-    return forceEnable
-            || (ourApp && ourApp->options && ourApp->options->verboseTrace && ourApp->options->verboseDebug); // both trace and debug must be on
-}
-
-
 #ifdef ENABLE_TESTS
 #include "bitcoin/utilstrencodings.h"
 #include "Json.h"

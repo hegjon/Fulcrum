@@ -289,7 +289,6 @@ struct DownloadBlocksTask : public CtlTask
     unsigned next = 0;
     std::atomic_uint goodCt = 0;
     bool maybeDone = false;
-    const bool TRACE = Trace::isEnabled();
 
     int q_ct = 0;
     static constexpr int max_q = BitcoinDMgr::N_CLIENTS+1; // todo: tune this
@@ -363,7 +362,7 @@ void DownloadBlocksTask::do_get(unsigned int bnum)
                 if (bool sizeOk = header.length() == HEADER_SIZE; sizeOk && (chkHash = BTC::HashRev(header)) == hash) {
                     auto ppb = PreProcessedBlock::makeShared(bnum, size_t(rawblock.size()), BTC::Deserialize<bitcoin::CBlock>(rawblock)); // this is here to test performance
 
-                    if (TRACE) Trace() << "block " << bnum << " size: " << rawblock.size() << " nTx: " << ppb->txInfos.size();
+                    qCDebug(trace) << "block" << bnum << "size:" << rawblock.size() << "nTx:" << ppb->txInfos.size();
                     // update some stats for /stats endpoint
                     nTx += ppb->txInfos.size();
                     nOuts += ppb->outputs.size();
@@ -376,7 +375,7 @@ void DownloadBlocksTask::do_get(unsigned int bnum)
                     if (!(bnum % 1000) && bnum) {
                         emit progress(lastProgress);
                     }
-                    if (TRACE) Trace() << resp.method << ": header for height: " << bnum << " len: " << header.length();
+                    qCDebug(trace) << resp.method << ": header for height:" << bnum << "len:" << header.length();
                     emit ctl->putBlock(this, ppb); // send the block off to the Controller thread for further processing and for save to db
                     if (goodCt >= expectedCt) {
                         // flag state to maybeDone to do checks when process() called again
@@ -430,7 +429,6 @@ struct SynchMempoolTask : public CtlTask
     using DldTxsMap = robin_hood::unordered_flat_map<TxHash, std::pair<Mempool::TxRef, bitcoin::CTransactionRef>, HashHasher>;
     DldTxsMap txsDownloaded;
     unsigned expectedNumTxsDownloaded = 0;
-    const bool TRACE = Trace::isEnabled(); // set this to true to print more debug
 
     /// The scriptHashes that were affected by this refresh/synch cycle. Used for notifications.
     std::unordered_set<HashX, HashHasher> scriptHashesAffected;
@@ -594,7 +592,7 @@ void SynchMempoolTask::processResults()
                     sh = prevInfo.hashX;
                     tx->hashXs[sh].unconfirmedSpends[prevTXO] = prevInfo;
                     prevTxRef->hashXs[sh].utxo.erase(prevN); // remove this spend from utxo set for prevTx in mempool
-                    if (TRACE) qDebug() << hash.toHex() << " unconfirmed spend: " << prevTXO.toString() << " " << prevInfo.amount.ToString().c_str();
+                    qCDebug(trace) << hash.toHex() << "unconfirmed spend:" << prevTXO.toString() << prevInfo.amount.ToString().c_str();
                 } else {
                     // prev is a confirmed tx
                     const auto optTXOInfo = storage->utxoGetFromDB(prevTXO, false); // this may also throw on low-level db error
@@ -619,7 +617,7 @@ void SynchMempoolTask::processResults()
                     }
                     // end memory saving hack
                     hxit->second.confirmedSpends[prevTXO] = prevInfo;
-                    if (TRACE) qDebug() << hash.toHex() << " confirmed spend: " << prevTXO.toString() << " " << prevInfo.amount.ToString().c_str();
+                    qCDebug(trace) << hash.toHex() << "confirmed spend:" << prevTXO.toString() << prevInfo.amount.ToString().c_str();
                 }
                 tx->fee += prevInfo.amount;
                 assert(sh == prevInfo.hashX);
@@ -687,8 +685,7 @@ void SynchMempoolTask::doDLNextTx()
         }
         tx->sizeBytes = unsigned(expectedLen); // save size now -- this is needed later to calculate fees and for everything else.
 
-        if (TRACE)
-            qDebug() << "got reply for tx: " << hashHex << " " << txdata.length() << " bytes";
+        qCDebug(trace) << "got reply for tx:" << hashHex << txdata.length() << "bytes";
 
         {
             // tmp mutable object will be moved into CTransactionRef below via a move constructor
@@ -732,9 +729,9 @@ void SynchMempoolTask::doGetRawMempool()
             static const QVariantList EmptyList; // avoid constructng this for each iteration
             if (auto it = mempool.txs.find(hash); it != mempool.txs.end()) {
                 droppedTxs.erase(hash); // mark this tx as "not dropped" since it was in the mempool before and is in the mempool now.
-                if (TRACE) qDebug() << "Existing mempool tx: " << hash.toHex();
+                qCDebug(trace) << "Existing mempool tx:" << hash.toHex();
             } else {
-                if (TRACE) qDebug() << "New mempool tx: " << hash.toHex();
+                qCDebug(trace) << "New mempool tx:" << hash.toHex();
                 ++newCt;
                 Mempool::TxRef tx = std::make_shared<Mempool::Tx>();
                 tx->hashXs.max_load_factor(1.0); // hopefully this will save some memory by expicitly setting it to 1.0
@@ -924,7 +921,7 @@ void Controller::process(bool beSilentIfUpToDate)
     using State = StateMachine::State;
     if (sm->state == State::Begin) {
         auto task = newTask<GetChainInfoTask>(true, this);
-        task->threadObjectDebugLifecycle = Trace::isEnabled(); // suppress debug prints here unless we are in trace mode
+        task->threadObjectDebugLifecycle = trace().isDebugEnabled(); // suppress debug prints here unless we are in trace mode
         sm->mostRecentGetChainInfoTask = task; // reentrancy defense mechanism for ignoring all but the most recent getchaininfo reply from bitcoind
         sm->waitingTs = Util::getTimeSecs();
         sm->state = State::WaitingForChainInfo; // more reentrancy prevention paranoia -- in case we get a spurious call to process() in the future
@@ -1068,7 +1065,7 @@ void Controller::process(bool beSilentIfUpToDate)
     } else if (sm->state == State::SynchMempool) {
         // ...
         auto task = newTask<SynchMempoolTask>(true, this, storage, masterNotifySubsFlag);
-        task->threadObjectDebugLifecycle = Trace::isEnabled(); // suppress verbose lifecycle prints unless trace mode
+        task->threadObjectDebugLifecycle = trace().isDebugEnabled(); // suppress verbose lifecycle prints unless trace mode
         connect(task, &CtlTask::success, this, [this, task]{
             if (UNLIKELY(!sm || isTaskDeleted(task) || sm->state != State::SynchingMempool))
                 // task was stopped from underneath us and/or this response is stale.. so return and ignore
