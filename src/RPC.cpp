@@ -323,7 +323,7 @@ namespace RPC {
     void ConnectionBase::_sendError(bool disc, int code, const QString &msg, const Message::Id & reqId)
     {
         if (status != Connected || !socket) {
-            DebugM(__func__, "; Not connected! ", "(id: ", this->id, "), forcing on_disconnect ...");
+            qCDebug(normal) << __func__ << "; Not connected! (id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
@@ -340,7 +340,7 @@ namespace RPC {
     void ConnectionBase::_sendResult(const Message::Id & reqid, const QVariant & result)
     {
         if (status != Connected || !socket) {
-            DebugM(__func__, ":  Not connected! ", "(id: ", this->id, "), forcing on_disconnect ...");
+            qCDebug(normal) << __func__ << ":  Not connected! (id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
@@ -417,7 +417,7 @@ namespace RPC {
                 message.method = idMethodMap.take(message.id);
                 if (!message.id.isNull() && message.method.isEmpty())
                     // Hmm. Error with no corresponding request id.. log that fact to debug log
-                    DebugM("Got unexpected error reply for id: ", message.id);
+                    qCDebug(normal) << "Got unexpected error reply for id:" << message.id.toString();
                 emit gotErrorMessage(id, message);
             } else if (message.isNotif()) {
                 try {
@@ -529,8 +529,8 @@ namespace RPC {
             // check if paused -- we may get paused inside processJson below
             if (readPaused) {
                 skippedOnReadyRead = true;
-                DebugM(prettyName(), " reads paused, skipping on_readyRead",
-                       " (bufsz: ", QString::number(socket->bytesAvailable()/1024.0, 'f', 1), " KB) ...");
+                qCDebug(normal) << prettyName() << "reads paused, skipping on_readyRead"
+                       << "(bufsz:" << QString::number(socket->bytesAvailable()/1024.0, 'f', 1) << "KB) ...";
                 break;
             }
             // /pause check
@@ -541,8 +541,8 @@ namespace RPC {
             processJson(data);
         }
         if (isBad()) { // this may have been set again by processJson() above
-            DebugM(prettyName(), " is now bad, ignoring read (buf: ",
-                   QString::number((socket ? socket->bytesAvailable() : 0)/1024., 'f', 1), " KB)");
+            qCDebug(normal) << prettyName() << "is now bad, ignoring read (buf: "
+                   << QString::number((socket ? socket->bytesAvailable() : 0)/1024., 'f', 1) << "KB)";
             return;
         }
 
@@ -559,7 +559,7 @@ namespace RPC {
     {
 #ifndef NDEBUG
         if (this->thread() != QThread::currentThread()) {
-            qCritical() << __func__ << ": ERROR -- called from a thread outside this object's thread! FIXME!";
+            qCritical(normal) << __func__ << ": ERROR -- called from a thread outside this object's thread! FIXME!";
             return;
         }
 #endif
@@ -583,12 +583,12 @@ namespace RPC {
         static const auto StopTimer = [](ElectrumConnection *me, qint64 avail) {
             me->memoryWasteTimerActive = false;
             me->stopTimer(memoryWasteTimer);
-            DebugM("Memory waste timer STOPPED for ", me->id, " from ", me->peerAddress().toString(),
-                   ", read buffer now: ", avail);
+            qCDebug(normal) << "Memory waste timer STOPPED for" << me->id << "from" << me->peerAddress().toString()
+                   << ", read buffer now:" << avail;
         };
         memoryWasteThreshold = MAX_BUFFER;
         if (memoryWasteThreshold < 0) {
-            qCritical() << __func__ << ": MAX_BUFFER is < 0 -- fix me!";
+            qCritical(normal) << __func__ << ": MAX_BUFFER is < 0 -- fix me!";
             return;
         }
         // DoS protection logic below for memory exhaustion attacks.  If a client connects from many IPs and with

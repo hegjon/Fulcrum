@@ -61,7 +61,7 @@ PeerMgr::PeerMgr(const SrvMgr *sm, const std::shared_ptr<Storage> &storage_ , co
     // /proxy
 }
 
-PeerMgr::~PeerMgr() { cleanup(); /* noop if already stopped */ DebugM(__func__);  }
+PeerMgr::~PeerMgr() { cleanup(); /* noop if already stopped */ qCDebug(normal) << __func__;  }
 
 QVariantMap PeerMgr::makeFeaturesDict(PeerClient *c) const
 {
@@ -174,7 +174,7 @@ void PeerMgr::cleanup()
 {
     stop();
     if (auto num = stopAllTimers(); num)
-        qCDebug(normal) << objectName() << " stopped " << num << " active timers";
+        qCDebug(normal) << objectName() << "stopped" << num << "active timers";
 }
 
 void PeerMgr::on_rpcAddPeer(const PeerInfoList &infos, const QHostAddress &source)

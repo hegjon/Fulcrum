@@ -742,7 +742,7 @@ void App::parseArgs()
                           .arg(options->maxBufferMin).arg(options->maxBufferMax));
         options->maxBuffer.store( mb );
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mb]{ qCDebug(normal) << "config: max_buffer = " << mb; });
+        Util::AsyncOnObject(this, [mb]{ qCDebug(normal) << "config: max_buffer =" << mb; });
     }
     // pick up 'workqueue' and 'worker_threads' optional conf params
     if (conf.hasValue("workqueue")) {
@@ -754,7 +754,7 @@ void App::parseArgs()
             throw BadArgs(QString("workqueue: Unable to set workqueue to %1; SetExtantJobLimit returned false.").arg(val));
         options->workQueue = val; // save advisory value for stats(), etc code
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [this]{ qCDebug(normal) << "config: workqueue = " << tpool->extantJobLimit(); });
+        Util::AsyncOnObject(this, [this]{ qCDebug(normal) << "config: workqueue =" << tpool->extantJobLimit(); });
     } else
         options->workQueue = tpool->extantJobLimit(); // so stats() knows what was auto-configured
     if (conf.hasValue("worker_threads")) {
@@ -769,7 +769,7 @@ void App::parseArgs()
             throw BadArgs(QString("worker_threads: Unable to set worker threads to %1").arg(val));
         options->workerThreads = val; // save advisory value for stats(), etc code
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [val,this]{ qCDebug(normal) << "config: worker_threads = " << val << " (configured: " << tpool->maxThreadCount() << ")"; });
+        Util::AsyncOnObject(this, [val,this]{ qCDebug(normal) << "config: worker_threads =" << val << "(configured: " << tpool->maxThreadCount() << ")"; });
     } else
         options->workerThreads = tpool->maxThreadCount(); // so stats() knows what was auto-configured
     // max_pending_connections
@@ -781,7 +781,7 @@ void App::parseArgs()
                           .arg(options->minMaxPendingConnections).arg(options->maxMaxPendingConnections));
         options->maxPendingConnections = val;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: max_pending_connections = " << val; });
+        Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: max_pending_connections =" << val; });
     }
 
     // handle tor-related params: tor_hostname, tor_banner, tor_tcp_port, tor_ssl_port, tor_proxy, tor_user, tor_pass
@@ -789,12 +789,12 @@ void App::parseArgs()
         options->torHostName = thn;
         if (!thn.endsWith(".onion"))
             throw BadArgs(QString("Bad tor_hostname specified: must end with .onion: %1").arg(thn));
-        Util::AsyncOnObject(this, [thn]{ qCDebug(normal) << "config: tor_hostname = " << thn; });
+        Util::AsyncOnObject(this, [thn]{ qCDebug(normal) << "config: tor_hostname =" << thn; });
     }
     if (conf.hasValue("tor_banner")) {
         const auto banner = conf.value("tor_banner");
         options->torBannerFile = banner;
-        Util::AsyncOnObject(this, [banner]{ qCDebug(normal) << "config: tor_banner = " << banner; });
+        Util::AsyncOnObject(this, [banner]{ qCDebug(normal) << "config: tor_banner =" << banner; });
     }
     if (conf.hasValue("tor_tcp_port")) {
         bool ok = false;
@@ -804,7 +804,7 @@ void App::parseArgs()
         if (!val) options->torTcp.reset();
         else {
             options->torTcp = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_tcp_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_tcp_port =" << val; });
         }
     }
     if (conf.hasValue("tor_ssl_port")) {
@@ -815,7 +815,7 @@ void App::parseArgs()
         if (!val) options->torSsl.reset();
         else {
             options->torSsl = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_ssl_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_ssl_port =" << val; });
         }
     }
     if (conf.hasValue("tor_ws_port")) {
@@ -826,7 +826,7 @@ void App::parseArgs()
         if (!val) options->torWs.reset();
         else {
             options->torWs = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_ws_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_ws_port =" << val; });
         }
     }
     if (conf.hasValue("tor_wss_port")) {
@@ -837,16 +837,16 @@ void App::parseArgs()
         if (!val) options->torWss.reset();
         else {
             options->torWss = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_wss_port = " << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_wss_port =" << val; });
         }
     }
     if (conf.hasValue("tor_proxy")) {
         options->torProxy = parseInterface(conf.value("tor_proxy"), true); // may throw if bad
-        Util::AsyncOnObject(this, [val=options->torProxy]{ qCDebug(normal) << "config: tor_proxy = " << val.first.toString() << ":" << val.second; });
+        Util::AsyncOnObject(this, [val=options->torProxy]{ qCDebug(normal) << "config: tor_proxy =" << val.first.toString() << ":" << val.second; });
     }
     if (conf.hasValue("tor_user")) {
         options->torUser = conf.value("tor_user");
-        Util::AsyncOnObject(this, [val=options->torUser]{ qCDebug(normal) << "config: tor_user = " << val; });
+        Util::AsyncOnObject(this, [val=options->torUser]{ qCDebug(normal) << "config: tor_user =" << val; });
     }
     if (conf.hasValue("tor_pass")) {
         options->torUser = conf.value("tor_pass");
@@ -872,7 +872,7 @@ void App::parseArgs()
             throw BadArgs("Failed to parse \"bitcoind_throttle\" -- out of range or invalid format. Please specify 3 positive integers in range.");
         options->bdReqThrottleParams.store(p);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [p]{ qCDebug(normal) << "config: bitcoind_throttle = " << QString("(hi: %1, lo: %2, decay: %3)").arg(p.hi).arg(p.lo).arg(p.decay); });
+        Util::AsyncOnObject(this, [p]{ qCDebug(normal) << "config: bitcoind_throttle =" << QString("(hi: %1, lo: %2, decay: %3)").arg(p.hi).arg(p.lo).arg(p.decay); });
     }
     if (conf.hasValue("max_subs_per_ip")) {
         bool ok;
@@ -882,7 +882,7 @@ void App::parseArgs()
                           .arg(options->maxSubsPerIPMin).arg(options->maxSubsPerIPMax));
         options->maxSubsPerIP = subs;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [subs]{ qCDebug(normal) << "config: max_subs_per_ip = " << subs; });
+        Util::AsyncOnObject(this, [subs]{ qCDebug(normal) << "config: max_subs_per_ip =" << subs; });
     }
     if (conf.hasValue("max_subs")) {
         bool ok;
