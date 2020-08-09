@@ -191,8 +191,8 @@ void SubsMgr::doNotifyAllPending()
     }
     if (ctr || ctrSH) {
         const auto elapsedMS = (Util::getTimeNS() - t0)/1e6;
-        DebugM(__func__, ": ", ctr, Util::Pluralize(" client", ctr), ", ", ctrSH, Util::Pluralize(" scripthash", ctrSH),
-               " in ", QString::number(elapsedMS, 'f', 4), " msec");
+        qCDebug(normal) << ctr << Util::Pluralize(" client", ctr) << ctrSH << Util::Pluralize(" scripthash", ctrSH)
+               << "in" << QString::number(elapsedMS, 'f', 4) << "msec";
     }
 }
 
@@ -378,7 +378,7 @@ auto SubsMgr::getFullStatus(const HashX &sh) const -> StatusHash
     const auto elapsed = Util::getTimeNS() - t0;
     constexpr qint64 kTookKindaLongNS = 7500000LL; // 7.5mec -- if it takes longer than this, log it to debug log, otherwise don't as this can get spammy.
     if (elapsed > kTookKindaLongNS) {
-        DebugM("full status for ",  Util::ToHexFast(sh), " ", hist.size(), " items in ", QString::number(elapsed/1e6, 'f', 4), " msec");
+        qCDebug(normal) << "full status for" << Util::ToHexFast(sh) << hist.size() << "items in" << QString::number(elapsed/1e6, 'f', 4) << "msec";
     }
     return ret;
 }

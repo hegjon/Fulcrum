@@ -182,7 +182,6 @@ void SimpleHttpServer::on_newConnection(QTcpSocket *sock)
         try {
             while(sock->canReadLine()) {
                 auto line = QString(sock->readLine()).trimmed();
-                //DebugM(sockName, " Got line: ", line);
                 if (QString loc = sock->property("req-loc").toString(); loc.isEmpty()) {
                     auto toks = line.split(' ');
                     if (toks.length() != 3 || (toks[0] != "GET" && toks[1] != "POST") || toks[2] != "HTTP/1.1")
@@ -406,8 +405,8 @@ void ServerBase::on_newConnection(QTcpSocket *sock) {
     if (sock->state() == QAbstractSocket::SocketState::ConnectedState) {
         newClient(sock);
     } else {
-        DebugM("Got a connection from ", sock->peerAddress().toString(),
-               ", but before we could handle it, it was closed; deleting socket and ignoring.");
+        qCDebug(normal) << "Got a connection from" << sock->peerAddress()
+               << ", but before we could handle it, it was closed; deleting socket and ignoring.";
         sock->deleteLater();
     }
 }
@@ -762,8 +761,8 @@ void ServerBase::generic_async_to_bitcoind(Client *c, const RPC::Message::Id & r
         ++c->perIPData->bdReqCtr; // increase bitcoind request counter (per-IP, owned by multiple threads)
         ++c->perIPData->bdReqCtr_cum; // increase cumulative bitcoind request counter (per-IP, owned by multiple threads)
         if (++c->bdReqCtr/*<- incr. per-client counter*/ >= bdReqHi && !c->isReadPaused()) {
-            DebugM(c->prettyName(), " has bitcoinD req ctr: ", c->bdReqCtr, " (PerIP ctr: ",
-                   c->perIPData->bdReqCtr, "), PAUSING reads from socket");
+            qCDebug(normal) << c->prettyName() << "has bitcoinD req ctr:" << c->bdReqCtr << "(PerIP ctr:"
+                   << c->perIPData->bdReqCtr << "), PAUSING reads from socket";
             c->setReadPaused(true); // pause reading from this client -- they exceeded threshold.
             // if timer not already active, start timer to decay ctr over time --
             constexpr auto kTimerName = "+BDR_DecayTimer";
@@ -774,8 +773,8 @@ void ServerBase::generic_async_to_bitcoind(Client *c, const RPC::Message::Id & r
                 if ((++iCtr % kPollFreqHz) == 0) // every kPollFreqHz iterations = every 1 second, decay the counter by decayPerSec amount
                     c->bdReqCtr -= std::min(qint64(decayPerSec), c->bdReqCtr);
                 if (c->isReadPaused() && c->bdReqCtr <= bdReqLo) {
-                    DebugM(c->prettyName(), " has bitcoinD req ctr: ", c->bdReqCtr, " (PerIP ctr: ",
-                           c->perIPData->bdReqCtr, "), RESUMING reads from socket");
+                    qCDebug(normal) << c->prettyName() << "has bitcoinD req ctr:" << c->bdReqCtr << " (PerIP ctr:"
+                           << c->perIPData->bdReqCtr << "), RESUMING reads from socket";
                     c->setReadPaused(false);
                 }
                 return c->bdReqCtr > 0; // return false when ctr reaches 0, which stops the recurring decay timer
@@ -872,13 +871,13 @@ void Server::rpc_server_add_peer(Client *c, const RPC::Message &m)
         if (peerList.isEmpty() || peerList.front().genesisHash != storage->genesisHash())
             throw BadFeaturesMap("Incompatible genesis hash");
         const auto peerAddress = c->peerAddress();
-        DebugM("add_peer tentatively accepted for host ", peerList.front().hostName,
-               " (", peerList.size(), ")", " from ", peerAddress.toString());
+        qCDebug(normal) << "add_peer tentatively accepted for host" << peerList.front().hostName
+               << "(" << peerList.size() << ") from" << peerAddress;
         emit gotRpcAddPeer(peerList, peerAddress);
     } catch (const BadFeaturesMap & e) {
         const auto hm = map.value("hosts").toMap();
         const QString hostNamePart = !hm.isEmpty() ? QString(" (%1)").arg(hm.firstKey()) : QString();
-        DebugM("Refusing add_peer ", hostNamePart, " for reason: ", e.what());
+        qCDebug(normal) << "Refusing add_peer" << hostNamePart << "for reason:" << e.what();
         retval = false;
     }
     emit c->sendResult(m.id, retval);
@@ -1211,9 +1210,9 @@ void Server::rpc_blockchain_headers_subscribe(Client *c, const RPC::Message &m) 
             // the notification is a list of size 1, with a dict in it. :/
             c->sendNotification(meth, QVariantList({mkResp(height, header)}));
         });
-        DebugM(c->prettyName(false, false), " is now subscribed to headers");
+        qCDebug(normal) << c->prettyName(false, false) << "is now subscribed to headers";
     } else {
-        DebugM(c->prettyName(false, false), " was already subscribed to headers, ignoring duplicate subscribe request");
+        qCDebug(normal) << c->prettyName(false, false) << "was already subscribed to headers, ignoring duplicate subscribe request";
     }
     emit c->sendResult(m.id, mkResp(unsigned(std::max(0, height)), hdr));
 }
@@ -1380,14 +1379,14 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
         if (UNLIKELY(nShSubs > options->maxSubsPerIP)) {
             if (c->perIPData->isWhitelisted()) {
                 // White-listed, let it go, but print to debug log
-                DebugM( c->prettyName(false, false), " exceeded the per-IP subscribe limit with ", nShSubs,
-                        " subs, but it is whitelisted (subnet: ", c->perIPData->whiteListedSubnet().toString(), ")");
+                qCDebug(normal) << c->prettyName(false, false) << "exceeded the per-IP subscribe limit with" << nShSubs
+                        << "subs, but it is whitelisted (subnet:" << c->perIPData->whiteListedSubnet().toString() << ")";
             } else {
                 // Not white-listed .. unsubscribe and throw an error.
                 if (const auto now = Util::getTimeSecs(); now - c->lastWarnedAboutSubsLimit > ServerMisc::kMaxSubsPerIPWarningsRateLimitSecs /* 1.0 secs */) {
                     // message spam throttled to once per second
-                    qWarning() << c->prettyName(false, false) << " exceeded per-IP subscribe limit with " << nShSubs
-                              << " subs, denying subscribe request";
+                    qWarning(normal) << c->prettyName(false, false) << "exceeded per-IP subscribe limit with" << nShSubs
+                              << "subs, denying subscribe request";
                     c->lastWarnedAboutSubsLimit = now;
                 }
                 if (doUnsub) {
@@ -1398,7 +1397,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
                         --c->perIPData->nShSubs;
                     } else
                         // This should never happen but we'll print debug/warning info if it does.
-                        qWarning() << c->prettyName(false, false) << " failed to unsubscribe client from a scripthash we just subscribed him to! FIXME!";
+                        qWarning(normal) << c->prettyName(false, false) << "failed to unsubscribe client from a scripthash we just subscribed him to! FIXME!";
                 }
                 throw RPCError("Subscription limit reached", RPC::Code_App_LimitExceeded); // send error to client
             }
@@ -1453,7 +1452,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
     } catch (const SubsMgr::LimitReached &e) {
         if (Util::getTimeSecs() - lastSubsWarningPrintTime > ServerMisc::kMaxSubsWarningsRateLimitSecs /* ~250 ms */) {
             // rate limit printing
-            qWarning() << "Exception from SubsMgr: " << e.what() << " (while serving subscribe request for " << c->prettyName(false, false) << ")";
+            qWarning(normal) << "Exception from SubsMgr: " << e.what() << " (while serving subscribe request for " << c->prettyName(false, false) << ")";
             lastSubsWarningPrintTime = Util::getTimeSecs();
         }
         emit globalSubsLimitReached(); // connected to the SrvMgr, which will loop through all IPs and kick all clients for the most-subscribed IP
@@ -1462,7 +1461,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
     const auto & [wasNew, optStatus] = result;
     if (wasNew) {
         if (++c->nShSubs == 1)
-            DebugM(c->prettyName(false, false), " is now subscribed to at least one scripthash");
+            qCDebug(normal) << c->prettyName(false, false) << "is now subscribed to at least one scripthash";
         // increment per ip counter ...
         // ... and check if they hit the limit again. This catches races.  Note that if the limit is reached this will
         // throw and after unsubscribing -- but the zombie sub will be left around for a time until it is reaped
@@ -1486,7 +1485,7 @@ void Server::impl_sh_subscribe(Client *c, const RPC::Message &m, const HashX &sh
             // not empty, so we return the hex-encoded string
             result = QString(Util::ToHexFast(*optStatus));
         // commented out because it is spammy
-        //DebugM("Sending cached status to client for scripthash: ", Util::ToHexFast(sh), " status: ", result.toString());
+        //qCDebug(normal) << "Sending cached status to client for scripthash:" << Util::ToHexFast(sh) << "status:" << result.toString();
         //
         emit c->sendResult(m.id, result); ///<  may be 'null' if status was empty (indicates no history for scripthash)
     }
@@ -1506,9 +1505,9 @@ void Server::impl_sh_unsubscribe(Client *c, const RPC::Message &m, const HashX &
     const bool result = storage->subs()->unsubscribe(c, sh);
     if (result) {
         if (--c->nShSubs == 0)
-            DebugM(c->prettyName(false, false), " is no longer subscribed to any scripthashes");
+            qCDebug(normal) << c->prettyName(false, false) << "is no longer subscribed to any scripthashes";
         if (--c->perIPData->nShSubs == 0)
-            DebugM("PerIP: ", c->peerAddress().toString(), " is no longer subscribed to any scripthashes");
+            qCDebug(normal) << "PerIP:" << c->peerAddress() << "is no longer subscribed to any scripthashes";
     }
     emit c->sendResult(m.id, QVariant(result));
 }
@@ -1977,7 +1976,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     auto tmpConnections = std::make_shared<QList<QMetaObject::Connection>>();
     *tmpConnections += connect(socket, &QSslSocket::disconnected, this, [socket, peerName]{
         if (!socket->property(kTimedOutPropertyName).toBool())
-            DebugM(peerName, " SSL handshake failed due to disconnect before completion, deleting socket");
+            qCDebug(normal) << peerName << "SSL handshake failed due to disconnect before completion, deleting socket";
         socket->deleteLater();
     });
     *tmpConnections += connect(socket, &QSslSocket::encrypted, this, [this, timer, tmpConnections, socket, peerName] {
@@ -2004,8 +2003,8 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     *tmpConnections +=
     connect(socket, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), this, [socket, peerName](const QList<QSslError> & errors) {
         for (const auto & e : errors)
-            qWarning() << peerName << " SSL error: " << e.errorString();
-        DebugM(peerName, " Aborting connection due to SSL errors");
+            qWarning(normal) << peerName << "SSL error: " << e.errorString();
+        qCDebug(normal) << peerName << "Aborting connection due to SSL errors";
         socket->deleteLater();
     });
     timer->start(10'000); // give the TLS handshake 10 seconds to complete
@@ -2407,7 +2406,7 @@ Client::~Client()
 {
     --numClients;
     if constexpr (!isReleaseBuild())
-        DebugM(__func__, " ", id);
+        qCDebug(normal) << id;
     socket = nullptr; // NB: we are a child of socket, so socket is alread invalid here. This line here is added in case some day I make AbstractClient delete socket on destruct.
     emit clientDestructing(this); // This is currently connected to a lambda in ServerBase::newClient
 }
@@ -2422,7 +2421,7 @@ void Client::do_disconnect(bool graceful)
         /// reenter here and delete the socket.
         socket->deleteLater(); // side-effect: will implicitly delete 'this' because we are a child of the socket!
     else if (socket && graceful)
-        DebugM(__func__,  " " , id, " (graceful); delayed socket delete (wait for disconnect) ...");
+        qCDebug(normal) << id << " (graceful); delayed socket delete (wait for disconnect) ...";
 
     // tell ConnectionBase to not send us any new messages from this client
     ignoreNewIncomingMessages = true;
@@ -2434,7 +2433,7 @@ void Client::do_ping()
     // Instead, rely on them to ping us else disconnect them if idle for too long.
     // The below just checks idle.
     if (Util::getTime() - lastGood >= stale_threshold) {
-        DebugM(prettyName(), ": idle timeout after ", (stale_threshold)/1e3, " sec., will close connection");
+        qCDebug(normal) << prettyName() << ": idle timeout after" << (stale_threshold)/1e3 << "sec., will close connection";
         do_disconnect();
         return;
     }

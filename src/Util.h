@@ -132,15 +132,6 @@ public:
 #endif
 };
 
-/// This is fast: It only evaluates args if Debug is enabled. Use this in performance-critical code.
-/// Unfortunately, there is no way to do this exact thing with templates, so we opted for a C-style macro
-/// to avoid evaluating the args in the !Debug::isEnabled() case.
-#define DebugM(...)                \
-    do {                           \
-        if (Debug::isEnabled())    \
-            Debug()(__VA_ARGS__);  \
-    } while (0)
-
 #define FatalAssert(b, message)                                       \
     do {                                                              \
         if (!(b))                                                     \

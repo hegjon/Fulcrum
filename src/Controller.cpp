@@ -869,13 +869,13 @@ void Controller::add_DLHeaderTask(unsigned int from, unsigned int to, size_t nTa
     connect(t, &CtlTask::success, this, [t, this]{
         // NOTE: this callback is sometimes delivered after the sm has been reset(), so we don't check or use it here.
         if (UNLIKELY(isTaskDeleted(t))) return; // task was stopped from underneath us, this is stale.. abort.
-        DebugM( "Got all blocks from: ", t->objectName(), " blockCt: ",  t->goodCt,
-                " nTx,nInp,nOutp: ", t->nTx, ",", t->nIns, ",", t->nOuts);
+        qCDebug(normal) << "Got all blocks from:" << t->objectName() << " blockCt:" <<  t->goodCt
+                << "nTx,nInp,nOutp:" << t->nTx << "," << t->nIns << "," << t->nOuts;
     });
     connect(t, &CtlTask::errored, this, [t, this]{
         if (UNLIKELY(!sm || isTaskDeleted(t))) return; // task was stopped from underneath us, this is stale.. abort.
         if (sm->state == StateMachine::State::Failure) return; // silently ignore if we are already in failure
-        qCritical() << "Task errored: " << t->objectName() << ", error: " << t->errorMessage;
+        qCritical(normal) << "Task errored:" << t->objectName() << ", error:" << t->errorMessage;
         genericTaskErrored();
     });
 }
@@ -913,7 +913,6 @@ void Controller::process(bool beSilentIfUpToDate)
     bool enablePollTimer = false;
     auto polltimeout = polltimeMS;
     stopTimer(pollTimerName);
-    //DebugM("Process called...");
     if (!sm) {
         std::lock_guard g(smLock);
         sm = std::make_unique<StateMachine>();
@@ -1000,9 +999,9 @@ void Controller::process(bool beSilentIfUpToDate)
         // does so.
         if (Util::getTimeSecs() - sm->waitingTs > sm->simpleTaskTookTooLongSecs) {
             // this is very unlikely but is here in case bitcoind goes out to lunch so we can reset things and try again.
-            qWarning() << "GetChainInfo task took longer than " << sm->simpleTaskTookTooLongSecs << " seconds to return a response. Trying again ...";
+            qWarning(normal) << "GetChainInfo task took longer than" << sm->simpleTaskTookTooLongSecs << "seconds to return a response. Trying again ...";
             genericTaskErrored();
-        } else { DebugM("Spurious Controller::process() call while waiting for the chain info task to complete, ignoring"); }
+        } else { qCDebug(normal) << "Spurious Controller::process() call while waiting for the chain info task to complete, ignoring"; }
     } else if (sm->state == State::GetBlocks) {
         FatalAssert(sm->ht >= 0, "Inconsistent state -- sm->ht cannot be negative in State::GetBlocks! FIXME!"); // paranoia
         const size_t base = size_t(storage->latestTip().first+1);
@@ -1031,7 +1030,7 @@ void Controller::process(bool beSilentIfUpToDate)
         AGAIN();
     } else if (sm->state == State::Retry) {
         // normally the result of Rewinding due to reorg, retry right away.
-        DebugM("Retrying download again ...");
+        qCDebug(normal) << "Retrying download again ...";
         {
             std::lock_guard g(smLock);
             sm.reset();
@@ -1039,7 +1038,7 @@ void Controller::process(bool beSilentIfUpToDate)
         AGAIN();
     } else if (sm->state == State::Failure) {
         // We will try again later via the pollTimer
-        qCritical() << "Failed to synch blocks and/or mempool";
+        qCritical(normal) << "Failed to synch blocks and/or mempool";
         {
             std::lock_guard g(smLock);
             sm.reset();
@@ -1088,10 +1087,10 @@ void Controller::process(bool beSilentIfUpToDate)
 void Controller::on_putBlock(CtlTask *task, PreProcessedBlockPtr p)
 {
     if (!sm || isTaskDeleted(task) || sm->state == StateMachine::State::Failure || stopFlag) {
-        DebugM("Ignoring block ", p->height, " for now-defunct task");
+        qCDebug(normal) << "Ignoring block" << p->height << " for now-defunct task";
         return;
     } else if (sm->state != StateMachine::State::DownloadingBlocks) {
-        DebugM("Ignoring putBlocks request for block ", p->height, " -- state is not \"DownloadingBlocks\" but rather is: \"", sm->stateStr(), "\"");
+        qCDebug(normal) << "Ignoring putBlocks request for block" << p->height << "-- state is not \"DownloadingBlocks\" but rather is:", sm->stateStr();
         return;
     }
     sm->ppBlocks[p->height] = p;
@@ -1175,7 +1174,7 @@ void Controller::process_DownloadingBlocks()
 
     // testing debug
     //if (auto backlog = sm->ppBlocks.size(); backlog < 100 || ct > 100) {
-    //    DebugM("ppblk - processed: ", ct, ", backlog: ", backlog);
+    //    qCDebug(normal) << "ppblk - processed:" << ct << ", backlog:" << backlog;
     //}
 }
 
@@ -1196,8 +1195,8 @@ bool Controller::process_VerifyAndAddBlock(PreProcessedBlockPtr ppb)
         storage->addBlock(ppb, saveUndoInfo, nLeft, masterNotifySubsFlag);
 
     } catch (const HeaderVerificationFailure & e) {
-        DebugM("addBlock exception: ", e.what());
-        qCInfo(normal) << "Possible reorg detected at height " << ppb->height << ", rewinding 1 block and trying again ...";
+        qCDebug(normal) << "addBlock exception:" << e.what();
+        qCInfo(normal) << "Possible reorg detected at height" << ppb->height << ", rewinding 1 block and trying again ...";
         process_DoUndoAndRetry();
         return false;
     } catch (const std::exception & e) {
@@ -1527,7 +1526,7 @@ void Controller::dumpScriptHashes(const QString &fileName) const
         if (ctr && !(ctr % 1000000))
             qCInfo(normal) << text;
         else
-            DebugM(text);
+            qCDebug(normal) << text;
     });
     outFile.flush();
     outFile.close();
