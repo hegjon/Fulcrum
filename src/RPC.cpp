@@ -860,7 +860,7 @@ namespace RPC {
 
         // Sanity check to ensure we estimated the size correctly. This branch is compiled-out of release builds.
         if constexpr (!isReleaseBuild()) {
-            if (const auto actualSize = payload.size(); reserveSize != actualSize && Debug::isEnabled())
+            if (const auto actualSize = payload.size(); reserveSize != actualSize && normal().isDebugEnabled())
                 qDebug() << "reserveSize: " << reserveSize << " != actualSize: " << actualSize
                         << " (this leads to extra mallocs) for: \"" << payload.left(80) << "\" ... ";
         }

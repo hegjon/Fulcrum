@@ -650,7 +650,7 @@ void SynchMempoolTask::processResults()
         newSize = mempool.txs.size();
         newNumAddresses = mempool.hashXTxs.size();
     } // release mempool lock
-    if (oldSize != newSize && Debug::isEnabled()) {
+    if (oldSize != newSize && normal().isDebugEnabled()) {
         Controller::printMempoolStatusToLog(newSize, newNumAddresses, true, true);
     }
     emit success();

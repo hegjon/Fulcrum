@@ -1526,7 +1526,7 @@ void Server::LogFilter::Broadcast::operator()(bool isSuccess, const QByteArray &
             // log the line if it's not already been logged (this prevents log spam abuse from malicious clients)
             which.insert(key);
             return {true, false};
-        } else if (Debug::isEnabled()) {
+        } else if (normal().isDebugEnabled()) {
             // even if suppressed, log it anyway as debug log, iff debug is enabled
             return {true, true};
         }
