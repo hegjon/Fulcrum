@@ -102,7 +102,7 @@ void SrvMgr::startServers()
     _net = BTC::NetFromName(storage->getChain()); // set this now since server instances may need this information
 
     if (options->peerDiscovery) {
-        qInfo() << "SrvMgr: starting PeerMgr ...";
+        qCInfo(normal) << "SrvMgr: starting PeerMgr ...";
         peermgr = std::make_shared<PeerMgr>(this, storage, options);
         peermgr->startup(); // may throw
         connect(this, &SrvMgr::allServersStarted, peermgr.get(), &PeerMgr::on_allServersStarted);
@@ -120,7 +120,7 @@ void SrvMgr::startServers()
     const auto num =   options->interfaces.length() + options->sslInterfaces.length()
                      + options->wsInterfaces.length() + options->wssInterfaces.length()
                      + options->adminInterfaces.length();
-    qInfo() << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
+    qCInfo(normal) << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
     const auto firstSsl = options->interfaces.size(),
                firstWs = options->interfaces.size() + options->sslInterfaces.size(),
                firstWss = options->interfaces.size() + options->sslInterfaces.size() + options->wsInterfaces.size();
@@ -306,7 +306,7 @@ void SrvMgr::on_liftPeerSuffixBan(const QString &s)
         wasBanned = bannedPeerSuffixes.remove(suffix);
     }
     if (wasBanned)
-        qInfo() << "Peers matching suffix *" << suffix << " are no longer banned";
+        qCInfo(normal) << "Peers matching suffix *" << suffix << " are no longer banned";
 }
 
 void SrvMgr::on_banIP(const QHostAddress &addr)

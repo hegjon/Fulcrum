@@ -542,7 +542,7 @@ Storage::~Storage() { qCDebug(normal) << __func__; cleanup(); }
 
 void Storage::startup()
 {
-    qInfo() << "Loading database ...";
+    qCInfo(normal) << "Loading database ...";
 
     if (UNLIKELY(!subsmgr || !options))
         throw BadArgs("Storage instance constructed with nullptr for `options` and/or `subsmgr` -- FIXME!");
@@ -612,7 +612,7 @@ void Storage::startup()
             p->meta = m_db;
             Debug () << "Read meta from db ok";
             if (!p->meta.chain.isEmpty())
-                qInfo() << "Chain: " << p->meta.chain;
+                qCInfo(normal) << "Chain: " << p->meta.chain;
         } else {
             // ok, did not exist .. write a new one to db
             saveMeta_impl();
@@ -735,7 +735,7 @@ void Storage::setChain(const QString &chain)
         LockGuard l(p->metaLock);
         p->meta.chain = chain;
     }
-    qInfo() << "Chain: " << chain;
+    qCInfo(normal) << "Chain: " << chain;
     save(SaveItem::Meta);
 }
 
@@ -879,7 +879,7 @@ void Storage::loadCheckHeadersInDB()
     assert(p->blockHeaderSize() > 0);
     p->headersFile = std::make_unique<RecordFile>(options->datadir + QDir::separator() + "headers", size_t(p->blockHeaderSize()), 0x00f026a1); // may throw
 
-    qInfo() << "Verifying headers ...";
+    qCInfo(normal) << "Verifying headers ...";
     uint32_t num = unsigned(p->headersFile->numRecords());
     std::vector<QByteArray> hVec;
     const auto t0 = Util::getTimeNS();
@@ -932,7 +932,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
     if (const int height = latestTip().first; height >= 0)
     {
         p->blkInfos.reserve(std::min(size_t(height+1), MAX_HEADERS));
-        qInfo() << "Checking tx counts ...";
+        qCInfo(normal) << "Checking tx counts ...";
         for (int i = 0; i <= height; ++i) {
             static const QString errMsg("Failed to read a blkInfo from db, the database may be corrupted");
             const auto blkInfo = GenericDBGetFailIfMissing<BlkInfo>(p->db.blkinfo.get(), uint32_t(i), errMsg, false, p->db.defReadOpts);
@@ -944,7 +944,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
             p->blkInfos.emplace_back(blkInfo);
             p->blkInfosByTxNum[blkInfo.txNum0] = unsigned(p->blkInfos.size()-1);
         }
-        qInfo() << ct << " total transactions";
+        qCInfo(normal) << ct << " total transactions";
     }
     if (ct != p->txNumNext) {
         throw DatabaseFormatError(QString("BlkInfo txNums do not add up to expected value of %1 != %2."
@@ -959,7 +959,7 @@ void Storage::loadCheckUTXOsInDB()
     FatalAssert(!!p->db.utxoset, "Utxo set db is not open");
 
     if (options->doSlowDbChecks) {
-        qInfo() << "CheckDB: Verifying utxo set (this may take some time) ...";
+        qCInfo(normal) << "CheckDB: Verifying utxo set (this may take some time) ...";
 
         const auto t0 = Util::getTimeNS();
         {
@@ -1012,7 +1012,7 @@ void Storage::loadCheckUTXOsInDB()
                     throw DatabaseError(msg);
                 }
                 if (0 == ++p->utxoCt % 100000) {
-                    (0 == p->utxoCt % 2500000 ? qInfo() : qDebug(normal)) << "CheckDB: Verified " << p->utxoCt << " utxos ...";
+                    (0 == p->utxoCt % 2500000 ? qInfo(normal) : qDebug(normal)) << "CheckDB: Verified" << p->utxoCt << "utxos ...";
                 }
             }
 
@@ -1030,8 +1030,8 @@ void Storage::loadCheckUTXOsInDB()
     }
 
     if (const auto ct = utxoSetSize(); ct)
-        qInfo() << "UTXO set: "  << ct << Util::Pluralize(" utxo", ct)
-              << ", " << QString::number(utxoSetSizeMiB(), 'f', 3) << " MiB";
+        qCInfo(normal) << "UTXO set:"  << ct << Util::Pluralize(" utxo", ct)
+              << "," << QString::number(utxoSetSizeMiB(), 'f', 3) << "MiB";
 }
 
 void Storage::loadCheckEarliestUndo()
@@ -1642,7 +1642,7 @@ BlockHeight Storage::undoLatestBlock(bool notifySubs)
 
         const size_t nTx = undo.blkInfo.nTx, nSH = undo.scriptHashes.size();
         const auto elapsedms = (Util::getTimeNS() - t0) / 1e6;
-        qInfo() << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
+        qCInfo(normal) << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
               << nTx << " " << Util::Pluralize("transaction", nTx)
               << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
               << ", in " << QString::number(elapsedms, 'f', 2) << " msec, new height now: " << prevHeight;

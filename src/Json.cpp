@@ -579,7 +579,7 @@ namespace {
         if (files.isEmpty()) throw BadArgs(QString("DATADIR '%1' does not have any *.json files").arg(dir));
         std::vector<QByteArray> fileData;
         std::size_t total = 0;
-        qInfo() << "Reading " << files.size() << " *.json files from DATADIR=" << dir << " ...";
+        qCInfo(normal) << "Reading " << files.size() << " *.json files from DATADIR=" << dir << " ...";
 
         for (auto & fn : files) {
             QFile f(dataDir.path() + QDir::separator() + fn);
@@ -588,7 +588,7 @@ namespace {
             fileData.push_back(f.readAll());
             total += fileData.back().size();
         }
-        qInfo() << "Read " << total << " bytes total";
+        qCInfo(normal) << "Read " << total << " bytes total";
         std::vector<QVariant> parsed;
         parsed.reserve(fileData.size());
         int iters = 10;
@@ -601,8 +601,8 @@ namespace {
                     throw BadArgs("Expected ITERS= to be a positive integer");
             }
         }
-        qInfo() << "---";
-        qInfo() << "Benching custom Json lib parse: Iterating " << iters << " times ...";
+        qCInfo(normal) << "---";
+        qCInfo(normal) << "Benching custom Json lib parse: Iterating " << iters << " times ...";
         double t0 = Util::getTimeSecs();
         for (int i = 0; i < iters; ++i) {
             for (const auto & ba : fileData) {
@@ -613,13 +613,13 @@ namespace {
             }
         }
         double tf = Util::getTimeSecs();
-        qInfo() << "Custom lib parse - total: " << (tf-t0) << " secs" << " - per-iter: "
+        qCInfo(normal) << "Custom lib parse - total: " << (tf-t0) << " secs" << " - per-iter: "
               << QString::asprintf("%1.16g", ((tf-t0)/iters) * 1e3) << " msec";
         parsed.clear();
         parsed.reserve(fileData.size());
 
-        qInfo() << "---";
-        qInfo() << "Benching Qt Json parse: Iterating " << iters << " times ...";
+        qCInfo(normal) << "---";
+        qCInfo(normal) << "Benching Qt Json parse: Iterating " << iters << " times ...";
         t0 = Util::getTimeSecs();
         for (int i = 0; i < iters; ++i) {
             for (const auto & ba : fileData) {
@@ -634,11 +634,11 @@ namespace {
             }
         }
         tf = Util::getTimeSecs();
-        qInfo() << "Qt Json parse - total: " << (tf-t0) << " secs" << " - per-iter: "
+        qCInfo(normal) << "Qt Json parse - total: " << (tf-t0) << " secs" << " - per-iter: "
               << QString::asprintf("%1.16g", ((tf-t0)/iters) * 1e3) << " msec";
 
-        qInfo() << "---";
-        qInfo() << "Benching custom Json lib serialize: Iterating " << iters << " times ...";
+        qCInfo(normal) << "---";
+        qCInfo(normal) << "Benching custom Json lib serialize: Iterating " << iters << " times ...";
         t0 = Util::getTimeSecs();
         for (int i = 0; i < iters; ++i) {
             for (const auto & var : parsed) {
@@ -646,11 +646,11 @@ namespace {
             }
         }
         tf = Util::getTimeSecs();
-        qInfo() << "Custom lib serialize - total: " << (tf-t0) << " secs" << " - per-iter: "
+        qCInfo(normal) << "Custom lib serialize - total: " << (tf-t0) << " secs" << " - per-iter: "
               << QString::asprintf("%1.16g", ((tf-t0)/iters) * 1e3) << " msec";
 
-        qInfo() << "---";
-        qInfo() << "Benching Qt lib serialize: Iterating " << iters << " times ...";
+        qCInfo(normal) << "---";
+        qCInfo(normal) << "Benching Qt lib serialize: Iterating " << iters << " times ...";
         t0 = Util::getTimeSecs();
         for (int i = 0; i < iters; ++i) {
             for (const auto & var : parsed) {
@@ -660,10 +660,10 @@ namespace {
             }
         }
         tf = Util::getTimeSecs();
-        qInfo() << "Qt lib serialize - total: " << (tf-t0) << " secs" << " - per-iter: "
+        qCInfo(normal) << "Qt lib serialize - total: " << (tf-t0) << " secs" << " - per-iter: "
               << QString::asprintf("%1.16g", ((tf-t0)/iters) * 1e3) << " msec";
 
-        qInfo() << "---";
+        qCInfo(normal) << "---";
     }
 
     void test()
@@ -682,13 +682,13 @@ namespace {
             QByteArrayList bal = {{ "astring", "anotherstring", "laststring", QByteArray{} }};
             QVariant v;
             v.setValue(bal);
-            qInfo() << "QByteArrayList -> JSON: " << (json=toUtf8(v, true, SerOption::BareNullOk));
+            qCInfo(normal) << "QByteArrayList -> JSON: " << (json=toUtf8(v, true, SerOption::BareNullOk));
             if (json != expect1) throw Exception(QString("Json does not match, excpected: %1").arg(expect1));
             QStringList sl = {{ "astringl1", "anotherstringl2", "laststringl3", QString{} }};
             v.setValue(sl);
-            qInfo() << "QStringList -> JSON: " << (json=toUtf8(v, true, SerOption::BareNullOk));
+            qCInfo(normal) << "QStringList -> JSON: " << (json=toUtf8(v, true, SerOption::BareNullOk));
             if (json != expect2) throw Exception(QString("Json does not match, excpected: %1").arg(expect2));
-            qInfo() << "Parse \"1.01000\": " << (json=toUtf8(parseUtf8("1.01000", ParseOption::AcceptAnyValue), true, SerOption::BareNullOk));
+            qCInfo(normal) << "Parse \"1.01000\": " << (json=toUtf8(parseUtf8("1.01000", ParseOption::AcceptAnyValue), true, SerOption::BareNullOk));
             if (json != "1.01") throw Exception(QString("Json does not match, excpected: %1").arg("1.01"));
             QVariantHash h;
             QByteArray empty; empty.resize(10); empty.resize(0);
@@ -714,13 +714,13 @@ namespace {
                {"u64_max", qulonglong(18446744073709551615ULL)},
                {"z_i64_min", qlonglong(0x8000000000000000LL)},
             }};
-            qInfo() << "QVariantHash -> JSON: " << toUtf8(h, true, SerOption::BareNullOk);
+            qCInfo(normal) << "QVariantHash -> JSON: " << toUtf8(h, true, SerOption::BareNullOk);
             // we can't do the top-level hash since that has random order based on hash seed.. so we do this
             json = toUtf8(h, false /* !compact */, SerOption::BareNullOk);
             auto hh = parseUtf8(json, ParseOption::RequireObject).toMap();
             json = toUtf8(hh["mapkey"], true, SerOption::BareNullOk);
             if (json != expect3) throw Exception(QString("Json \"mapkey\" does not match\nexcpected:\n%1\n\ngot:\n%2").arg(expect3).arg(QString(json)));
-            qInfo() << "Basic tests: passed";
+            qCInfo(normal) << "Basic tests: passed";
         }
         // /end basic tests
         const char *dir = std::getenv("DATADIR");
@@ -747,7 +747,7 @@ namespace {
             files.push_back(std::move(t));
         }
         if (files.empty()) throw BadArgs(QString("DATADIR '%1' does not have any [pass/fail/round]*.json files").arg(dir));
-        qInfo() << "Found " << files.size() << " json test files, running extended tests ...";
+        qCInfo(normal) << "Found " << files.size() << " json test files, running extended tests ...";
         const auto runTest = [](const TFile &t) {
             QFile f(t.path);
             auto baseName = QFileInfo(t.path).baseName();
@@ -771,7 +771,7 @@ namespace {
                                     .arg(QString(json)).arg(QString(json.toHex()))
                                     .arg(QString(json2)).arg(QString(json2.toHex())));
             }
-            qInfo() << baseName << ": passed";
+            qCInfo(normal) << baseName << ": passed";
         };
         for (const auto & t : files)
             runTest(t);

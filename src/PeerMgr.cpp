@@ -257,9 +257,9 @@ void PeerMgr::on_rpcAddPeer(const PeerInfoList &infos, const QHostAddress &sourc
                     return;
                 }
             }
-            DebugM("add_peer: Rejected because source (", source.toString(), ") does not match resolved address (",
-                   result.addresses().isEmpty() ? QString() : result.addresses().front().toString(), ")",
-                   skipped ? " (some of the resolved addresses were skipped due us lacking the capability to connect"
+            qCDebug(normal) << "add_peer: Rejected because source (" << source << ") does not match resolved address (" <<
+                   (result.addresses().isEmpty() ? QString() : result.addresses().front().toString()) << ")" <<
+                   (skipped ? " (some of the resolved addresses were skipped due us lacking the capability to connect"
                              " to their advertised IP protocol)" : "");
         });
         QTimer::singleShot(int(kDNSTimeout*1e3), this, [this, lookupId, pi] {
@@ -358,7 +358,7 @@ void PeerMgr::retryFailedPeers(bool useBadMap)
                 // optimization to not waste memory on defunct peers and is not a requirement for correctness.
                 // Keeping the seedPeers around indefinitely even if 'failed' does very little harm since the seedPeer
                 // list is bounded and small, and it does good (in the case of an extended connectivity outage).
-                qInfo() << "Purging failed peer " << pi.hostName << " because it has been unavailable for " <<  failureHoursString(pi);
+                qCInfo(normal) << "Purging failed peer " << pi.hostName << " because it has been unavailable for " <<  failureHoursString(pi);
                 continue;
             }
             auto it = queued.insert(pi.hostName, pi);

@@ -480,7 +480,7 @@ void SynchMempoolTask::process()
 }
 
 
-/// takes locks, prints to qInfo() every 30 seconds if there were changes
+/// takes locks, prints to qCInfo(normal) every 30 seconds if there were changes
 void Controller::printMempoolStatusToLog() const
 {
     if (storage) {
@@ -503,8 +503,8 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
     double now = Util::getTimeSecs();
     std::lock_guard g(mut);
     if (force || (newSize > 0 && (oldSize != newSize || oldNumAddresses != numAddresses) && now - lastTS >= interval)) {
-        auto log = isDebug ? qDebug(normal) : qInfo();
-        log << newSize << Util::Pluralize(" mempool tx", newSize) << " involving " << numAddresses
+        auto log = isDebug ? qDebug(normal) : qInfo(normal);
+        log << newSize << Util::Pluralize(" mempool tx", newSize) << "involving" << numAddresses
             << Util::Pluralize(" address", numAddresses);
         if (!force) {
             oldSize = newSize;
@@ -707,7 +707,7 @@ void SynchMempoolTask::doGetRawMempool()
                     auto [mempool, lock] = storage->mutableMempool(); // take the lock exclusively here
                     const auto sz = mempool.txs.size();
                     mempool.clear();
-                    DebugM("Mempool cleared of ", sz, Util::Pluralize(" tx", sz));
+                    qCDebug(normal) << "Mempool cleared of" << sz << Util::Pluralize(" tx", sz);
                 }
             });
         int newCt = 0;
@@ -722,7 +722,7 @@ void SynchMempoolTask::doGetRawMempool()
             const auto txidHex = var.toString().trimmed().toLower();
             const TxHash hash = Util::ParseHexFast(txidHex.toUtf8());
             if (hash.length() != HashLen) {
-                qCritical() << resp.method << ": got an empty tx hash";
+                qCCritical(normal) << resp.method << ": got an empty tx hash";
                 emit errored();
                 return;
             }
@@ -746,12 +746,12 @@ void SynchMempoolTask::doGetRawMempool()
             // If tx's were dropped, we clear the mempool and try again. We also enqueue notifications for the dropped
             // tx's.
             const bool recommendFullRetry = oldCt >= 2 && droppedTxs.size() >= oldCt/2; // more than 50% of the mempool tx's dropped out. something is funny. likely a new block arrived.
-            DebugM(droppedTxs.size(), " txs dropped from mempool, resetting mempool and trying again ...");
+            qCDebug(normal) << droppedTxs.size() << "txs dropped from mempool, resetting mempool and trying again ...";
             // NOTIFICATION
             if (recommendFullRetry) {
                 // NOTIFICATION of all ...
                 scriptHashesAffected.merge(Util::keySet<decltype(scriptHashesAffected)>(mempool.hashXTxs));
-                DebugM("Will notify for all ", scriptHashesAffected.size(), " addresses of mempool for notificatons ...");
+                qCDebug(normal) << "Will notify for all" << scriptHashesAffected.size() << "addresses of mempool for notificatons ...";
             } else {
                 // just the dropped tx's
                 for (const auto & txid : droppedTxs) {
@@ -761,7 +761,7 @@ void SynchMempoolTask::doGetRawMempool()
                             scriptHashesAffected.merge(Util::keySet<decltype(scriptHashesAffected)>(tx->hashXs));
                     }
                 }
-                DebugM("Will notify for ", scriptHashesAffected.size(), " addresses belonging to the dropped tx's for notificatons ...");
+                qCDebug(normal) << "Will notify for" << scriptHashesAffected.size() << "addresses belonging to the dropped tx's for notificatons ...";
             }
             clearMempool = true; // Defer object at top of this lamba above will clear the mempool on function return (taking an exclusive lock) if this is true.
             if (recommendFullRetry) {
@@ -774,7 +774,7 @@ void SynchMempoolTask::doGetRawMempool()
         }
 
         if (newCt)
-            DebugM(resp.method, ": got reply with ", txidList.size(), " items, ", newCt, " new");
+            qCDebug(normal) << resp.method << ": got reply with" << txidList.size() << "items," << newCt << "new";
         isdlingtxs = true;
         expectedNumTxsDownloaded = unsigned(newCt);
         // TX data will be downloaded now, if needed
@@ -970,7 +970,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 if (task->info.bestBlockhash == tipHash) { // no reorg
                     if (!beSilentIfUpToDate) {
                         storage->updateMerkleCache(unsigned(tip));
-                        qInfo() << "Block height " << tip << ", up-to-date";
+                        qCInfo(normal) << "Block height " << tip << ", up-to-date";
                         emit upToDate();
                         emit newHeader(unsigned(tip), tipHeader);
                     }
@@ -988,7 +988,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                 return;
             } else {
-                qInfo() << "Block height " << sm->ht << ", downloading new blocks ...";
+                qCInfo(normal) << "Block height " << sm->ht << ", downloading new blocks ...";
                 emit synchronizing();
                 sm->state = State::GetBlocks;
             }
@@ -1020,7 +1020,7 @@ void Controller::process(bool beSilentIfUpToDate)
         process_DownloadingBlocks();
     } else if (sm->state == State::FinishedDL) {
         size_t N = sm->endHeight - sm->startheight + 1;
-        qInfo() << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
+        qCInfo(normal) << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
               << " (" << sm->nIns << " " << Util::Pluralize("input", sm->nIns) << ", " << sm->nOuts << " " << Util::Pluralize("output", sm->nOuts)
               << ", " << sm->nSH << Util::Pluralize(" address", sm->nSH) << ")"
               << ", verified ok.";
@@ -1197,7 +1197,7 @@ bool Controller::process_VerifyAndAddBlock(PreProcessedBlockPtr ppb)
 
     } catch (const HeaderVerificationFailure & e) {
         DebugM("addBlock exception: ", e.what());
-        qInfo() << "Possible reorg detected at height " << ppb->height << ", rewinding 1 block and trying again ...";
+        qCInfo(normal) << "Possible reorg detected at height " << ppb->height << ", rewinding 1 block and trying again ...";
         process_DoUndoAndRetry();
         return false;
     } catch (const std::exception & e) {
@@ -1520,18 +1520,18 @@ void Controller::dumpScriptHashes(const QString &fileName) const
     QFile outFile(fileName);
     if (!outFile.open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Truncate))
         throw BadArgs(QString("Dump: Output file \"%1\" could not be opened for writing").arg(fileName));
-    qInfo() << "Dump: " << "writing all known script hashes from db to \"" << fileName << "\" (this may take some time) ...";
+    qCInfo(normal) << "Dump: " << "writing all known script hashes from db to \"" << fileName << "\" (this may take some time) ...";
     const auto t0 = Util::getTimeSecs();
     const auto count = storage->dumpAllScriptHashes(&outFile, 2, 0, [](size_t ctr){
         const QString text(QString("Dump: wrote %1 scripthashes so far ...").arg(ctr));
         if (ctr && !(ctr % 1000000))
-            qInfo() << text;
+            qCInfo(normal) << text;
         else
             DebugM(text);
     });
     outFile.flush();
     outFile.close();
-    qInfo() << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
+    qCInfo(normal) << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
           << " in " << QString::number(Util::getTimeSecs() - t0, 'f', 1) << " seconds"
           <<" (" << QString::number(outFile.size()/1e6, 'f', 3) << " MiB)";
     emit dumpScriptHashesComplete();

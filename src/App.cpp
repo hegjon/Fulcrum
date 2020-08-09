@@ -69,7 +69,7 @@ App::App(int argc, char *argv[])
     } catch (const std::exception &e) {
         qputenv("QT_MESSAGE_PATTERN", "%{message}"); // suppress timestamp stuff
         qCritical("%s", e.what());
-        qInfo() << "Use the -h option to show help.";
+        qCInfo(normal) << "Use the -h option to show help.";
         std::exit(1);
     }
     if (options->syslogMode) {
@@ -116,7 +116,7 @@ void App::startup()
         auto gotsig = [](int sig) {
             static int ct = 0;
             if (!ct++) {
-                qInfo() << "Got signal: " << sig << ", exiting ...";
+                qCInfo(normal) << "Got signal: " << sig << ", exiting ...";
                 app()->exit(sig);
             } else if (ct < 5) {
                 std::printf("Duplicate signal %d already being handled, ignoring\n", sig);

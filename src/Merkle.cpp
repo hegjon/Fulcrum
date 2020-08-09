@@ -153,13 +153,13 @@ namespace Merkle {
         for (auto & tx : txs) tx = QByteArray::fromHex(tx);
         auto pair = Merkle::branchAndRoot(txs, 0);
         static const auto ba2quoted = [](const auto &b){return QString("'%1'").arg(QString::fromUtf8(b.toHex()));};
-        qInfo() << "Txs: [ " << Util::Stringify(txs, ba2quoted) << " ]";
-        qInfo() << "Branch: [ " << Util::Stringify(pair.first, ba2quoted) << " ]";
-        qInfo() << "Root: '" << pair.second.toHex() << "'";
-        qInfo() << "Level1: [ " << Util::Stringify(Merkle::level(txs, 1), ba2quoted) << " ]";
+        qCInfo(normal) << "Txs: [ " << Util::Stringify(txs, ba2quoted) << " ]";
+        qCInfo(normal) << "Branch: [ " << Util::Stringify(pair.first, ba2quoted) << " ]";
+        qCInfo(normal) << "Root: '" << pair.second.toHex() << "'";
+        qCInfo(normal) << "Level1: [ " << Util::Stringify(Merkle::level(txs, 1), ba2quoted) << " ]";
 
         const size_t num = 64000;
-        qInfo() << "Testing performance, filling " << num << " hashes and computing merkle...";
+        qCInfo(normal) << "Testing performance, filling " << num << " hashes and computing merkle...";
         // next, test perfromance -- by
         Merkle::HashVec txs2(num);
         for (size_t i = 0; i < txs2.size(); ++i) {
@@ -169,7 +169,7 @@ namespace Merkle {
         }
         const auto t0 = Util::getTimeNS();
         auto pair2 = Merkle::branchAndRoot(txs2, 0);
-        qInfo() << "Merkle took: " << QString::number((Util::getTimeNS() - t0)/1e6, 'f', 4) << " msec";
+        qCInfo(normal) << "Merkle took: " << QString::number((Util::getTimeNS() - t0)/1e6, 'f', 4) << " msec";
     }
 
 
@@ -195,14 +195,14 @@ namespace Merkle {
     void Cache::initialize(unsigned l)
     {
         ExclusiveLockGuard g(lock);
-        qInfo() << "Initializing header merkle cache ...";
+        qCInfo(normal) << "Initializing header merkle cache ...";
         const auto hashes = getHashes(0, l);
         initialize_nolock(hashes);
     }
     void Cache::initialize(const HashVec &hashes)
     {
         ExclusiveLockGuard g(lock);
-        qInfo() << "Initializing header merkle cache ...";
+        qCInfo(normal) << "Initializing header merkle cache ...";
         initialize_nolock(hashes);
     }
 

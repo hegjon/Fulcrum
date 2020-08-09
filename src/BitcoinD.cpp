@@ -47,7 +47,7 @@ BitcoinDMgr::BitcoinDMgr(const QString &hostName, quint16 port, const QString &u
 BitcoinDMgr::~BitcoinDMgr() {  cleanup(); }
 
 void BitcoinDMgr::startup() {
-    qInfo() << objectName() << ": starting " << N_CLIENTS << " " << Util::Pluralize("bitcoin rpc client", N_CLIENTS) << " ...";
+    qCInfo(normal) << objectName() << ": starting " << N_CLIENTS << " " << Util::Pluralize("bitcoin rpc client", N_CLIENTS) << " ...";
 
     // As soon as a good BitcoinD is up, try and grab the network info (version, subversion, etc).  This must
     // happen early because the values in this info object determine which workarounds we may or may not apply to
@@ -103,7 +103,7 @@ void BitcoinDMgr::startup() {
 
     start();
 
-    qInfo() << objectName() << ": started ok";
+    qCInfo(normal) << objectName() << ": started ok";
 }
 
 void BitcoinDMgr::on_started()
