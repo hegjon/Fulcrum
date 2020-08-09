@@ -503,7 +503,7 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
     double now = Util::getTimeSecs();
     std::lock_guard g(mut);
     if (force || (newSize > 0 && (oldSize != newSize || oldNumAddresses != numAddresses) && now - lastTS >= interval)) {
-        auto log = isDebug ? qDebug() : qInfo();
+        auto log = isDebug ? qDebug(normal) : qInfo();
         log << newSize << Util::Pluralize(" mempool tx", newSize) << " involving " << numAddresses
             << Util::Pluralize(" address", numAddresses);
         if (!force) {

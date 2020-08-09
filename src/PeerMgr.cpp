@@ -137,7 +137,7 @@ void PeerMgr::parseServersDotJson(const QString &fnIn)
         info.hostName = it.key().trimmed().toLower();
         // skip empties/malformed entries, or pruning entries -- thisdefensive programming.. ideally we include only good entries in servers.json
         if (info.hostName.isEmpty() || d.isEmpty() || (!d.value("pruning").isNull() && d.value("pruning").toString() != "-")) {
-            qDebug() << "Server \"" << info.hostName << "\" in " << fn << " has either no data or uses pruning, skipping";
+            qCDebug(normal) << "Server \"" << info.hostName << "\" in " << fn << " has either no data or uses pruning, skipping";
             continue;
         }
         bool ok;
@@ -149,10 +149,10 @@ void PeerMgr::parseServersDotJson(const QString &fnIn)
             info.tcp = quint16(val);
         info.protocolVersion = d.value("version", ServerMisc::MinProtocolVersion.toString()).toString();
         if (!info.isMinimallyValid()) {
-            qDebug() << "Bad server in " << fn << ": " << info.hostName;
+            qCDebug(normal) << "Bad server in " << fn << ": " << info.hostName;
             continue;
         } else if (info.protocolVersion < ServerMisc::MinProtocolVersion || info.protocolVersion > ServerMisc::MaxProtocolVersion) {
-            qDebug() << "Server in " << fn << " has incompatible protocol version (" << info.protocolVersion.toString() << "), skipping";
+            qCDebug(normal) << "Server in " << fn << " has incompatible protocol version (" << info.protocolVersion.toString() << "), skipping";
             continue;
         }
         seedPeers[info.hostName] = info;
@@ -160,12 +160,12 @@ void PeerMgr::parseServersDotJson(const QString &fnIn)
     if (seedPeers.isEmpty())
         throw InternalError(QString("PeerMgr: No valid peers parsed from %1").arg(fn));
     seedPeers.squeeze();
-    qDebug() << objectName() << ": using " << seedPeers.size() << " peers from " << fn;
+    qCDebug(normal) << objectName() << ": using " << seedPeers.size() << " peers from " << fn;
 }
 
 void PeerMgr::on_started()
 {
-    qDebug() << objectName() << ": started ok";
+    qCDebug(normal) << objectName() << ": started ok";
     conns += connect(this, &PeerMgr::needUpdateSoon, this, &PeerMgr::updateSoon);
     chan.put("ok");
 }
@@ -174,7 +174,7 @@ void PeerMgr::cleanup()
 {
     stop();
     if (auto num = stopAllTimers(); num)
-        qDebug() << objectName() << " stopped " << num << " active timers";
+        qCDebug(normal) << objectName() << " stopped " << num << " active timers";
 }
 
 void PeerMgr::on_rpcAddPeer(const PeerInfoList &infos, const QHostAddress &source)

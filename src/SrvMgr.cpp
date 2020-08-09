@@ -57,7 +57,7 @@ SrvMgr::SrvMgr(const std::shared_ptr<const Options> & options,
 
 SrvMgr::~SrvMgr()
 {
-    qDebug() << __func__ ;
+    qCDebug(normal) << __func__ ;
     cleanup();
 }
 

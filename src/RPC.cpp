@@ -882,36 +882,36 @@ namespace RPC {
     /* static */ void HttpConnection::Test()
     {
         std::shared_ptr<HttpConnection> h(new HttpConnection(MethodMap{}, 1), [](HttpConnection *h){
-            qDebug() << "Calling h->deleteLater...";
+            qCDebug(normal) << "Calling h->deleteLater...";
             h->deleteLater();
         });
-        connect(h.get(), &QObject::destroyed, qApp, [](QObject*){qDebug() << "HttpConnection deleted! yay!";});
+        connect(h.get(), &QObject::destroyed, qApp, [](QObject*){qCDebug(normal) << "HttpConnection deleted! yay!";});
         h->setV1(true);
         h->errorPolicy = ErrorPolicyDisconnect;
         h->setAuth("CalinsNads", "ENTER PASSWORD HERE");
         h->socket = new QTcpSocket(h.get());
         // below will create circular refs until socket is deleted...
         connect(h->socket, &QAbstractSocket::connected, h.get(), [h]{
-            qDebug() << h->prettyName() << " connected";
+            qCDebug(normal) << h->prettyName() << " connected";
             h->connectedConns.push_back(
                 connect(h.get(), &RPC::ConnectionBase::gotMessage, h.get(),
                         [h](qint64 id_in, const RPC::Message &m)
                     {
-                        qDebug() << "Got message from server: id: " << id_in << " json: " << m.toJsonString();
+                        qCDebug(normal) << "Got message from server: id: " << id_in << " json: " << m.toJsonString();
                     })
             ); // connection will be auto-disconnected on socket disconnect in superclass  on_disconnected impl.
             h->connectedConns.push_back(
                 connect(h.get(), &RPC::ConnectionBase::gotErrorMessage, h.get(),
                         [](qint64 id_in, const RPC::Message &m)
                     {
-                        qDebug() << "Got ERROR message from server: id: " << id_in << " json: " << m.toJsonString();
+                        qCDebug(normal) << "Got ERROR message from server: id: " << id_in << " json: " << m.toJsonString();
                     })
             ); // connection will be auto-disconnected on socket disconnect in superclass  on_disconnected impl.
             connect(h.get(), &AbstractConnection::lostConnection, h.get(),
                     [](AbstractConnection *a)
             {
                 if (auto h = dynamic_cast<HttpConnection *>(a)) {
-                    qDebug() << "lost connection, deleting socket. We should also die sometime later...";
+                    qCDebug(normal) << "lost connection, deleting socket. We should also die sometime later...";
                     if (h->socket) { h->socket->deleteLater(); h->socket = nullptr; }
                 }
             }, Qt::QueuedConnection);
@@ -928,7 +928,7 @@ namespace RPC {
                });
                const auto randHeight = rgen.bounded(1, 1000000);
                QTimer::singleShot(0, h.get(), [h, randHeight]{
-                   qDebug() << "Sending getblockstats " << randHeight << "...";
+                   qCDebug(normal) << "Sending getblockstats " << randHeight << "...";
                    emit h->sendRequest(newId(), "getblockstats", {randHeight});
                });
             }

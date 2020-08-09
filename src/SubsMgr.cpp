@@ -76,7 +76,7 @@ SubsMgr::SubsMgr(const std::shared_ptr<const Options> & o, Storage *s, const QSt
     setObjectName(n);
     _thread.setObjectName(n);
 }
-SubsMgr::~SubsMgr() { qDebug() << __func__; cleanup(); }
+SubsMgr::~SubsMgr() { qCDebug(normal) << __func__; cleanup(); }
 void SubsMgr::startup() {
     if (UNLIKELY(!storage || !options))
         // paranoia
@@ -85,7 +85,7 @@ void SubsMgr::startup() {
 }
 void SubsMgr::cleanup() {
     if (_thread.isRunning())
-         qDebug() << "Stopping " << objectName() << " ...";
+         qCDebug(normal) << "Stopping " << objectName() << " ...";
     stop();
 }
 
@@ -269,7 +269,7 @@ auto SubsMgr::subscribe(RPC::ConnectionBase *c, const HashX &sh, const StatusCal
         if (!wasnew && sub->subscribedClientIds.count(c->id)) {
             // already had a sub for this client, disconnect it because we will re-add the new functor below
             bool res = QObject::disconnect(sub.get(), &Subscription::statusChanged, c, nullptr);
-            if constexpr (debugPrint) qDebug() << "Existing sub disconnected signal: " << (res ? "ok" : "not ok!");
+            if constexpr (debugPrint) qCDebug(normal) << "Existing sub disconnected signal: " << (res ? "ok" : "not ok!");
         } else {
             // did not have a sub for this client, add its id and also add the destroyed signal to clean up the id
             // upon client object destruction
@@ -280,7 +280,7 @@ auto SubsMgr::subscribe(RPC::ConnectionBase *c, const HashX &sh, const StatusCal
                 LockGuard g(sub->mut);
                 sub->subscribedClientIds.erase(id);
                 sub->updateTS();
-                //qDebug() << "client id " << id << " destroyed, implicitly unsubbed from " << sub->scriptHash.toHex()
+                //qCDebug(normal) << "client id " << id << " destroyed, implicitly unsubbed from " << sub->scriptHash.toHex()
                 //        << ", " << sub->subscribedClientIds.size() << " sub(s) remain";
             });
             if (UNLIKELY(!conn))
@@ -303,7 +303,7 @@ auto SubsMgr::subscribe(RPC::ConnectionBase *c, const HashX &sh, const StatusCal
 
     if constexpr (debugPrint) {
         const auto elapsed = Util::getTimeNS() - t0;
-        qDebug() << "subscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
+        qCDebug(normal) << "subscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
     }
     return ret;
 }
@@ -340,7 +340,7 @@ bool SubsMgr::unsubscribe(RPC::ConnectionBase *c, const HashX &sh)
     }
     if constexpr (debugPrint) {
         const auto elapsed = Util::getTimeNS() - t0;
-        qDebug() << int(ret) << " unsubscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
+        qCDebug(normal) << int(ret) << " unsubscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
     }
     return ret;
 }

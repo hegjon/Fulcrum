@@ -42,7 +42,7 @@ Job::Job(QObject *context, ThreadPool *pool, const VoidFunc & work, const VoidFu
     : QObject(nullptr), pool(pool), work(work), weakContextRef(context ? context : pool)
 {
     if (!context && (completion || fail))
-        qDebug() << "Warning: use of ThreadPool jobs without a context is not recommended, FIXME!";
+        qCDebug(normal) << "Warning: use of ThreadPool jobs without a context is not recommended, FIXME!";
     if (completion)
         connect(this, &Job::completed, context ? context : pool, [completion]{ completion(); });
     if (fail)
@@ -53,7 +53,7 @@ Job::~Job() {}
 void Job::run() {
     emit started();
     if (UNLIKELY(pool->isShuttingDown())) {
-        qDebug() << objectName() << ": blockNewWork = true, exiting early without doing any work";
+        qCDebug(normal) << objectName() << ": blockNewWork = true, exiting early without doing any work";
         return;
 
     } else if (UNLIKELY(!weakContextRef)) {
