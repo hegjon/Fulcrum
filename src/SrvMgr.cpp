@@ -266,7 +266,7 @@ bool SrvMgr::isPeerHostNameBanned(const QString &h) const
 void SrvMgr::clientDisconnected(IdMixin::Id cid, const QHostAddress &addr)
 {
     if (auto count = addrIdMap.remove(addr, cid); UNLIKELY(count > 1)) {
-        qCWarning(normal) << "Multiple clients with id:" << cid << ", address " << addr << "in addrIdMap in" << __func__ << " -- FIXME!";
+        qCWarning(normal) << "Multiple clients with id:" << cid << ", address " << addr << "in addrIdMap in" <<  " -- FIXME!";
     } else if (count) {
         if (const auto size = size_t(addrIdMap.size());
                 size >= tableSqueezeThreshold && size * 2U <= size_t(addrIdMap.capacity())) {
@@ -312,7 +312,7 @@ void SrvMgr::on_liftPeerSuffixBan(const QString &s)
 void SrvMgr::on_banIP(const QHostAddress &addr)
 {
     if (addr.isNull()) {
-        qCDebug(normal) << __func__ << ": address is null!";
+        qCDebug(normal) << "address is null!";
         return;
     }
     bool wasNew = false;
@@ -351,7 +351,7 @@ void SrvMgr::on_banID(IdMixin::Id cid)
 void SrvMgr::on_liftIPBan(const QHostAddress &addr)
 {
     if (addr.isNull()) {
-        qCDebug(normal) << __func__ << ": address is null!";
+        qCDebug(normal) << "address is null!";
         return;
     }
 

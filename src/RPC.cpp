@@ -272,14 +272,14 @@ namespace RPC {
     void ConnectionBase::_sendRequest(const Message::Id & reqid, const QString &method, const QVariantList & params)
     {
         if (status != Connected || !socket) {
-            qCDebug(normal) << __func__ << "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
+            qCDebug(normal) <<  "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
         }
         const QByteArray jsonData = Message::makeRequest(reqid, method, params, v1).toJsonUtf8();
         if (jsonData.isEmpty()) {
-            qCritical(normal) << __func__ << " method: " << method << "; Unable to generate request JSON! FIXME!";
+            qCritical(normal) <<  " method: " << method << "; Unable to generate request JSON! FIXME!";
             return;
         }
         if (idMethodMap.size() >= MAX_UNANSWERED_REQUESTS) {  // prevent memory leaks in case of misbehaving peer
@@ -297,7 +297,7 @@ namespace RPC {
     void ConnectionBase::_sendNotification(const QString &method, const QVariant & params)
     {
         if (status != Connected || !socket) {
-            qCDebug(normal) << __func__ << "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
+            qCDebug(normal) <<  "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
@@ -308,11 +308,11 @@ namespace RPC {
         } else if (params.canConvert<QVariantList>()) {
             json = Message::makeNotification(method, params.toList(), v1).toJsonUtf8();
         } else {
-            qCritical() << __func__ << " method: " << method << "; Notification requires either a QVarantList or a QVariantMap as its argument! FIXME!";
+            qCritical() <<  " method: " << method << "; Notification requires either a QVarantList or a QVariantMap as its argument! FIXME!";
             return;
         }
         if (json.isEmpty()) {
-            qCritical() << __func__ << " method: " << method << "; Unable to generate notification JSON! FIXME!";
+            qCritical() <<  " method: " << method << "; Unable to generate notification JSON! FIXME!";
             return;
         }
         qCDebug(trace) << "Sending json:" << Util::Ellipsify(json);
@@ -323,7 +323,7 @@ namespace RPC {
     void ConnectionBase::_sendError(bool disc, int code, const QString &msg, const Message::Id & reqId)
     {
         if (status != Connected || !socket) {
-            qCDebug(normal) << __func__ << "; Not connected! (id:" << this->id << "), forcing on_disconnect ...";
+            qCDebug(normal) <<  "; Not connected! (id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
@@ -340,14 +340,14 @@ namespace RPC {
     void ConnectionBase::_sendResult(const Message::Id & reqid, const QVariant & result)
     {
         if (status != Connected || !socket) {
-            qCDebug(normal) << __func__ << ":  Not connected! (id:" << this->id << "), forcing on_disconnect ...";
+            qCDebug(normal) << "Not connected! (id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
         }
         const QByteArray json = Message::makeResponse(reqid, result, v1).toJsonUtf8();
         if (json.isEmpty()) {
-            qCritical(normal) << __func__ << ": Unable to generate result JSON! FIXME!";
+            qCritical(normal) << "Unable to generate result JSON! FIXME!";
             return;
         }
         qCDebug(trace) << "Sending result json:" << Util::Ellipsify(json);
@@ -559,7 +559,7 @@ namespace RPC {
     {
 #ifndef NDEBUG
         if (this->thread() != QThread::currentThread()) {
-            qCritical(normal) << __func__ << ": ERROR -- called from a thread outside this object's thread! FIXME!";
+            qCritical(normal) << "-- called from a thread outside this object's thread! FIXME!";
             return;
         }
 #endif
@@ -588,7 +588,7 @@ namespace RPC {
         };
         memoryWasteThreshold = MAX_BUFFER;
         if (memoryWasteThreshold < 0) {
-            qCritical(normal) << __func__ << ": MAX_BUFFER is < 0 -- fix me!";
+            qCritical(normal) <<  "MAX_BUFFER is < 0 -- fix me!";
             return;
         }
         // DoS protection logic below for memory exhaustion attacks.  If a client connects from many IPs and with
@@ -671,7 +671,7 @@ namespace RPC {
                 QByteArray data = socket->readLine();
                 nReceived += data.size();
                 data = data.simplified();
-                qCDebug(trace) << __func__ << "Got:" << data;
+                qCDebug(trace) <<  "Got:" << data;
                 if (sm->state == St::BEGIN) {
                     // read "HTTP/1.1 200 OK" line
                     auto toks = data.split(' ');

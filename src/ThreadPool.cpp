@@ -79,7 +79,7 @@ void Job::run() {
 void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidFunc & completion, const FailFunc & fail, int priority)
 {
     if (blockNewWork) {
-        qDebug(normal) << __func__ << ": Ignoring new work submitted because blockNewWork = true";
+        qDebug(normal) << "Ignoring new work submitted because blockNewWork = true";
         return;
     }
     static const FailFunc defaultFail = [](const QString &msg) {
@@ -124,7 +124,7 @@ bool ThreadPool::shutdownWaitForJobs(int timeout_ms)
 {
     blockNewWork = true;
     if constexpr (debugPrt) {
-        qDebug(normal) << __func__ << ": waiting for jobs ...";
+        qDebug(normal) << "waiting for jobs ...";
     }
     pool->clear();
     return pool->waitForDone(timeout_ms);

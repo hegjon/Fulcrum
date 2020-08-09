@@ -425,7 +425,7 @@ void BitcoinDMgr::submitRequest(QObject *sender, const RPC::Message::Id &rid, co
                     qCritical(normal) << "Context in table with rid" << rid.toString() << "differs from what we expected! FIXME!";
                 }
                 if constexpr (debugDeletes)
-                    qCDebug(normal) << __func__ << "- req context table size now:" << reqContextTable.size();
+                    qCDebug(normal) <<  "- req context table size now:" << reqContextTable.size();
             });
         } else {
             // this indicates a bug the calling code; it is sending dupe id's which we do not support
@@ -462,7 +462,7 @@ void BitcoinDMgr::requestTimeoutChecker()
             context->timedOut = true; // flag it as having already been handled
             ++requestTimeoutCtr; // increment counter for /stats
             emit context->fail(it.key(), "bitcoind request timed out");
-            qCDebug(normal) << __func__ << "- request id" << it.key().toString() << "timed out after" << (Util::getTime()-context->ts)/1e3
+            qCDebug(normal) <<  "- request id" << it.key().toString() << "timed out after" << (Util::getTime()-context->ts)/1e3
                    << "secs without a response from bitcoind (possibly because the connection was lost while we were"
                    << "preparing the request, or bitcoind may have hung)";
         }
@@ -489,7 +489,7 @@ void BitcoinDMgr::handleMessageCommon(const RPC::Message &msg, ReqCtxResultsOrEr
         if (msg.method != QStringLiteral("ping")) { // <--- pings don't go through our req layer so they always come through without a table entry here
             // this can happen in rare cases if the sender object was deleted before bitcoind responded.
             // log the situation but don't warn or anything like that
-            qCDebug(normal) << __func__ << "- request id" << msg.id.toString() << "method" << msg.method << "not found in request context table "
+            qCDebug(normal) <<  "- request id" << msg.id.toString() << "method" << msg.method << "not found in request context table "
                    << "(sender object may have already been deleted)";
             ++requestZombieCtr; // increment this counter for /stats
         }

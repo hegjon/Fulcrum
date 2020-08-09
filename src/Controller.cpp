@@ -660,7 +660,7 @@ void SynchMempoolTask::doDLNextTx()
 {
     Mempool::TxRef tx;
     if (auto it = txsNeedingDownload.begin(); it == txsNeedingDownload.end()) {
-        qCritical() << "FIXME -- txsNeedingDownload is empty in " << __func__;
+        qCritical(normal) << "FIXME -- txsNeedingDownload is empty in ";
         emit errored();
         return;
     } else {
@@ -858,7 +858,7 @@ void Controller::rmTask(CtlTask *t)
         tasks.erase(it); // will delete object immediately
         return;
     }
-    qCritical() << __func__ << ": Task '" << t->objectName() << "' not found! FIXME!";
+    qCritical(normal) << "Task" << t->objectName() << "not found! FIXME!";
 }
 
 bool Controller::isTaskDeleted(CtlTask *t) const { return tasks.count(t) == 0; }
@@ -1237,7 +1237,7 @@ CtlTask::CtlTask(Controller *ctl, const QString &name)
 }
 
 CtlTask::~CtlTask() {
-    qCDebug(trace) << __func__ << "(" << objectName() << ")";
+    qCDebug(trace) <<  "(" << objectName() << ")";
     stop();
 }
 

@@ -179,7 +179,7 @@ void PeerMgr::cleanup()
 
 void PeerMgr::on_rpcAddPeer(const PeerInfoList &infos, const QHostAddress &source)
 {
-    if constexpr (debugPrint) qCDebug(normal) << __func__ << "source:" << source;
+    if constexpr (debugPrint) qCDebug(normal) <<  "source:" << source;
 
     // detect protocols we may have missed on startup. No-op if source isNull or if we have both v4 and v6
     detectProtocol(source);
@@ -277,7 +277,7 @@ void PeerMgr::on_rpcAddPeer(const PeerInfoList &infos, const QHostAddress &sourc
 
 void PeerMgr::addPeerVerifiedSource(const PeerInfo &piIn, const QHostAddress & addr)
 {
-    if constexpr (debugPrint) qCDebug(normal) << __func__ << "peer" << piIn.hostName << "ipaddr:" << addr;
+    if constexpr (debugPrint) qCDebug(normal) <<  "peer" << piIn.hostName << "ipaddr:" << addr;
 
     PeerInfo pi(piIn);
     pi.addr = addr;
@@ -501,7 +501,7 @@ void PeerMgr::on_kickByAddress(const QHostAddress &addr)
     for (PeerInfoMap *m : {&seedPeers, &queued, &bad, &failed} ) {
         for (auto it = m->begin(); it != m->end() ; /**/) {
             if (it->addr == addr) {
-                qCDebug(normal) << __func__ << "removing peer" << it.key() << addr;
+                qCDebug(normal) <<  "removing peer" << it.key() << addr;
                 hostnames.insert(it->hostName);
                 it = m->erase(it);
                 ++ctr;
@@ -512,7 +512,7 @@ void PeerMgr::on_kickByAddress(const QHostAddress &addr)
     // lastly, loop through the active/connected clients and tell them all to delete themselves
     for (PeerClient *c : clients) {
         if (c->peerAddress() == addr || c->info.addr == addr) {
-            qCDebug(normal) << __func__ << "kicked connected peer" << c->info.hostName << addr;
+            qCDebug(normal) <<  "kicked connected peer" << c->info.hostName << addr;
             hostnames.insert(c->info.hostName);
             c->wasKicked = true;
             c->deleteLater(); // this will call us back to remove it from the hashmap, etc
@@ -534,7 +534,7 @@ void PeerMgr::on_kickBySuffix(const QString &suffix)
     for (PeerInfoMap *m : {&seedPeers, &queued, &bad, &failed} ) {
         for (auto it = m->begin(); it != m->end() ; /**/) {
             if (it->hostName.endsWith(suffix)) {
-                qCDebug(normal) << __func__ << "removing peer" << it.key() << it->hostName;
+                qCDebug(normal) <<  "removing peer" << it.key() << it->hostName;
                 hostnames.insert(it->hostName);
                 it = m->erase(it);
                 ++ctr;
@@ -545,7 +545,7 @@ void PeerMgr::on_kickBySuffix(const QString &suffix)
     // lastly, loop through the active/connected clients and tell them all to delete themselves
     for (PeerClient *c : clients) {
         if (c->info.hostName.endsWith(suffix)) {
-            qCDebug(normal) << __func__ << "kicked connected peer" << c->info.hostName << c->info.addr.toString();
+            qCDebug(normal) <<  "kicked connected peer" << c->info.hostName << c->info.addr.toString();
             hostnames.insert(c->info.hostName);
             c->wasKicked = true;
             c->deleteLater(); // this will call us back to remove it from the hashmap, etc
@@ -676,7 +676,7 @@ PeerClient::PeerClient(bool announce, const PeerInfo &pi, IdMixin::Id id_, PeerM
 }
 
 PeerClient::~PeerClient() {
-    if constexpr (debugPrint) qCDebug(normal) << __func__ << ":" << info.hostName;
+    if constexpr (debugPrint) qCDebug(normal) << info.hostName;
 }
 
 

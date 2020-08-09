@@ -106,7 +106,7 @@ void AbstractTcpServer::on_started()
     if (!listen(addr, port)) {
         result = errorString();
         result = result.isEmpty() ? "Error binding/listening for connections" : QString("Could not bind to %1: %2").arg(hostPort()).arg(result);
-        qCDebug(normal) << __func__ << " listen failed";
+        qCDebug(normal) <<  " listen failed";
     } else {
         qCDebug(normal) << "started ok";
     }
@@ -146,7 +146,7 @@ void AbstractTcpServer::pvt_on_newConnection()
         // The below is to prevent malicious clients from choking the event loop.
         // We only process 10 connections at a time, then call ourselves again asynchronously.
         if (ctr >= 9 && hasPendingConnections()) {
-            qCWarning(normal) << __func__ << ": nextPendingConnection yielding to event loop after 10 connections processed, will try again shortly.";
+            qCWarning(normal) << "nextPendingConnection yielding to event loop after 10 connections processed, will try again shortly.";
             Util::AsyncOnObject(this, [this]{pvt_on_newConnection();});
             return;
         }
@@ -282,7 +282,7 @@ void SimpleHttpServer::on_newConnection(QTcpSocket *sock)
 void SimpleHttpServer::addEndpoint(const QString &endPoint, const Lambda &callback)
 {
     if (!endPoint.startsWith("/") && endPoint != "*")
-        qCWarning(normal) << __func__ << "endPoint" << endPoint << "does not start with '/' -- it will never be reached!  FIXME!";
+        qCWarning(normal) <<  "endPoint" << endPoint << "does not start with '/' -- it will never be reached!  FIXME!";
     endPoints[endPoint] = callback;
 }
 
@@ -450,7 +450,7 @@ bool ServerBase::attachPerIPDataAndCheckLimits(QTcpSocket *socket)
         }
     } else {
         // this should never happen
-        qCCritical(normal) << "INTERNAL ERROR: Could not create per-IP data object in" << __func__ << "-- invalid peer address!";
+        qCCritical(normal) << "INTERNAL ERROR: Could not create per-IP data object in" <<  "-- invalid peer address!";
         ok = false;
     }
     if (!ok) {
@@ -472,7 +472,7 @@ SockType *ServerBase::createSocketFromDescriptorAndCheckLimits(qintptr socketDes
         /// this check here simply for defensive programming.  Note: We don't go to the trouble of trying to close() the
         /// fd because it's an opaque type that isn't guaranteed to be an int, so we must let it leak.  However, if
         /// this branch is taken we already have bigger problems.
-        qCCritical(normal) << __func__ << ": setSocketDescriptor returned false! Socket fd will now leak. Error was: " << socket->errorString();
+        qCCritical(normal) << "setSocketDescriptor returned false! Socket fd will now leak. Error was: " << socket->errorString();
         delete socket;
         return nullptr;
     }
@@ -592,7 +592,7 @@ void ServerBase::killClient(Client *client)
 {
     if (!client)
         return;
-    qCDebug(normal) << __func__ << "(id:" << client->id << ")";
+    qCDebug(normal) <<  "(id:" << client->id << ")";
     clientsById.remove(client->id); // ensure gone from map asap so future lookups fail
     client->do_disconnect();
 }
@@ -753,7 +753,7 @@ void ServerBase::generic_async_to_bitcoind(Client *c, const RPC::Message::Id & r
 {
     if (UNLIKELY(QThread::currentThread() != c->thread())) {
         // Paranoia, in case I or a future programmer forgets this rule.
-        qCWarning(normal) << __func__ << " is meant to be called from the Client thread only. The current thread is not the"
+        qCWarning(normal) <<  " is meant to be called from the Client thread only. The current thread is not the"
                   << " Client thread. This may cause problems if the Client is deleted while submitting the request. FIXME!";
     }
     // Throttling support
@@ -934,7 +934,7 @@ QVariantMap Server::makeFeaturesDictForConnection(AbstractConnection *c, const Q
     QVariantMap r;
     if (!c) {
         // paranoia
-        qCritical() << __func__ << ": called with a nullptr for AbstractConnection FIXME!";
+        qCritical(normal) << "called with a nullptr for AbstractConnection FIXME!";
         return r;
     }
     r["pruning"] = QVariant(); // null

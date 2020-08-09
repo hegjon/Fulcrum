@@ -1153,7 +1153,7 @@ void App::on_requestMaxBufferChange(int m)
     if (Options::isMaxBufferSettingInBounds(m))
         options->maxBuffer.store( Options::clampMaxBufferSetting(m) );
     else
-        qCWarning(normal) << __func__ << ": " << m << " is out of range, ignoring new max_buffer setting";
+        qCWarning(normal) << m << "is out of range, ignoring new max_buffer setting";
 }
 
 void App::on_bitcoindThrottleParamsChange(int hi, int lo, int decay)
@@ -1162,7 +1162,7 @@ void App::on_bitcoindThrottleParamsChange(int hi, int lo, int decay)
     if (p.isValid())
         options->bdReqThrottleParams.store(p);
     else
-        qCWarning(normal) << __func__ << ": arguments out of range, ignoring new bitcoind_throttle setting";
+        qCWarning(normal) << "arguments out of range, ignoring new bitcoind_throttle setting";
 }
 
 /* static */ std::map<QString, std::function<void()>> App::registeredTests, App::registeredBenches;
@@ -1171,13 +1171,13 @@ void App::registerTestBenchCommon(const char *fname, const char *brief, NameFunc
                                   const NameFuncMap::key_type &name, const NameFuncMap::mapped_type &func)
 {
     if (_globalInstance) {
-        qCritical() << fname << " cannot be called after the app has already started!"
-                << " Ignoring request to register " << brief << " \"" << name << "\"";
+        qCritical() << fname << "cannot be called after the app has already started!"
+                << "Ignoring request to register" << brief  << name;
         return;
     }
     const auto & [_, inserted] = map.insert({name, func});
     if (!inserted)
-        qCritical() << fname << ": ignoring duplicate " << brief << " \"" << name << "\"";
+        qCritical() << fname << ": ignoring duplicate" << brief << name;
 }
 /* static */
 auto App::registerTest(const QString &name, const std::function<void()> &func) -> RegisteredTest
