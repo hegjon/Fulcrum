@@ -272,18 +272,18 @@ namespace RPC {
     void ConnectionBase::_sendRequest(const Message::Id & reqid, const QString &method, const QVariantList & params)
     {
         if (status != Connected || !socket) {
-            DebugM(__func__, " method: ", method, "; Not connected! ", "(id: ", this->id, "), forcing on_disconnect ...");
+            qCDebug(normal) << __func__ << "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
         }
         const QByteArray jsonData = Message::makeRequest(reqid, method, params, v1).toJsonUtf8();
         if (jsonData.isEmpty()) {
-            qCritical() << __func__ << " method: " << method << "; Unable to generate request JSON! FIXME!";
+            qCritical(normal) << __func__ << " method: " << method << "; Unable to generate request JSON! FIXME!";
             return;
         }
         if (idMethodMap.size() >= MAX_UNANSWERED_REQUESTS) {  // prevent memory leaks in case of misbehaving peer
-            qWarning() << "Closing connection because too many unanswered requests for: " << prettyName();
+            qWarning(normal) << "Closing connection because too many unanswered requests for: " << prettyName();
             do_disconnect();
             return;
         }
@@ -297,7 +297,7 @@ namespace RPC {
     void ConnectionBase::_sendNotification(const QString &method, const QVariant & params)
     {
         if (status != Connected || !socket) {
-            DebugM(__func__, " method: ", method, "; Not connected! ", "(id: ", this->id, "), forcing on_disconnect ...");
+            qCDebug(normal) << __func__ << "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
@@ -347,7 +347,7 @@ namespace RPC {
         }
         const QByteArray json = Message::makeResponse(reqid, result, v1).toJsonUtf8();
         if (json.isEmpty()) {
-            qCritical() << __func__ << ": Unable to generate result JSON! FIXME!";
+            qCritical(normal) << __func__ << ": Unable to generate result JSON! FIXME!";
             return;
         }
         qCDebug(trace) << "Sending result json:" << Util::Ellipsify(json);
@@ -362,7 +362,7 @@ namespace RPC {
             // This is only ever latched to true in the "Client" subclass and it signifies that the client is being
             // dropped and so we have this short-circuit conditional to save on cycles in that situation and not
             // bother processing further messages.
-            DebugM("ignoring ", json.length(), " byte incoming message from ", id);
+            qCDebug(normal) << "ignoring" << json.length() << "byte incoming message from" << id;
             return;
         }
         Message::Id msgId;
@@ -600,11 +600,11 @@ namespace RPC {
             memoryWasteTimerActive = true;
             callOnTimerSoonNoRepeat(memoryWasteTimeout, memoryWasteTimer, [this]{
                 if (!memoryWasteTimerActive)
-                    qWarning() << "Memory waste timer was not active but the timer lambda fired! FIXME!";
+                    qWarning(normal) << "Memory waste timer was not active but the timer lambda fired! FIXME!";
                 memoryWasteTimerActive = false;
                 const qint64 avail = socket ? socket->bytesAvailable() : 0;
                 if (avail >= memoryWasteThreshold) {
-                    qWarning() << "Client " << this->id << " from " << this->peerAddress().toString()
+                    qWarning(normal) << "Client " << this->id << " from " << this->peerAddress().toString()
                             << " exceeded its \"memory waste threshold\" by filling our receive buffer with "
                             << avail << " bytes for longer than "
                             << QString::number(memoryWasteTimeout/1e3, 'f', 1) << " seconds -- kicking client!";
@@ -615,8 +615,8 @@ namespace RPC {
                 } else
                     StopTimer(this, avail);
             });
-            DebugM("Memory waste timer STARTED for ", this->id, " from ", this->peerAddress().toString(),
-                   ", read buffer size: ", avail);
+            qCDebug(normal) << "Memory waste timer STARTED for" << this->id << "from" << this->peerAddress() <<
+                   ", read buffer size:" << avail;
         } else if (UNLIKELY(memoryWasteTimerActive && avail < memoryWasteThreshold)) {
             StopTimer(this, avail);
         }
@@ -690,7 +690,7 @@ namespace RPC {
                         throw Exception(QString("Could not parse status code: %1").arg(QString(code)));
                     }
                     if (sm->status != 200 && sm->status != 500) { // bitcoind sends 200 on results= and 500 on error= RPC messages. Everything else is unexpected.
-                        qWarning() << "Got HTTP status " << sm->status << " " << msg
+                        qCWarning(normal) << "Got HTTP status " << sm->status << " " << msg
                                   << (!trace().isDebugEnabled() ? "; will log the rest of this HTTP response" : "");
                         sm->logBad = true;
                         if (sm->status == 401) // 401 status indicates other side didn't like our auth cookie or we need an auth cookie.
@@ -702,7 +702,7 @@ namespace RPC {
                 } else if (sm->state == St::HEADER) {
                     // read header, line by line
                     if (sm->logBad && !trace().isDebugEnabled()) {
-                        qWarning() << sm->status << " (header): " << data;
+                        qCWarning(normal) << sm->status << " (header): " << data;
                     }
                     if (data != "") {
                         // process non-empty HEADER lines...
@@ -741,9 +741,9 @@ namespace RPC {
                                     return QString("Unsupported \"Connection: %1\" header field in response").arg(value);
                                 };
                                 if (lowerVal == s_close && sm->status == 200)
-                                    qWarning() << MakeErrMsg(value);
+                                    qWarning(normal) << MakeErrMsg(value);
                                 else
-                                    DebugM(MakeErrMsg(value));
+                                    qCDebug(normal) << MakeErrMsg(value);
                             }
                         }
                     } else {
@@ -774,11 +774,11 @@ namespace RPC {
                 if (sm->content.length() > sm->contentLength) {
                     // this shouldn't happen. if we get here, likely below code will fail with nonsense and connection will be killed. this is here
                     // just as a sanity check.
-                    qCritical() << "Content buffer has extra stuff at the end. Bug in code. FIXME! Crud was: '"
+                    qCritical(normal) << "Content buffer has extra stuff at the end. Bug in code. FIXME! Crud was: '"
                             << sm->content.mid(sm->contentLength) << "'";
                 }
                 if (bool trace2 = trace().isDebugEnabled(); sm->logBad && !trace2)
-                    qWarning() << sm->status << "(content):" << json.trimmed();
+                    qWarning(normal) << sm->status << "(content):" << json.trimmed();
                 else if (trace2)
                     qDebug(trace) << "cl:" << sm->contentLength << "inbound JSON:" << json.trimmed();
                 sm->clear(); // reset back to BEGIN state, empty buffers, clean slate.
@@ -797,7 +797,7 @@ namespace RPC {
                 throw Exception( QString("Peer backbuffer exceeded %1 bytes! Bad peer?").arg(MAX_BUFFER) );
             }
         } catch (const Exception & e) {
-            qCritical() << prettyName() << " fatal error: " << e.what();
+            qCritical(normal) << prettyName() << " fatal error: " << e.what();
             do_disconnect();
             status = Bad;
             if (sm) sm->clear(); // ensure state machine is "fresh" if we get here
@@ -861,8 +861,8 @@ namespace RPC {
         // Sanity check to ensure we estimated the size correctly. This branch is compiled-out of release builds.
         if constexpr (!isReleaseBuild()) {
             if (const auto actualSize = payload.size(); reserveSize != actualSize && normal().isDebugEnabled())
-                qDebug() << "reserveSize: " << reserveSize << " != actualSize: " << actualSize
-                        << " (this leads to extra mallocs) for: \"" << payload.left(80) << "\" ... ";
+                qCDebug(normal) << "reserveSize:" << reserveSize << "!= actualSize:" << actualSize
+                        << "(this leads to extra mallocs) for:" << payload.left(80) << "... ";
         }
 
         return payload;

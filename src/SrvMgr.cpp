@@ -268,7 +268,6 @@ void SrvMgr::clientDisconnected(IdMixin::Id cid, const QHostAddress &addr)
     if (auto count = addrIdMap.remove(addr, cid); UNLIKELY(count > 1)) {
         qCWarning(normal) << "Multiple clients with id:" << cid << ", address " << addr << "in addrIdMap in" << __func__ << " -- FIXME!";
     } else if (count) {
-        //DebugM("Client id ", cid, " addr ", addr.toString(), " removed from addrIdMap");
         if (const auto size = size_t(addrIdMap.size());
                 size >= tableSqueezeThreshold && size * 2U <= size_t(addrIdMap.capacity())) {
             // save space if we are over 2x capacity vs size
