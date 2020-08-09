@@ -184,7 +184,7 @@ void SubsMgr::doNotifyAllPending()
         if (doemit) {
             const auto nClients = sub->subscribedClientIds.size();
             ctr += nClients;
-            DebugM("Notifying ", nClients, Util::Pluralize(" client", nClients), " of status for ", Util::ToHexFast(sh));
+            qCDebug(normal) << "Notifying" << nClients << Util::Pluralize(" client", nClients) << "of status for" << Util::ToHexFast(sh);
             sub->updateTS();
             emit sub->statusChanged(sh, status);
         }
@@ -406,8 +406,8 @@ void SubsMgr::removeZombies(bool forced)
     if (ctr) {
         p->subs.reserve(p->kSubsReserveSize); // shrink_to_fit if over kSubsReserveSize
         const auto elapsed = Util::getTimeNS() - t0;
-        DebugM( "SubsMgr: Removed ", ctr, " zombie ", Util::Pluralize("sub", ctr), " out of ", total,
-                " in ", QString::number(elapsed/1e6, 'f', 4), " msec");
+        qCDebug(normal) << "SubsMgr: Removed" << ctr << "zombie" << Util::Pluralize("sub", ctr) << "out of" << total <<
+                "in" << QString::number(elapsed/1e6, 'f', 4) << "msec";
     }
 }
 

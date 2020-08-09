@@ -702,7 +702,7 @@ namespace RPC {
                 } else if (sm->state == St::HEADER) {
                     // read header, line by line
                     if (sm->logBad && !trace().isDebugEnabled()) {
-                        qCWarning(normal) << sm->status << " (header): " << data;
+                        qCWarning(normal) << sm->status << "(header): " << data;
                     }
                     if (data != "") {
                         // process non-empty HEADER lines...
