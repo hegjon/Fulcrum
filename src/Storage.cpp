@@ -797,7 +797,7 @@ void Storage::saveMeta_impl()
         throw DatabaseError("Failed to write meta to db");
     }
 
-    DebugM("Wrote new metadata to db");
+    qCDebug(normal) << "Wrote new metadata to db";
 }
 
 void Storage::appendHeader(const Header &h, BlockHeight height)

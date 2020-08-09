@@ -45,7 +45,7 @@ Controller::Controller(const std::shared_ptr<const Options> &o)
     _thread.setObjectName(objectName());
 }
 
-Controller::~Controller() { DebugM(__func__); cleanup(); }
+Controller::~Controller() { qDebug(normal) << __func__; cleanup(); }
 
 void Controller::startup()
 {
@@ -74,7 +74,7 @@ void Controller::startup()
             lostConn = true;
             stopTimer(pollTimerName);
             stopTimer(callProcessTimer);
-            callOnTimerSoon(msgPeriod, waitTimer, []{ qInfo("Waiting for bitcoind..."); return true; }, false, Qt::TimerType::VeryCoarseTimer);
+            callOnTimerSoon(msgPeriod, waitTimer, []{ qCInfo(normal, "Waiting for bitcoind..."); return true; }, false, Qt::TimerType::VeryCoarseTimer);
         };
         waitForBitcoinD();
         conns += connect(bitcoindmgr.get(), &BitcoinDMgr::allConnectionsLost, this, waitForBitcoinD);
@@ -83,7 +83,7 @@ void Controller::startup()
             if (lostConn) {
                 lostConn = false;
                 stopTimer(waitTimer);
-                DebugM("Auth recvd from bicoind with id: ", id, ", proceeding with processing ...");
+                qCDebug(normal) << "Auth recvd from bicoind with id:" << id << ", proceeding with processing ...";
                 callOnTimerSoonNoRepeat(smallDelay, callProcessTimer, [this]{process();}, true);
             }
         });
@@ -92,7 +92,7 @@ void Controller::startup()
             auto now = Util::getTimeSecs();
             if (now-last >= 1.0) { // throttled to not spam log
                 last = now;
-                qInfo() << "bitcoind is still warming up: " << msg;
+                qCInfo(normal) << "bitcoind is still warming up:" << msg;
             }
         });
     }
@@ -169,9 +169,9 @@ void Controller::cleanup()
     stopFlag = true;
     stop();
     tasks.clear(); // deletes all tasks asap
-    if (srvmgr) { qInfo("Stopping SrvMgr ... "); srvmgr->cleanup(); srvmgr.reset(); }
-    if (bitcoindmgr) { qInfo("Stopping BitcoinDMgr ... "); bitcoindmgr->cleanup(); bitcoindmgr.reset(); }
-    if (storage) { qInfo("Closing storage ..."); storage->cleanup(); storage.reset(); }
+    if (srvmgr) { qCInfo(normal, "Stopping SrvMgr ... "); srvmgr->cleanup(); srvmgr.reset(); }
+    if (bitcoindmgr) { qCInfo(normal, "Stopping BitcoinDMgr ... "); bitcoindmgr->cleanup(); bitcoindmgr.reset(); }
+    if (storage) { qCInfo(normal, "Closing storage ..."); storage->cleanup(); storage.reset(); }
     sm.reset();
 }
 
@@ -389,19 +389,19 @@ void DownloadBlocksTask::do_get(unsigned int bnum)
                         ++q_ct;
                     }
                 } else if (!sizeOk) {
-                    qWarning() << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
+                    qCWarning(normal) << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("bad size for height %1").arg(bnum);
                     emit errored();
                 } else {
-                    qWarning() << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
+                    qCWarning(normal) << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("hash mismatch for height %1").arg(bnum);
                     emit errored();
                 }
             });
         } else {
-            qWarning() << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
+            qWarning(normal) << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
             errorCode = int(bnum);
             errorMessage = QString("invalid hash for height %1").arg(bnum);
             emit errored();

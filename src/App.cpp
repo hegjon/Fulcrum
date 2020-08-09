@@ -939,19 +939,19 @@ void App::parseArgs()
             options->logTimestampMode = Options::LogTimestampMode::None;
         else
             throw BadArgs(QString("ts-format: unrecognized value \"%1\"").arg(fmt));
-        Util::AsyncOnObject(this, [this]{ DebugM("config: ts-format = ", options->logTimestampModeString()); });
+        Util::AsyncOnObject(this, [this]{ qCDebug(normal) << "config: ts-format =" << options->logTimestampModeString(); });
     }
 #ifdef Q_OS_UNIX
     else if (options->syslogMode) {
         options->logTimestampMode = Options::LogTimestampMode::None;
-        Util::AsyncOnObject(this, []{ DebugM("syslog mode enabled, defaulting to \"--ts-format none\""); });
+        Util::AsyncOnObject(this, []{ qCDebug(normal) << "syslog mode enabled, defaulting to \"--ts-format none\""; });
     }
 #endif
 
     // --tls-disallow-deprecated from CLI and/or tls-disallow-deprecated from conf
     if (parser.isSet("tls-disallow-deprecated") || conf.boolValue("tls-disallow-deprecated")) {
         options->tlsDisallowDeprecated = true;
-        Util::AsyncOnObject(this, []{ qInfo() << "TLS restricted to non-deprecated versions (version 1.2 or above)"; });
+        Util::AsyncOnObject(this, []{ qInfo(normal) << "TLS restricted to non-deprecated versions (version 1.2 or above)"; });
     }
 
     // parse --dump-*

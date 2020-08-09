@@ -65,7 +65,7 @@ void BitcoinDMgr::startup() {
         connect(client.get(), &BitcoinD::authenticated, this, [this](BitcoinD *b){
             // guard against stale/old signal
             if (!b->isGood()) {
-                DebugM("got authenticated for id:", b->id, " but isGood() is false!");
+                qCDebug(normal) <<"got authenticated for id:" << b->id << "but isGood() is false!";
                 return; // false/stale signal
             }
             const bool wasEmpty = goodSet.empty();
@@ -86,7 +86,7 @@ void BitcoinDMgr::startup() {
         connect(client.get(), &BitcoinD::lostConnection, this, [this](AbstractConnection *c){
             // guard against stale/old signal
             if (c->isGood()) {
-                DebugM("got lostConnection for id:", c->id, " but isGood() is true!");
+                qCDebug(normal) << "got lostConnection for id:" << c->id << "but isGood() is true!";
                 return; // false/stale signal
             }
             goodSet.erase(c->id);
@@ -236,12 +236,13 @@ void BitcoinDMgr::refreshBitcoinDNetworkInfo()
                     if (ok) {
                         const auto res = parseBitcoindDVersion(val, bitcoinDInfo.subversion);
                         bitcoinDInfo.version = res.version;
-                        DebugM("Refreshed version info from bitcoind, version: ", bitcoinDInfo.version.toString(true),
-                               ", subversion: ", bitcoinDInfo.subversion);
+                        qCDebug(normal) << "Refreshed version info from bitcoind, version:"
+                               << bitcoinDInfo.version.toString(true)
+                               << ", subversion:" << bitcoinDInfo.subversion;
                         return res.isBchd;
                     } else {
                         bitcoinDInfo.version = Version();
-                        qWarning() << "Failed to parse version info from bitcoind";
+                        qWarning(normal) << "Failed to parse version info from bitcoind";
                     }
                     return false;
                 }();
@@ -267,7 +268,7 @@ void BitcoinDMgr::refreshBitcoinDNetworkInfo()
         },
         // error
         [](const RPC::Message &msg) {
-            qCritical() << "getnetworkinfo error, code: " << msg.errorCode() << ", error: " << msg.errorMessage();
+            qCritical(normal) << "getnetworkinfo error, code:" << msg.errorCode() << ", error: " << msg.errorMessage();
         },
         // failure
         [](const RPC::Message::Id &, const QString &reason){ qCritical() << "getnetworkinfo failed: " << reason; }
@@ -304,22 +305,22 @@ void BitcoinDMgr::refreshBitcoinDGenesisHash()
                 // quit the app here. But in the spirit of never giving up and never surrendering,
                 // we will just power through this situation with some error messages.
                 if (changed)
-                    qCritical() << "Error: bitcoind reports that the genesis hash has changed! Old hash: " << oldHash.toHex()
-                            << ", new hash: " << newHash.toHex();
+                    qCritical(normal) << "Error: bitcoind reports that the genesis hash has changed! Old hash:" << oldHash.toHex()
+                            << ", new hash:" << newHash.toHex();
                 else
-                    qCritical() << "Error: Failed to parse genesis hash from bitcoind: " << reply.result().toString();
+                    qCritical(normal) << "Error: Failed to parse genesis hash from bitcoind:" << reply.result().toString();
             } else {
-                DebugM("Refreshed genesis hash from bitcoind: ", newHash.toHex());
+                qCDebug(normal) << "Refreshed genesis hash from bitcoind:" << newHash.toHex();
             }
         },
         // error
         [](const RPC::Message &msg){
-            qCritical() << "getblockhash error when attempting to get genesis hash, code: " << msg.errorCode()
-                    << ", error: " << msg.errorMessage();
+            qCritical(normal) << "getblockhash error when attempting to get genesis hash, code:" << msg.errorCode()
+                    << ", error:" << msg.errorMessage();
         },
         // failure
         [](const RPC::Message::Id &, const QString &reason){
-            qCritical() << "getblockhash failed when attempting to get genesis hash: " << reason;
+            qCritical(normal) << "getblockhash failed when attempting to get genesis hash:" << reason;
         }
     );
 }
@@ -357,8 +358,8 @@ void BitcoinDMgr::submitRequest(QObject *sender, const RPC::Message::Id &rid, co
         // Note: this may run in any thread -- so all we can do here to context is context->deleteLater()
         if constexpr (debugDeletes) {
             // the below is not technically thread-safe, because it calls objectName(); only enable this branch when testing
-            DebugM(context->objectName(), " shptr deleter");
-            connect(context, &QObject::destroyed, qApp, [n=context->objectName()]{ DebugM(n, " destroyed"); }, Qt::DirectConnection);
+            qCDebug(normal) << context->objectName() << "shptr deleter";
+            connect(context, &QObject::destroyed, qApp, [n=context->objectName()]{ qCDebug(normal) << n << "destroyed"; }, Qt::DirectConnection);
         }
         context->deleteLater(); // thread-safe
     });
@@ -421,10 +422,10 @@ void BitcoinDMgr::submitRequest(QObject *sender, const RPC::Message::Id &rid, co
                 // remove context from table and also check it's what we expect
                 if (const auto ref = reqContextTable.take(rid).lock(); ref && ref.get() != context) {
                     // this should never happen
-                    qCritical() << "Context in table with rid " << rid.toString() << " differs from what we expected! FIXME!";
+                    qCritical(normal) << "Context in table with rid" << rid.toString() << "differs from what we expected! FIXME!";
                 }
                 if constexpr (debugDeletes)
-                    DebugM(__func__, " - req context table size now: ", reqContextTable.size());
+                    qCDebug(normal) << __func__ << "- req context table size now:" << reqContextTable.size();
             });
         } else {
             // this indicates a bug the calling code; it is sending dupe id's which we do not support
@@ -461,9 +462,9 @@ void BitcoinDMgr::requestTimeoutChecker()
             context->timedOut = true; // flag it as having already been handled
             ++requestTimeoutCtr; // increment counter for /stats
             emit context->fail(it.key(), "bitcoind request timed out");
-            DebugM(__func__, " - request id ", it.key(), " timed out after ", (Util::getTime()-context->ts)/1e3,
-                   " secs without a response from bitcoind (possibly because the connection was lost while we were"
-                   " preparing the request, or bitcoind may have hung)");
+            qCDebug(normal) << __func__ << "- request id" << it.key().toString() << "timed out after" << (Util::getTime()-context->ts)/1e3
+                   << "secs without a response from bitcoind (possibly because the connection was lost while we were"
+                   << "preparing the request, or bitcoind may have hung)";
         }
     }
 }
@@ -488,8 +489,8 @@ void BitcoinDMgr::handleMessageCommon(const RPC::Message &msg, ReqCtxResultsOrEr
         if (msg.method != QStringLiteral("ping")) { // <--- pings don't go through our req layer so they always come through without a table entry here
             // this can happen in rare cases if the sender object was deleted before bitcoind responded.
             // log the situation but don't warn or anything like that
-            DebugM(__func__, " - request id ", msg.id, " method `", msg.method, "` not found in request context table "
-                   "(sender object may have already been deleted)");
+            qCDebug(normal) << __func__ << "- request id" << msg.id.toString() << "method" << msg.method << "not found in request context table "
+                   << "(sender object may have already been deleted)";
             ++requestZombieCtr; // increment this counter for /stats
         }
         return;
@@ -508,8 +509,8 @@ void BitcoinDMgr::on_Message(quint64 bid, const RPC::Message &msg)
 
 void BitcoinDMgr::on_ErrorMessage(quint64 bid, const RPC::Message &msg)
 {
-    DebugM("ErrMsg from: ", bid, " (reqId: ", msg.id, ", method: ", msg.method, ") code=", msg.errorCode(),
-           " error=", msg.errorMessage());
+    qCDebug(normal) << "ErrMsg from:" << bid << " (reqId:" << msg.id.toString() << ", method:" << msg.method << ") code=" << msg.errorCode()
+           << "error=" << msg.errorMessage();
     if (msg.errorCode() == bitcoin::RPCErrorCode::RPC_IN_WARMUP) {
         emit inWarmUp(msg.errorMessage());
     }
@@ -583,7 +584,7 @@ void BitcoinD::on_started()
         const auto SetTimer = [this] {
             callOnTimerSoon(5000, reconnectTimer, [this]{
                 if (!isGood()) {
-                    DebugM(prettyName(), " reconnecting...");
+                    qCDebug(normal) << prettyName() << "reconnecting...";
                     reconnect();
                     return true; // keep the timer alive
                 }
@@ -591,11 +592,11 @@ void BitcoinD::on_started()
             });
         };
         conns += connect(this, &BitcoinD::lostConnection, this, [SetTimer]{
-            qInfo() << "Lost connection to bitcoind, will retry every 5 seconds ...";
+            qInfo(normal) << "Lost connection to bitcoind, will retry every 5 seconds ...";
             SetTimer();
         });
         conns += connect(this, &BitcoinD::authFailure, this, [SetTimer, this] {
-            qCritical() << "Authentication to bitcoind rpc failed. Please check the rpcuser and rpcpass are correct and restart!";
+            qCritical(normal) << "Authentication to bitcoind rpc failed. Please check the rpcuser and rpcpass are correct and restart!";
             badAuth = true;
             SetTimer();
         });
@@ -623,7 +624,7 @@ void BitcoinD::reconnect()
         socketConnectSignals();
         connect(ssl, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), ssl, [ssl](auto errs) {
             for (const auto & err : errs)
-                DebugM("Ignoring SSL error for ", ssl->peerName(), ": ", err.errorString());
+                qCDebug(normal) << "Ignoring SSL error for" << ssl->peerName() << ":" << err.errorString();
             ssl->ignoreSslErrors();
         });
 
@@ -653,7 +654,7 @@ void BitcoinD::on_connected()
 void BitcoinD::do_ping()
 {
     if (isStale()) {
-        DebugM("Stale connection, reconnecting.");
+        qCDebug(normal) << "Stale connection, reconnecting.";
         reconnect();
     } else
         emit sendRequest(newId(), "ping");
@@ -663,7 +664,7 @@ void BitcoinD::resetPingTimer(int time_ms)
 {
     auto setter = [time_ms, this] {
         if (pingtime_ms != time_ms)
-            DebugM("Changed pingtime_ms: ", time_ms);
+            qCDebug(normal) << "Changed pingtime_ms:" << time_ms;
         pingtime_ms = time_ms;
         stale_threshold = pingtime_ms * 2;
         if (pingtime_ms > 0) {

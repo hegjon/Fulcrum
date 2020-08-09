@@ -119,7 +119,6 @@ void TimersByNameMixin::callOnTimerSoon(int ms, const QString &name, const std::
     _timerMap[name] = timer;
     timer->setObjectName(name);
     timer->start(ms);
-    //DebugM("timerByName: ", name, " started, ms = ", ms);
 }
 
 /// Identical to above, except takes a pure voidfunc. It's as if the above returned false (so will not keep going).
