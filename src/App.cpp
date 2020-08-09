@@ -529,13 +529,13 @@ void App::parseArgs()
             throw BadArgs(QString("The specified path \"%1\" already exists but is not a directory").arg(path));
         if (!fi.isReadable() || !fi.isExecutable() || !fi.isWritable())
             throw BadArgs(QString("Bad permissions for path \"%1\" (must be readable, writable, and executable)").arg(path));
-        Util::AsyncOnObject(this, [path]{ qCDebug(normal) << "datadir: " << path; }); // log this after return to event loop so it ends up in syslog (if -S mode)
+        Util::AsyncOnObject(this, [path]{ qCDebug(normal) << "datadir:" << path; }); // log this after return to event loop so it ends up in syslog (if -S mode)
     } else { // !exists
         if (!QDir().mkpath(options->datadir))
             throw BadArgs(QString("Unable to create directory: %1").arg(options->datadir));
         path = QFileInfo(options->datadir).canonicalFilePath();
         // log this after return to event loop so it ends up in syslog (in case user specified -S mode)
-        Util::AsyncOnObject(this, [path]{ qCDebug(normal) << "datadir: Created directory " << path; });
+        Util::AsyncOnObject(this, [path]{ qCDebug(normal) << "datadir: Created directory" << path; });
     }
 
     // parse bitcoind - conf.value is always unset if parser.value is set, hence this strange constrcution below (parser.value takes precedence)
@@ -643,7 +643,7 @@ void App::parseArgs()
         if (!iface.first.isLoopback()) {
             // print the warning later when logger is up
             Util::AsyncOnObject(this, [iface]{
-                qCWarning(normal) << "Warning: Binding admin RPC port to non-loopback interface " << iface.first.toString() << ":" << iface.second << " is not recommended. Please ensure that this port is not globally reachable from the internet.";
+                qCWarning(normal) << "Warning: Binding admin RPC port to non-loopback interface" << iface.first << ":" << iface.second << "is not recommended. Please ensure that this port is not globally reachable from the internet.";
             });
         }
     }
@@ -735,7 +735,7 @@ void App::parseArgs()
                           .arg(options->maxHistoryMin).arg(options->maxHistoryMax));
         options->maxHistory = mh;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mh]{ qCDebug(normal) << "config: max_history = " << mh; });
+        Util::AsyncOnObject(this, [mh]{ qCDebug(normal) << "config: max_history =" << mh; });
     }
     if (conf.hasValue("max_buffer")) {
         bool ok;
@@ -907,7 +907,7 @@ void App::parseArgs()
                           .arg(options->db.maxOpenFilesMin).arg(options->db.maxOpenFilesMax));
         options->db.maxOpenFiles = int(mof);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mof]{ qCDebug(normal) << "config: db_max_open_files = " << mof; });
+        Util::AsyncOnObject(this, [mof]{ qCDebug(normal) << "config: db_max_open_files =" << mof; });
     }
     if (conf.hasValue("db_keep_log_file_num")) {
         bool ok;
@@ -917,7 +917,7 @@ void App::parseArgs()
                           .arg(options->db.minKeepLogFileNum).arg(options->db.maxKeepLogFileNum));
         options->db.keepLogFileNum = unsigned(klfn);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [klfn]{ qCDebug(normal) << "config: db_keep_log_file_num = " << klfn; });
+        Util::AsyncOnObject(this, [klfn]{ qCDebug(normal) << "config: db_keep_log_file_num =" << klfn; });
     }
 
     // warn user that no hostname was specified if they have peerDiscover turned on
