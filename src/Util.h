@@ -141,9 +141,6 @@ public:
             Debug()(__VA_ARGS__);  \
     } while (0)
 
-// Now add these macros for symmetry
-#define WarningM(...) (qWarning()(__VA_ARGS__))
-
 #define FatalAssert(b, message)                                       \
     do {                                                              \
         if (!(b))                                                     \
