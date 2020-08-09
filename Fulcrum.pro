@@ -61,6 +61,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # This enables those functions.
 DEFINES += USE_QT_IN_BITCOIN
 
+# Include file, function name and line in the logging statements
+# Disabled by default in the Release build
+DEFINES += QT_MESSAGELOGCONTEXT
+
 ### It is recommended you use Qt Creator to build, and that you set
 ### your compiler to a clang variant for maximal benefit.
 ### NOTE: If on a BIG ENDIAN architecture that isn't Linux, be sure to set this:
