@@ -1,7 +1,7 @@
-Name:    {{{ git_name name="fulcrum" }}}
+Name:    {{{ git_name name="fulcrum-jonny" }}}
 Version: 1.2.8
 Release: {{{ git_version }}}%{?dist}
-Summary: A fast & nimble SPV server for Bitcoin Cash
+Summary: A fast & nimble SPV server for Bitcoin Cash. Custom build.
 
 License:    GPLv3
 URL:        https://github.com/cculianu/Fulcrum
