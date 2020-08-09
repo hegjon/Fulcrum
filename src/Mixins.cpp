@@ -26,7 +26,7 @@ QObject *QObjectMixin::qobj() const
 {
     QObject *ret = dynamic_cast<QObject *>(const_cast<QObjectMixin *>(this));
     if (!ret) {
-        qCritical(category) << __PRETTY_FUNCTION__ << ": Cannot cast this to QObject! App will likely crash now!";
+        qCritical(normal) << __PRETTY_FUNCTION__ << ": Cannot cast this to QObject! App will likely crash now!";
     }
     return ret;
 }
@@ -161,7 +161,7 @@ auto StatsMixin::statsSafe(int timeout_ms) const -> Stats
     try {
         ret = Util::LambdaOnObject<Stats>(qobj(), [this]{ return stats(); }, timeout_ms);
     } catch (const std::exception & e) {
-        qDebug(category) << "Safe stats get failed:" <<  e.what();
+        qDebug(normal) << "Safe stats get failed:" <<  e.what();
         ret = QVariantMap{{"error" , e.what()}};
     }
     return ret;
@@ -174,7 +174,7 @@ auto StatsMixin::debugSafe(const StatsParams &p, int timeout_ms) const -> Stats
     try {
         ret = Util::LambdaOnObject<Stats>(qobj(), [this, p]{ return debug(p); }, timeout_ms);
     } catch (const std::exception & e) {
-        qDebug(category) << "Safe debug get failed:" << e.what();
+        qDebug(normal) << "Safe debug get failed:" << e.what();
         ret = QVariantMap{{"error" , e.what()}};
     }
     return ret;

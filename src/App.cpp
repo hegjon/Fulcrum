@@ -91,24 +91,24 @@ App::App(int argc, char *argv[])
 
 App::~App()
 {
-    qCDebug(category) << "App d'tor";
-    qCInfo(category) << "Shudown complete";
+    qCDebug(normal) << "App d'tor";
+    qCInfo(normal) << "Shudown complete";
     _globalInstance = nullptr;
     /// child objects will be auto-deleted, however most are already gone in cleanup() at this point.
 }
 
 void App::startup()
 {
-    qCInfo(category).noquote()
+    qCInfo(normal).noquote()
             << applicationName()
             << applicationVersion()
             << "-" << QDateTime::currentDateTime().toString("ddd MMM d, yyyy hh:mm:ss.zzz t")
             << "- starting up ...";
 
     if ( ! Util::isClockSteady() ) {
-        qCDebug(category) << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
+        qCDebug(normal) << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
     } else {
-        qCDebug(category) << "High resolution clock: isSteady = true";
+        qCDebug(normal) << "High resolution clock: isSteady = true";
     }
     try {
         BTC::CheckBitcoinEndiannessAndOtherSanityChecks();
@@ -137,7 +137,7 @@ void App::startup()
 
         if (!options->statsInterfaces.isEmpty()) {
             const auto num = options->statsInterfaces.count();
-            qCInfo(category).noquote() << "Stats HTTP: starting" << num << Util::Pluralize("server", num) << "...";
+            qCInfo(normal).noquote() << "Stats HTTP: starting" << num << Util::Pluralize("server", num) << "...";
             // start 'stats' http servers, if any
             for (const auto & i : options->statsInterfaces)
                 start_httpServer(i); // may throw
@@ -150,15 +150,15 @@ void App::startup()
 
 void App::cleanup()
 {
-    qCDebug(category) << __PRETTY_FUNCTION__ ;
+    qCDebug(normal) << __PRETTY_FUNCTION__ ;
     quitting = true;
     cleanup_WaitForThreadPoolWorkers();
     if (!httpServers.isEmpty()) {
-        qCInfo(category) << "Stopping Stats HTTP Servers ...";
+        qCInfo(normal) << "Stopping Stats HTTP Servers ...";
         for (auto h : httpServers) { h->stop(); }
         httpServers.clear(); // deletes shared pointers
     }
-    if (controller) { qCInfo(category, "Stopping Controller ..."); controller->cleanup(); controller.reset(); }
+    if (controller) { qCInfo(normal, "Stopping Controller ..."); controller->cleanup(); controller.reset(); }
 }
 
 void App::cleanup_WaitForThreadPoolWorkers()
@@ -167,14 +167,14 @@ void App::cleanup_WaitForThreadPoolWorkers()
     QElapsedTimer t0; t0.start();
     const int nJobs = tpool->extantJobs();
     if (nJobs)
-        qCInfo(category) << "Waiting for extant thread pool workers ...";
+        qCInfo(normal) << "Waiting for extant thread pool workers ...";
     const bool res = tpool->shutdownWaitForJobs(timeout);
     if (!res) {
-        qCWarning(category, "After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
+        qCWarning(normal, "After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
                 qRound(double(t0.elapsed())/1e3), nJobs, Util::Pluralize("worker", nJobs).toUtf8().constData(),
                 qAbs(nJobs) == 1 ? "is" : "are");
     } else if (nJobs) {
-        qCDebug(category, "Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
+        qCDebug(normal, "Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
               Util::Pluralize("worker", nJobs).toUtf8().constData(), t0.elapsed()/1e3);
     }
 }
@@ -374,7 +374,7 @@ void App::parseArgs()
                 auto it = registeredTests.find(tname);
                 if (it == registeredTests.end())
                     throw BadArgs(QString("No such test: %1").arg(tname));
-                qCInfo(category) << "Running test: " << it->first << " ...";
+                qCInfo(normal) << "Running test: " << it->first << " ...";
                 it->second();
             }
         }
@@ -385,7 +385,7 @@ void App::parseArgs()
                 auto it = registeredBenches.find(tname);
                 if (it == registeredBenches.end())
                     throw BadArgs(QString("No such bench: %1").arg(tname));
-                qCInfo(category) << "Running benchmark: " << it->first << " ...";
+                qCInfo(normal) << "Running benchmark: " << it->first << " ...";
                 it->second();
             }
         }

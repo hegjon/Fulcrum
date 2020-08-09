@@ -20,3 +20,6 @@
 
 /// put the vtable here.
 Exception::~Exception() {}
+
+Q_LOGGING_CATEGORY(normal, "fulcrum")
+Q_LOGGING_CATEGORY(trace, "fulcrum.verbose")

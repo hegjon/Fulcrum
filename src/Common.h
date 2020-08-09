@@ -19,6 +19,7 @@
 #pragma once
 
 #include <QString>
+#include <QLoggingCategory>
 
 #include <cstdint>
 #include <exception>
@@ -37,6 +38,9 @@ struct Exception : public std::runtime_error
 
 struct InternalError : public Exception { using Exception::Exception; };
 struct BadArgs : public Exception { using Exception::Exception; };
+
+Q_DECLARE_LOGGING_CATEGORY(normal);
+Q_DECLARE_LOGGING_CATEGORY(trace);
 
 #define APPNAME "Fulcrum"
 #define VERSION "1.2.8"

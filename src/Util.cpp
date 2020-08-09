@@ -41,9 +41,6 @@
 #include <thread>
 
 
-Q_LOGGING_CATEGORY(category, "fulcrum")
-Q_LOGGING_CATEGORY(trace, "fulcrum.verbose")
-
 namespace Util {
     QString basename(const QString &s) {
         QRegExp re("[\\/]");

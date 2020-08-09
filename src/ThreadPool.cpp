@@ -59,7 +59,7 @@ void Job::run() {
     } else if (UNLIKELY(!weakContextRef)) {
         // this is here so we avoid doing any work in case work is costly when we know for a fact the
         // interested/subscribed context object is already deleted.
-        qCDebug(category) << objectName() << ": context already deleted, exiting early without doing any work";
+        qCDebug(normal) << objectName() << ": context already deleted, exiting early without doing any work";
         return;
     }
     if (LIKELY(work)) {
@@ -79,11 +79,11 @@ void Job::run() {
 void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidFunc & completion, const FailFunc & fail, int priority)
 {
     if (blockNewWork) {
-        qDebug(category) << __func__ << ": Ignoring new work submitted because blockNewWork = true";
+        qDebug(normal) << __func__ << ": Ignoring new work submitted because blockNewWork = true";
         return;
     }
     static const FailFunc defaultFail = [](const QString &msg) {
-            qWarning(category) << "A ThreadPool job failed with the error message:" << msg;
+            qWarning(normal) << "A ThreadPool job failed with the error message:" << msg;
     };
     const FailFunc & failFuncToUse (fail ? fail : defaultFail);
     Job *job = new Job(context, this, work, completion, failFuncToUse);
@@ -95,11 +95,11 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
         failFuncToUse(msg);
         if (&failFuncToUse != &defaultFail)
             // make sure log gets the error
-            qWarning(category) << msg;
+            qWarning(normal) << msg;
         return;
     } else if (UNLIKELY(njobs < 0)) {
         // should absolutely never happen.
-        qCritical(category) << "FIXME: njobs" << njobs << "< 0!";
+        qCritical(normal) << "FIXME: njobs" << njobs << "< 0!";
     } else if (njobs > extantMaxSeen)
         // FIXME: this isn't entirely atomic but this value is for diagnostic purposes and doesn't need to be strictly correct
         extantMaxSeen = njobs;
@@ -108,13 +108,13 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
     job->setObjectName(QStringLiteral("Job %1 for '%2'").arg(num).arg( context ? context->objectName() : QStringLiteral("<no context>")));
     if constexpr (debugPrt) {
         QObject::connect(job, &Job::started, this, [n=job->objectName()]{
-            qDebug(category) << n << "-- started";
+            qDebug(normal) << n << "-- started";
         }, Qt::DirectConnection);
         QObject::connect(job, &Job::completed, this, [n=job->objectName()]{
-            qDebug(category) << n << "-- completed";
+            qDebug(normal) << n << "-- completed";
         }, Qt::DirectConnection);
         QObject::connect(job, &Job::failed, this, [n=job->objectName()](const QString &msg){
-            qDebug(category) << n << "-- failed: " << msg;
+            qDebug(normal) << n << "-- failed: " << msg;
         }, Qt::DirectConnection);
     }
     pool->start(job, priority);
@@ -124,7 +124,7 @@ bool ThreadPool::shutdownWaitForJobs(int timeout_ms)
 {
     blockNewWork = true;
     if constexpr (debugPrt) {
-        qDebug(category) << __func__ << ": waiting for jobs ...";
+        qDebug(normal) << __func__ << ": waiting for jobs ...";
     }
     pool->clear();
     return pool->waitForDone(timeout_ms);

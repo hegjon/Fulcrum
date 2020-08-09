@@ -62,9 +62,6 @@ class App;
 #define UNLIKELY(bool_expr) EXPECT(int(bool(bool_expr)), 0)
 
 
-Q_DECLARE_LOGGING_CATEGORY(category);
-Q_DECLARE_LOGGING_CATEGORY(trace);
-
 /// Super class of Debug, Warning, Error classes.  Can be instantiated for regular log messages.
 class Log
 {
