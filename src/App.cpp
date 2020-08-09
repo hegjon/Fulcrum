@@ -418,7 +418,7 @@ void App::parseArgs()
     // first warn user about dupes
     for (const auto & opt : allOptions) {
         static const auto DupeMsg = [](const QString &arg) {
-            qInfo() << "'" << arg << "' specified both via the CLI and the configuration file. The CLI arg will take precedence.";
+            qCInfo(normal) << arg << "specified both via the CLI and the configuration file. The CLI arg will take precedence.";
         };
         for (const auto & name : opt.names()) {
             if (name.length() == 1) continue;
