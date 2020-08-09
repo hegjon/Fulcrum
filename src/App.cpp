@@ -35,6 +35,7 @@
 #include <QSslEllipticCurve>
 #include <QSslSocket>
 #include <QtDebug>
+#include <QtGlobal>
 
 #include <array>
 #include <clocale>
@@ -76,9 +77,11 @@ App::App(int argc, char *argv[])
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     }
     if(options->verboseDebug) {
+        qSetMessagePattern("[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{if-category}[%{category}] <%{file}:%{line}>: %{endif}%{message}");
         QLoggingCategory::setFilterRules("fulcrum.debug=true");
     }
     if(options->verboseTrace) {
+        qSetMessagePattern("[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{if-category}[%{category}] <%{file}:%{line}>: %{endif}%{message}");
         QLoggingCategory::setFilterRules("fulcrum.debug=true\n"
                                          "fulcrum.verbose.debug=true");
     }
@@ -1123,7 +1126,7 @@ void App::miscPreAppFixups()
     if(qEnvironmentVariableIsSet("JOURNAL_STREAM")) {
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     } else {
-        qputenv("QT_MESSAGE_PATTERN", "[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{if-category}[%{category}] %{endif}%{message}");
+        qSetMessagePattern("[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{if-category}[%{category}] %{endif}%{message}");
         //qInstallMessageHandler(customMessageHandler);
     }
 #ifdef Q_OS_DARWIN
