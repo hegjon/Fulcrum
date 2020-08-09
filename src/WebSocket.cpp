@@ -726,7 +726,7 @@ namespace WebSocket
                                 ok && (gotKey=headers.value(QStringLiteral("sec-websocket-accept"))) != expectedDigest)
                             Fail(QString("Bad key: expected '%1', got '%2'").arg(QString(expectedDigest)).arg(gotKey));
                         if (ok) {
-                            qCDebug(normal) << "Successful websocket handshake to host" << sock->peerName() << ":" << sock->peerPort();
+                            qCDebug(f) << "Successful websocket handshake to host" << sock->peerName() << ":" << sock->peerPort();
                             {
                                 // save some properties to the socket
                                 sock->setProperty(kWebsocketFlag, true);
@@ -741,7 +741,7 @@ namespace WebSocket
                             Fail("Missing required headers");
                     }
                 } catch (const std::exception &e) {
-                    qCDebug(normal) << "Failed handshake: " << e.what();
+                    qCDebug(f) << "Failed handshake: " << e.what();
                     emit failure(e.what());
                     // at this point this slot will never be called again because we auto-disconnect signals
                 }
@@ -850,7 +850,7 @@ namespace WebSocket
                             sock->write(header);
                         }
 
-                        qCDebug(normal) << "Successful websocket handshake for client"
+                        qCDebug(f) << "Successful websocket handshake for client"
                                << sock->peerAddress() << ":" << sock->peerPort();
                         {
                             // save some properties to the socket
@@ -865,7 +865,7 @@ namespace WebSocket
                         return;
                     }
                 } catch (const std::exception &e) {
-                    qCDebug(normal) << sock->peerAddress() << ":" << sock->peerPort() << "failed handshake:" << e.what();
+                    qCDebug(f) << sock->peerAddress() << ":" << sock->peerPort() << "failed handshake:" << e.what();
                     emit failure(e.what());
                     // at this point this slot will never be called again because we auto-disconnect signals
                 }
@@ -953,7 +953,7 @@ namespace WebSocket
                 *reinterpret_cast<quint32 *>(data.data()) = QRandomGenerator::global()->generate();
                 sendPing(data);
                 if (Util::getTime() - lastPongRecvd >= pingTimer->interval()*2) {
-                    qCDebug(normal) << "Ping timeout for" << peerAddress() << ":" << peerPort();
+                    qCDebug(f) << "Ping timeout for" << peerAddress() << ":" << peerPort();
                     disconnectFromHost(CloseCode::ProtocolError, QByteArrayLiteral("Ping timeout"));
                 }
             });
@@ -1009,7 +1009,7 @@ namespace WebSocket
         sendClose(code, reason);
         QTimer::singleShot(3000, this, [this]{
             if (!gotclose && isValid()) {
-                qCDebug(normal) << "close reply timeout, closing socket";
+                qCDebug(f) << "close reply timeout, closing socket";
                 socket->disconnectFromHost();
             }
         });

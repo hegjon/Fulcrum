@@ -45,7 +45,7 @@ Controller::Controller(const std::shared_ptr<const Options> &o)
     _thread.setObjectName(objectName());
 }
 
-Controller::~Controller() { qDebug(normal) << __func__; cleanup(); }
+Controller::~Controller() { qDebug(f) << __func__; cleanup(); }
 
 void Controller::startup()
 {
@@ -74,7 +74,7 @@ void Controller::startup()
             lostConn = true;
             stopTimer(pollTimerName);
             stopTimer(callProcessTimer);
-            callOnTimerSoon(msgPeriod, waitTimer, []{ qCInfo(normal, "Waiting for bitcoind..."); return true; }, false, Qt::TimerType::VeryCoarseTimer);
+            callOnTimerSoon(msgPeriod, waitTimer, []{ qCInfo(f, "Waiting for bitcoind..."); return true; }, false, Qt::TimerType::VeryCoarseTimer);
         };
         waitForBitcoinD();
         conns += connect(bitcoindmgr.get(), &BitcoinDMgr::allConnectionsLost, this, waitForBitcoinD);
@@ -83,7 +83,7 @@ void Controller::startup()
             if (lostConn) {
                 lostConn = false;
                 stopTimer(waitTimer);
-                qCDebug(normal) << "Auth recvd from bicoind with id:" << id << ", proceeding with processing ...";
+                qCDebug(f) << "Auth recvd from bicoind with id:" << id << ", proceeding with processing ...";
                 callOnTimerSoonNoRepeat(smallDelay, callProcessTimer, [this]{process();}, true);
             }
         });
@@ -92,7 +92,7 @@ void Controller::startup()
             auto now = Util::getTimeSecs();
             if (now-last >= 1.0) { // throttled to not spam log
                 last = now;
-                qCInfo(normal) << "bitcoind is still warming up:" << msg;
+                qCInfo(f) << "bitcoind is still warming up:" << msg;
             }
         });
     }
@@ -169,9 +169,9 @@ void Controller::cleanup()
     stopFlag = true;
     stop();
     tasks.clear(); // deletes all tasks asap
-    if (srvmgr) { qCInfo(normal, "Stopping SrvMgr ... "); srvmgr->cleanup(); srvmgr.reset(); }
-    if (bitcoindmgr) { qCInfo(normal, "Stopping BitcoinDMgr ... "); bitcoindmgr->cleanup(); bitcoindmgr.reset(); }
-    if (storage) { qCInfo(normal, "Closing storage ..."); storage->cleanup(); storage.reset(); }
+    if (srvmgr) { qCInfo(f, "Stopping SrvMgr ... "); srvmgr->cleanup(); srvmgr.reset(); }
+    if (bitcoindmgr) { qCInfo(f, "Stopping BitcoinDMgr ... "); bitcoindmgr->cleanup(); bitcoindmgr.reset(); }
+    if (storage) { qCInfo(f, "Closing storage ..."); storage->cleanup(); storage.reset(); }
     sm.reset();
 }
 
@@ -389,19 +389,19 @@ void DownloadBlocksTask::do_get(unsigned int bnum)
                         ++q_ct;
                     }
                 } else if (!sizeOk) {
-                    qCWarning(normal) << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
+                    qCWarning(f) << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("bad size for height %1").arg(bnum);
                     emit errored();
                 } else {
-                    qCWarning(normal) << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
+                    qCWarning(f) << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("hash mismatch for height %1").arg(bnum);
                     emit errored();
                 }
             });
         } else {
-            qWarning(normal) << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
+            qWarning(f) << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
             errorCode = int(bnum);
             errorMessage = QString("invalid hash for height %1").arg(bnum);
             emit errored();
@@ -503,7 +503,7 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
     double now = Util::getTimeSecs();
     std::lock_guard g(mut);
     if (force || (newSize > 0 && (oldSize != newSize || oldNumAddresses != numAddresses) && now - lastTS >= interval)) {
-        auto log = isDebug ? qDebug(normal) : qInfo(normal);
+        auto log = isDebug ? qDebug(f) : qInfo(f);
         log << newSize << Util::Pluralize(" mempool tx", newSize) << "involving" << numAddresses
             << Util::Pluralize(" address", numAddresses);
         if (!force) {
@@ -650,7 +650,7 @@ void SynchMempoolTask::processResults()
         newSize = mempool.txs.size();
         newNumAddresses = mempool.hashXTxs.size();
     } // release mempool lock
-    if (oldSize != newSize && normal().isDebugEnabled()) {
+    if (oldSize != newSize && f().isDebugEnabled()) {
         Controller::printMempoolStatusToLog(newSize, newNumAddresses, true, true);
     }
     emit success();
@@ -660,7 +660,7 @@ void SynchMempoolTask::doDLNextTx()
 {
     Mempool::TxRef tx;
     if (auto it = txsNeedingDownload.begin(); it == txsNeedingDownload.end()) {
-        qCritical(normal) << "FIXME -- txsNeedingDownload is empty in ";
+        qCritical(f) << "FIXME -- txsNeedingDownload is empty in ";
         emit errored();
         return;
     } else {
@@ -707,7 +707,7 @@ void SynchMempoolTask::doGetRawMempool()
                     auto [mempool, lock] = storage->mutableMempool(); // take the lock exclusively here
                     const auto sz = mempool.txs.size();
                     mempool.clear();
-                    qCDebug(normal) << "Mempool cleared of" << sz << Util::Pluralize(" tx", sz);
+                    qCDebug(f) << "Mempool cleared of" << sz << Util::Pluralize(" tx", sz);
                 }
             });
         int newCt = 0;
@@ -722,7 +722,7 @@ void SynchMempoolTask::doGetRawMempool()
             const auto txidHex = var.toString().trimmed().toLower();
             const TxHash hash = Util::ParseHexFast(txidHex.toUtf8());
             if (hash.length() != HashLen) {
-                qCCritical(normal) << resp.method << ": got an empty tx hash";
+                qCCritical(f) << resp.method << ": got an empty tx hash";
                 emit errored();
                 return;
             }
@@ -746,12 +746,12 @@ void SynchMempoolTask::doGetRawMempool()
             // If tx's were dropped, we clear the mempool and try again. We also enqueue notifications for the dropped
             // tx's.
             const bool recommendFullRetry = oldCt >= 2 && droppedTxs.size() >= oldCt/2; // more than 50% of the mempool tx's dropped out. something is funny. likely a new block arrived.
-            qCDebug(normal) << droppedTxs.size() << "txs dropped from mempool, resetting mempool and trying again ...";
+            qCDebug(f) << droppedTxs.size() << "txs dropped from mempool, resetting mempool and trying again ...";
             // NOTIFICATION
             if (recommendFullRetry) {
                 // NOTIFICATION of all ...
                 scriptHashesAffected.merge(Util::keySet<decltype(scriptHashesAffected)>(mempool.hashXTxs));
-                qCDebug(normal) << "Will notify for all" << scriptHashesAffected.size() << "addresses of mempool for notificatons ...";
+                qCDebug(f) << "Will notify for all" << scriptHashesAffected.size() << "addresses of mempool for notificatons ...";
             } else {
                 // just the dropped tx's
                 for (const auto & txid : droppedTxs) {
@@ -761,7 +761,7 @@ void SynchMempoolTask::doGetRawMempool()
                             scriptHashesAffected.merge(Util::keySet<decltype(scriptHashesAffected)>(tx->hashXs));
                     }
                 }
-                qCDebug(normal) << "Will notify for" << scriptHashesAffected.size() << "addresses belonging to the dropped tx's for notificatons ...";
+                qCDebug(f) << "Will notify for" << scriptHashesAffected.size() << "addresses belonging to the dropped tx's for notificatons ...";
             }
             clearMempool = true; // Defer object at top of this lamba above will clear the mempool on function return (taking an exclusive lock) if this is true.
             if (recommendFullRetry) {
@@ -774,7 +774,7 @@ void SynchMempoolTask::doGetRawMempool()
         }
 
         if (newCt)
-            qCDebug(normal) << resp.method << ": got reply with" << txidList.size() << "items," << newCt << "new";
+            qCDebug(f) << resp.method << ": got reply with" << txidList.size() << "items," << newCt << "new";
         isdlingtxs = true;
         expectedNumTxsDownloaded = unsigned(newCt);
         // TX data will be downloaded now, if needed
@@ -858,7 +858,7 @@ void Controller::rmTask(CtlTask *t)
         tasks.erase(it); // will delete object immediately
         return;
     }
-    qCritical(normal) << "Task" << t->objectName() << "not found! FIXME!";
+    qCritical(f) << "Task" << t->objectName() << "not found! FIXME!";
 }
 
 bool Controller::isTaskDeleted(CtlTask *t) const { return tasks.count(t) == 0; }
@@ -869,13 +869,13 @@ void Controller::add_DLHeaderTask(unsigned int from, unsigned int to, size_t nTa
     connect(t, &CtlTask::success, this, [t, this]{
         // NOTE: this callback is sometimes delivered after the sm has been reset(), so we don't check or use it here.
         if (UNLIKELY(isTaskDeleted(t))) return; // task was stopped from underneath us, this is stale.. abort.
-        qCDebug(normal) << "Got all blocks from:" << t->objectName() << " blockCt:" <<  t->goodCt
+        qCDebug(f) << "Got all blocks from:" << t->objectName() << " blockCt:" <<  t->goodCt
                 << "nTx,nInp,nOutp:" << t->nTx << "," << t->nIns << "," << t->nOuts;
     });
     connect(t, &CtlTask::errored, this, [t, this]{
         if (UNLIKELY(!sm || isTaskDeleted(t))) return; // task was stopped from underneath us, this is stale.. abort.
         if (sm->state == StateMachine::State::Failure) return; // silently ignore if we are already in failure
-        qCritical(normal) << "Task errored:" << t->objectName() << ", error:" << t->errorMessage;
+        qCritical(f) << "Task errored:" << t->objectName() << ", error:" << t->errorMessage;
         genericTaskErrored();
     });
 }
@@ -969,7 +969,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 if (task->info.bestBlockhash == tipHash) { // no reorg
                     if (!beSilentIfUpToDate) {
                         storage->updateMerkleCache(unsigned(tip));
-                        qCInfo(normal) << "Block height " << tip << ", up-to-date";
+                        qCInfo(f) << "Block height " << tip << ", up-to-date";
                         emit upToDate();
                         emit newHeader(unsigned(tip), tipHeader);
                     }
@@ -987,7 +987,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                 return;
             } else {
-                qCInfo(normal) << "Block height " << sm->ht << ", downloading new blocks ...";
+                qCInfo(f) << "Block height " << sm->ht << ", downloading new blocks ...";
                 emit synchronizing();
                 sm->state = State::GetBlocks;
             }
@@ -999,9 +999,9 @@ void Controller::process(bool beSilentIfUpToDate)
         // does so.
         if (Util::getTimeSecs() - sm->waitingTs > sm->simpleTaskTookTooLongSecs) {
             // this is very unlikely but is here in case bitcoind goes out to lunch so we can reset things and try again.
-            qWarning(normal) << "GetChainInfo task took longer than" << sm->simpleTaskTookTooLongSecs << "seconds to return a response. Trying again ...";
+            qWarning(f) << "GetChainInfo task took longer than" << sm->simpleTaskTookTooLongSecs << "seconds to return a response. Trying again ...";
             genericTaskErrored();
-        } else { qCDebug(normal) << "Spurious Controller::process() call while waiting for the chain info task to complete, ignoring"; }
+        } else { qCDebug(f) << "Spurious Controller::process() call while waiting for the chain info task to complete, ignoring"; }
     } else if (sm->state == State::GetBlocks) {
         FatalAssert(sm->ht >= 0, "Inconsistent state -- sm->ht cannot be negative in State::GetBlocks! FIXME!"); // paranoia
         const size_t base = size_t(storage->latestTip().first+1);
@@ -1019,7 +1019,7 @@ void Controller::process(bool beSilentIfUpToDate)
         process_DownloadingBlocks();
     } else if (sm->state == State::FinishedDL) {
         size_t N = sm->endHeight - sm->startheight + 1;
-        qCInfo(normal) << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
+        qCInfo(f) << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
               << " (" << sm->nIns << " " << Util::Pluralize("input", sm->nIns) << ", " << sm->nOuts << " " << Util::Pluralize("output", sm->nOuts)
               << ", " << sm->nSH << Util::Pluralize(" address", sm->nSH) << ")"
               << ", verified ok.";
@@ -1030,7 +1030,7 @@ void Controller::process(bool beSilentIfUpToDate)
         AGAIN();
     } else if (sm->state == State::Retry) {
         // normally the result of Rewinding due to reorg, retry right away.
-        qCDebug(normal) << "Retrying download again ...";
+        qCDebug(f) << "Retrying download again ...";
         {
             std::lock_guard g(smLock);
             sm.reset();
@@ -1038,7 +1038,7 @@ void Controller::process(bool beSilentIfUpToDate)
         AGAIN();
     } else if (sm->state == State::Failure) {
         // We will try again later via the pollTimer
-        qCritical(normal) << "Failed to synch blocks and/or mempool";
+        qCritical(f) << "Failed to synch blocks and/or mempool";
         {
             std::lock_guard g(smLock);
             sm.reset();
@@ -1087,10 +1087,10 @@ void Controller::process(bool beSilentIfUpToDate)
 void Controller::on_putBlock(CtlTask *task, PreProcessedBlockPtr p)
 {
     if (!sm || isTaskDeleted(task) || sm->state == StateMachine::State::Failure || stopFlag) {
-        qCDebug(normal) << "Ignoring block" << p->height << " for now-defunct task";
+        qCDebug(f) << "Ignoring block" << p->height << " for now-defunct task";
         return;
     } else if (sm->state != StateMachine::State::DownloadingBlocks) {
-        qCDebug(normal) << "Ignoring putBlocks request for block" << p->height << "-- state is not \"DownloadingBlocks\" but rather is:", sm->stateStr();
+        qCDebug(f) << "Ignoring putBlocks request for block" << p->height << "-- state is not \"DownloadingBlocks\" but rather is:", sm->stateStr();
         return;
     }
     sm->ppBlocks[p->height] = p;
@@ -1195,8 +1195,8 @@ bool Controller::process_VerifyAndAddBlock(PreProcessedBlockPtr ppb)
         storage->addBlock(ppb, saveUndoInfo, nLeft, masterNotifySubsFlag);
 
     } catch (const HeaderVerificationFailure & e) {
-        qCDebug(normal) << "addBlock exception:" << e.what();
-        qCInfo(normal) << "Possible reorg detected at height" << ppb->height << ", rewinding 1 block and trying again ...";
+        qCDebug(f) << "addBlock exception:" << e.what();
+        qCInfo(f) << "Possible reorg detected at height" << ppb->height << ", rewinding 1 block and trying again ...";
         process_DoUndoAndRetry();
         return false;
     } catch (const std::exception & e) {
@@ -1519,18 +1519,18 @@ void Controller::dumpScriptHashes(const QString &fileName) const
     QFile outFile(fileName);
     if (!outFile.open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Truncate))
         throw BadArgs(QString("Dump: Output file \"%1\" could not be opened for writing").arg(fileName));
-    qCInfo(normal) << "Dump: " << "writing all known script hashes from db to \"" << fileName << "\" (this may take some time) ...";
+    qCInfo(f) << "Dump: " << "writing all known script hashes from db to \"" << fileName << "\" (this may take some time) ...";
     const auto t0 = Util::getTimeSecs();
     const auto count = storage->dumpAllScriptHashes(&outFile, 2, 0, [](size_t ctr){
         const QString text(QString("Dump: wrote %1 scripthashes so far ...").arg(ctr));
         if (ctr && !(ctr % 1000000))
-            qCInfo(normal) << text;
+            qCInfo(f) << text;
         else
-            qCDebug(normal) << text;
+            qCDebug(f) << text;
     });
     outFile.flush();
     outFile.close();
-    qCInfo(normal) << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
+    qCInfo(f) << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
           << " in " << QString::number(Util::getTimeSecs() - t0, 'f', 1) << " seconds"
           <<" (" << QString::number(outFile.size()/1e6, 'f', 3) << " MiB)";
     emit dumpScriptHashesComplete();

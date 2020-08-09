@@ -70,7 +70,7 @@ App::App(int argc, char *argv[])
     } catch (const std::exception &e) {
         qputenv("QT_MESSAGE_PATTERN", "%{message}"); // suppress timestamp stuff
         qCritical("%s", e.what());
-        qCInfo(normal) << "Use the -h option to show help.";
+        qCInfo(f) << "Use the -h option to show help.";
         std::exit(1);
     }
     if (options->syslogMode) {
@@ -94,24 +94,24 @@ App::App(int argc, char *argv[])
 
 App::~App()
 {
-    qCDebug(normal) << "App d'tor";
-    qCInfo(normal) << "Shudown complete";
+    qCDebug(f) << "App d'tor";
+    qCInfo(f) << "Shudown complete";
     _globalInstance = nullptr;
     /// child objects will be auto-deleted, however most are already gone in cleanup() at this point.
 }
 
 void App::startup()
 {
-    qCInfo(normal).noquote()
+    qCInfo(f).noquote()
             << applicationName()
             << applicationVersion()
             << "-" << QDateTime::currentDateTime().toString("ddd MMM d, yyyy hh:mm:ss.zzz t")
             << "- starting up ...";
 
     if ( ! Util::isClockSteady() ) {
-        qCDebug(normal) << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
+        qCDebug(f) << "High resolution clock provided by the std C++ library is not 'steady'. Log timestamps may drift if system time gets adjusted.";
     } else {
-        qCDebug(normal) << "High resolution clock: isSteady = true";
+        qCDebug(f) << "High resolution clock: isSteady = true";
     }
     try {
         BTC::CheckBitcoinEndiannessAndOtherSanityChecks();
@@ -119,7 +119,7 @@ void App::startup()
         auto gotsig = [](int sig) {
             static int ct = 0;
             if (!ct++) {
-                qCInfo(normal) << "Got signal: " << sig << ", exiting ...";
+                qCInfo(f) << "Got signal: " << sig << ", exiting ...";
                 app()->exit(sig);
             } else if (ct < 5) {
                 std::printf("Duplicate signal %d already being handled, ignoring\n", sig);
@@ -140,7 +140,7 @@ void App::startup()
 
         if (!options->statsInterfaces.isEmpty()) {
             const auto num = options->statsInterfaces.count();
-            qCInfo(normal).noquote() << "Stats HTTP: starting" << num << Util::Pluralize("server", num) << "...";
+            qCInfo(f).noquote() << "Stats HTTP: starting" << num << Util::Pluralize("server", num) << "...";
             // start 'stats' http servers, if any
             for (const auto & i : options->statsInterfaces)
                 start_httpServer(i); // may throw
@@ -153,15 +153,15 @@ void App::startup()
 
 void App::cleanup()
 {
-    qCDebug(normal) << __PRETTY_FUNCTION__ ;
+    qCDebug(f) << __PRETTY_FUNCTION__ ;
     quitting = true;
     cleanup_WaitForThreadPoolWorkers();
     if (!httpServers.isEmpty()) {
-        qCInfo(normal) << "Stopping Stats HTTP Servers ...";
+        qCInfo(f) << "Stopping Stats HTTP Servers ...";
         for (auto h : httpServers) { h->stop(); }
         httpServers.clear(); // deletes shared pointers
     }
-    if (controller) { qCInfo(normal, "Stopping Controller ..."); controller->cleanup(); controller.reset(); }
+    if (controller) { qCInfo(f, "Stopping Controller ..."); controller->cleanup(); controller.reset(); }
 }
 
 void App::cleanup_WaitForThreadPoolWorkers()
@@ -170,14 +170,14 @@ void App::cleanup_WaitForThreadPoolWorkers()
     QElapsedTimer t0; t0.start();
     const int nJobs = tpool->extantJobs();
     if (nJobs)
-        qCInfo(normal) << "Waiting for extant thread pool workers ...";
+        qCInfo(f) << "Waiting for extant thread pool workers ...";
     const bool res = tpool->shutdownWaitForJobs(timeout);
     if (!res) {
-        qCWarning(normal, "After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
+        qCWarning(f, "After %d seconds, %d thread pool %s %s still active. App may abort with an error.",
                 qRound(double(t0.elapsed())/1e3), nJobs, Util::Pluralize("worker", nJobs).toUtf8().constData(),
                 qAbs(nJobs) == 1 ? "is" : "are");
     } else if (nJobs) {
-        qCDebug(normal, "Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
+        qCDebug(f, "Successfully waited for %d thread pool %s (elapsed: %0.3f secs)", nJobs,
               Util::Pluralize("worker", nJobs).toUtf8().constData(), t0.elapsed()/1e3);
     }
 }
@@ -377,7 +377,7 @@ void App::parseArgs()
                 auto it = registeredTests.find(tname);
                 if (it == registeredTests.end())
                     throw BadArgs(QString("No such test: %1").arg(tname));
-                qCInfo(normal) << "Running test: " << it->first << " ...";
+                qCInfo(f) << "Running test: " << it->first << " ...";
                 it->second();
             }
         }
@@ -388,7 +388,7 @@ void App::parseArgs()
                 auto it = registeredBenches.find(tname);
                 if (it == registeredBenches.end())
                     throw BadArgs(QString("No such bench: %1").arg(tname));
-                qCInfo(normal) << "Running benchmark: " << it->first << " ...";
+                qCInfo(f) << "Running benchmark: " << it->first << " ...";
                 it->second();
             }
         }
@@ -396,7 +396,7 @@ void App::parseArgs()
             std::exit(0);
     } catch (const std::exception & e) {
         // bench or test execution failed with an exception
-        qCCritical(normal, "Caught exception: %s", e.what());
+        qCCritical(f, "Caught exception: %s", e.what());
         std::exit(1);
     }
 
@@ -421,7 +421,7 @@ void App::parseArgs()
     // first warn user about dupes
     for (const auto & opt : allOptions) {
         static const auto DupeMsg = [](const QString &arg) {
-            qCInfo(normal) << arg << "specified both via the CLI and the configuration file. The CLI arg will take precedence.";
+            qCInfo(f) << arg << "specified both via the CLI and the configuration file. The CLI arg will take precedence.";
         };
         for (const auto & name : opt.names()) {
             if (name.length() == 1) continue;
@@ -470,7 +470,7 @@ void App::parseArgs()
         const bool confIsSet = conf.hasValue(l);
         const auto envVar = env ? std::getenv(env) : nullptr;
         if ((cliIsSet || confIsSet) && envVar)
-            qCWarning(normal) << "Warning: " << l <<  " is specified both via the " << (cliIsSet ? "CLI" : "config file")
+            qCWarning(f) << "Warning: " << l <<  " is specified both via the " << (cliIsSet ? "CLI" : "config file")
                       << " and the environement (as " << env << "). The " << (cliIsSet ? "CLI arg" : "config file setting")
                       << " will take precendence.";
         if (((!cliIsSet && !confIsSet) || conf.value(l, parser.value(s)).isEmpty()) && (!env || !envVar))
@@ -529,13 +529,13 @@ void App::parseArgs()
             throw BadArgs(QString("The specified path \"%1\" already exists but is not a directory").arg(path));
         if (!fi.isReadable() || !fi.isExecutable() || !fi.isWritable())
             throw BadArgs(QString("Bad permissions for path \"%1\" (must be readable, writable, and executable)").arg(path));
-        Util::AsyncOnObject(this, [path]{ qCDebug(normal) << "datadir:" << path; }); // log this after return to event loop so it ends up in syslog (if -S mode)
+        Util::AsyncOnObject(this, [path]{ qCDebug(f) << "datadir:" << path; }); // log this after return to event loop so it ends up in syslog (if -S mode)
     } else { // !exists
         if (!QDir().mkpath(options->datadir))
             throw BadArgs(QString("Unable to create directory: %1").arg(options->datadir));
         path = QFileInfo(options->datadir).canonicalFilePath();
         // log this after return to event loop so it ends up in syslog (in case user specified -S mode)
-        Util::AsyncOnObject(this, [path]{ qCDebug(normal) << "datadir: Created directory" << path; });
+        Util::AsyncOnObject(this, [path]{ qCDebug(f) << "datadir: Created directory" << path; });
     }
 
     // parse bitcoind - conf.value is always unset if parser.value is set, hence this strange constrcution below (parser.value takes precedence)
@@ -544,7 +544,7 @@ void App::parseArgs()
     if ((options->bitcoindUsesTls = parser.isSet("bitcoind-tls") || conf.boolValue("bitcoind-tls"))) {
         // check that Qt actually supports SSL since we now know that we require it to proceed
         checkSupportsSsl();
-        Util::AsyncOnObject(this, []{ qCDebug(normal) << "config: bitcoind-tls = true"; });
+        Util::AsyncOnObject(this, []{ qCDebug(f) << "config: bitcoind-tls = true"; });
     }
     // grab rpcuser
     options->rpcuser = conf.value("rpcuser", parser.isSet("u") ? parser.value("u") : std::getenv(RPCUSER));
@@ -643,7 +643,7 @@ void App::parseArgs()
         if (!iface.first.isLoopback()) {
             // print the warning later when logger is up
             Util::AsyncOnObject(this, [iface]{
-                qCWarning(normal) << "Warning: Binding admin RPC port to non-loopback interface" << iface.first << ":" << iface.second << "is not recommended. Please ensure that this port is not globally reachable from the internet.";
+                qCWarning(f) << "Warning: Binding admin RPC port to non-loopback interface" << iface.first << ":" << iface.second << "is not recommended. Please ensure that this port is not globally reachable from the internet.";
             });
         }
     }
@@ -705,7 +705,7 @@ void App::parseArgs()
             throw BadArgs(QString("max_clients_per_ip parse error: cannot parse '%1' as an integer").arg(val));
         // log this later in case we are in syslog mode
         Util::AsyncOnObject(this, [this]{
-            qCDebug(normal) << "config: max_clients_per_ip = "
+            qCDebug(f) << "config: max_clients_per_ip = "
                     << (options->maxClientsPerIP > 0 ? QString::number(options->maxClientsPerIP) : "Unlimited");
         });
     }
@@ -724,7 +724,7 @@ void App::parseArgs()
         }
         // log this later in case we are in syslog mode
         Util::AsyncOnObject(this, [parsed]{
-            qCDebug(normal) << "config: subnets_to_exclude_from_per_ip_limits = " << (parsed.isEmpty() ? "None" : parsed.join(", "));
+            qCDebug(f) << "config: subnets_to_exclude_from_per_ip_limits = " << (parsed.isEmpty() ? "None" : parsed.join(", "));
         });
     }
     if (conf.hasValue("max_history")) {
@@ -735,7 +735,7 @@ void App::parseArgs()
                           .arg(options->maxHistoryMin).arg(options->maxHistoryMax));
         options->maxHistory = mh;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mh]{ qCDebug(normal) << "config: max_history =" << mh; });
+        Util::AsyncOnObject(this, [mh]{ qCDebug(f) << "config: max_history =" << mh; });
     }
     if (conf.hasValue("max_buffer")) {
         bool ok;
@@ -745,7 +745,7 @@ void App::parseArgs()
                           .arg(options->maxBufferMin).arg(options->maxBufferMax));
         options->maxBuffer.store( mb );
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mb]{ qCDebug(normal) << "config: max_buffer =" << mb; });
+        Util::AsyncOnObject(this, [mb]{ qCDebug(f) << "config: max_buffer =" << mb; });
     }
     // pick up 'workqueue' and 'worker_threads' optional conf params
     if (conf.hasValue("workqueue")) {
@@ -757,7 +757,7 @@ void App::parseArgs()
             throw BadArgs(QString("workqueue: Unable to set workqueue to %1; SetExtantJobLimit returned false.").arg(val));
         options->workQueue = val; // save advisory value for stats(), etc code
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [this]{ qCDebug(normal) << "config: workqueue =" << tpool->extantJobLimit(); });
+        Util::AsyncOnObject(this, [this]{ qCDebug(f) << "config: workqueue =" << tpool->extantJobLimit(); });
     } else
         options->workQueue = tpool->extantJobLimit(); // so stats() knows what was auto-configured
     if (conf.hasValue("worker_threads")) {
@@ -772,7 +772,7 @@ void App::parseArgs()
             throw BadArgs(QString("worker_threads: Unable to set worker threads to %1").arg(val));
         options->workerThreads = val; // save advisory value for stats(), etc code
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [val,this]{ qCDebug(normal) << "config: worker_threads =" << val << "(configured: " << tpool->maxThreadCount() << ")"; });
+        Util::AsyncOnObject(this, [val,this]{ qCDebug(f) << "config: worker_threads =" << val << "(configured: " << tpool->maxThreadCount() << ")"; });
     } else
         options->workerThreads = tpool->maxThreadCount(); // so stats() knows what was auto-configured
     // max_pending_connections
@@ -784,7 +784,7 @@ void App::parseArgs()
                           .arg(options->minMaxPendingConnections).arg(options->maxMaxPendingConnections));
         options->maxPendingConnections = val;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: max_pending_connections =" << val; });
+        Util::AsyncOnObject(this, [val]{ qCDebug(f) << "config: max_pending_connections =" << val; });
     }
 
     // handle tor-related params: tor_hostname, tor_banner, tor_tcp_port, tor_ssl_port, tor_proxy, tor_user, tor_pass
@@ -792,12 +792,12 @@ void App::parseArgs()
         options->torHostName = thn;
         if (!thn.endsWith(".onion"))
             throw BadArgs(QString("Bad tor_hostname specified: must end with .onion: %1").arg(thn));
-        Util::AsyncOnObject(this, [thn]{ qCDebug(normal) << "config: tor_hostname =" << thn; });
+        Util::AsyncOnObject(this, [thn]{ qCDebug(f) << "config: tor_hostname =" << thn; });
     }
     if (conf.hasValue("tor_banner")) {
         const auto banner = conf.value("tor_banner");
         options->torBannerFile = banner;
-        Util::AsyncOnObject(this, [banner]{ qCDebug(normal) << "config: tor_banner =" << banner; });
+        Util::AsyncOnObject(this, [banner]{ qCDebug(f) << "config: tor_banner =" << banner; });
     }
     if (conf.hasValue("tor_tcp_port")) {
         bool ok = false;
@@ -807,7 +807,7 @@ void App::parseArgs()
         if (!val) options->torTcp.reset();
         else {
             options->torTcp = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_tcp_port =" << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(f) << "config: tor_tcp_port =" << val; });
         }
     }
     if (conf.hasValue("tor_ssl_port")) {
@@ -818,7 +818,7 @@ void App::parseArgs()
         if (!val) options->torSsl.reset();
         else {
             options->torSsl = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_ssl_port =" << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(f) << "config: tor_ssl_port =" << val; });
         }
     }
     if (conf.hasValue("tor_ws_port")) {
@@ -829,7 +829,7 @@ void App::parseArgs()
         if (!val) options->torWs.reset();
         else {
             options->torWs = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_ws_port =" << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(f) << "config: tor_ws_port =" << val; });
         }
     }
     if (conf.hasValue("tor_wss_port")) {
@@ -840,20 +840,20 @@ void App::parseArgs()
         if (!val) options->torWss.reset();
         else {
             options->torWss = val;
-            Util::AsyncOnObject(this, [val]{ qCDebug(normal) << "config: tor_wss_port =" << val; });
+            Util::AsyncOnObject(this, [val]{ qCDebug(f) << "config: tor_wss_port =" << val; });
         }
     }
     if (conf.hasValue("tor_proxy")) {
         options->torProxy = parseInterface(conf.value("tor_proxy"), true); // may throw if bad
-        Util::AsyncOnObject(this, [val=options->torProxy]{ qCDebug(normal) << "config: tor_proxy =" << val.first.toString() << ":" << val.second; });
+        Util::AsyncOnObject(this, [val=options->torProxy]{ qCDebug(f) << "config: tor_proxy =" << val.first.toString() << ":" << val.second; });
     }
     if (conf.hasValue("tor_user")) {
         options->torUser = conf.value("tor_user");
-        Util::AsyncOnObject(this, [val=options->torUser]{ qCDebug(normal) << "config: tor_user =" << val; });
+        Util::AsyncOnObject(this, [val=options->torUser]{ qCDebug(f) << "config: tor_user =" << val; });
     }
     if (conf.hasValue("tor_pass")) {
         options->torUser = conf.value("tor_pass");
-        Util::AsyncOnObject(this, []{ qCDebug(normal) << "config: tor_pass = <hidden>"; });
+        Util::AsyncOnObject(this, []{ qCDebug(f) << "config: tor_pass = <hidden>"; });
     }
     // /Tor params
 
@@ -875,7 +875,7 @@ void App::parseArgs()
             throw BadArgs("Failed to parse \"bitcoind_throttle\" -- out of range or invalid format. Please specify 3 positive integers in range.");
         options->bdReqThrottleParams.store(p);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [p]{ qCDebug(normal) << "config: bitcoind_throttle =" << QString("(hi: %1, lo: %2, decay: %3)").arg(p.hi).arg(p.lo).arg(p.decay); });
+        Util::AsyncOnObject(this, [p]{ qCDebug(f) << "config: bitcoind_throttle =" << QString("(hi: %1, lo: %2, decay: %3)").arg(p.hi).arg(p.lo).arg(p.decay); });
     }
     if (conf.hasValue("max_subs_per_ip")) {
         bool ok;
@@ -885,7 +885,7 @@ void App::parseArgs()
                           .arg(options->maxSubsPerIPMin).arg(options->maxSubsPerIPMax));
         options->maxSubsPerIP = subs;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [subs]{ qCDebug(normal) << "config: max_subs_per_ip =" << subs; });
+        Util::AsyncOnObject(this, [subs]{ qCDebug(f) << "config: max_subs_per_ip =" << subs; });
     }
     if (conf.hasValue("max_subs")) {
         bool ok;
@@ -895,7 +895,7 @@ void App::parseArgs()
                           .arg(options->maxSubsGloballyMin).arg(options->maxSubsGloballyMax));
         options->maxSubsGlobally = subs;
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [subs]{ qCDebug(normal) << "config: max_subs = " << subs; });
+        Util::AsyncOnObject(this, [subs]{ qCDebug(f) << "config: max_subs = " << subs; });
     }
 
     // DB options
@@ -907,7 +907,7 @@ void App::parseArgs()
                           .arg(options->db.maxOpenFilesMin).arg(options->db.maxOpenFilesMax));
         options->db.maxOpenFiles = int(mof);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [mof]{ qCDebug(normal) << "config: db_max_open_files =" << mof; });
+        Util::AsyncOnObject(this, [mof]{ qCDebug(f) << "config: db_max_open_files =" << mof; });
     }
     if (conf.hasValue("db_keep_log_file_num")) {
         bool ok;
@@ -917,14 +917,14 @@ void App::parseArgs()
                           .arg(options->db.minKeepLogFileNum).arg(options->db.maxKeepLogFileNum));
         options->db.keepLogFileNum = unsigned(klfn);
         // log this later in case we are in syslog mode
-        Util::AsyncOnObject(this, [klfn]{ qCDebug(normal) << "config: db_keep_log_file_num =" << klfn; });
+        Util::AsyncOnObject(this, [klfn]{ qCDebug(f) << "config: db_keep_log_file_num =" << klfn; });
     }
 
     // warn user that no hostname was specified if they have peerDiscover turned on
     if (!options->hostName.has_value() && options->peerDiscovery && options->peerAnnounceSelf) {
         // do this when we return to event loop in case user is logging to -S (so it appears in syslog which gets set up after we return)
         Util::AsyncOnObject(this, []{
-            qCWarning(normal) << "Warning: No 'hostname' variable defined in configuration. This server may not be peer-discoverable.";
+            qCWarning(f) << "Warning: No 'hostname' variable defined in configuration. This server may not be peer-discoverable.";
         });
     }
 
@@ -942,19 +942,19 @@ void App::parseArgs()
             options->logTimestampMode = Options::LogTimestampMode::None;
         else
             throw BadArgs(QString("ts-format: unrecognized value \"%1\"").arg(fmt));
-        Util::AsyncOnObject(this, [this]{ qCDebug(normal) << "config: ts-format =" << options->logTimestampModeString(); });
+        Util::AsyncOnObject(this, [this]{ qCDebug(f) << "config: ts-format =" << options->logTimestampModeString(); });
     }
 #ifdef Q_OS_UNIX
     else if (options->syslogMode) {
         options->logTimestampMode = Options::LogTimestampMode::None;
-        Util::AsyncOnObject(this, []{ qCDebug(normal) << "syslog mode enabled, defaulting to \"--ts-format none\""; });
+        Util::AsyncOnObject(this, []{ qCDebug(f) << "syslog mode enabled, defaulting to \"--ts-format none\""; });
     }
 #endif
 
     // --tls-disallow-deprecated from CLI and/or tls-disallow-deprecated from conf
     if (parser.isSet("tls-disallow-deprecated") || conf.boolValue("tls-disallow-deprecated")) {
         options->tlsDisallowDeprecated = true;
-        Util::AsyncOnObject(this, []{ qInfo(normal) << "TLS restricted to non-deprecated versions (version 1.2 or above)"; });
+        Util::AsyncOnObject(this, []{ qInfo(f) << "TLS restricted to non-deprecated versions (version 1.2 or above)"; });
     }
 
     // parse --dump-*
@@ -1026,25 +1026,25 @@ Options::CertInfo App::makeCertInfo(const QObject *context, const QString &cert,
 #else
             name = ret.cert.subjectInfo(QSslCertificate::Organization).join(", ");
 #endif
-            qCInfo(normal) << "Loaded SSL certificate:" << name
+            qCInfo(f) << "Loaded SSL certificate:" << name
                   << ret.cert.subjectInfo(QSslCertificate::SubjectInfo::EmailAddress).join(",")
                   //<< " self-signed: " << (options->sslCert.isSelfSigned() ? "YES" : "NO")
                   << "expires:" << (ret.cert.expiryDate().toString("ddd MMMM d yyyy hh:mm:ss"));
-            if (normal().isDebugEnabled()) {
+            if (f().isDebugEnabled()) {
                 QString cipherStr;
                 for (const auto & ciph : QSslConfiguration::supportedCiphers()) {
                     if (!cipherStr.isEmpty()) cipherStr += ", ";
                     cipherStr += ciph.name();
                 }
                 if (cipherStr.isEmpty()) cipherStr = "(None)";
-                qCDebug(normal) << "Supported ciphers:" << cipherStr;
+                qCDebug(f) << "Supported ciphers:" << cipherStr;
                 QString curvesStr;
                 for (const auto & curve : QSslConfiguration::supportedEllipticCurves()) {
                     if (!curvesStr.isEmpty()) curvesStr += ", ";
                     curvesStr += curve.longName();
                 }
                 if (curvesStr.isEmpty()) curvesStr = "(None)";
-                qCDebug(normal) << "Supported curves:" << curvesStr;
+                qCDebug(f) << "Supported curves:" << curvesStr;
             }
         });
     }
@@ -1065,9 +1065,9 @@ Options::CertInfo App::makeCertInfo(const QObject *context, const QString &cert,
         const auto algo = ret.key.algorithm();
         const auto algoName = KeyAlgoStr(algo);
         const auto keyTypeName = (ret.key.type() == QSsl::KeyType::PrivateKey ? "private" : "public");
-        qCInfo(normal) << "Loaded key type:" << keyTypeName << "algorithm:" << algoName;
+        qCInfo(f) << "Loaded key type:" << keyTypeName << "algorithm:" << algoName;
         if (algo != QSsl::KeyAlgorithm::Rsa)
-            qCWarning(normal) << "Warning:" << algoName << "key support is experimental."
+            qCWarning(f) << "Warning:" << algoName << "key support is experimental."
                        << "Please consider switching your SSL certificate and key to use 2048-bit RSA.";
     });
 
@@ -1153,7 +1153,7 @@ void App::on_requestMaxBufferChange(int m)
     if (Options::isMaxBufferSettingInBounds(m))
         options->maxBuffer.store( Options::clampMaxBufferSetting(m) );
     else
-        qCWarning(normal) << m << "is out of range, ignoring new max_buffer setting";
+        qCWarning(f) << m << "is out of range, ignoring new max_buffer setting";
 }
 
 void App::on_bitcoindThrottleParamsChange(int hi, int lo, int decay)
@@ -1162,7 +1162,7 @@ void App::on_bitcoindThrottleParamsChange(int hi, int lo, int decay)
     if (p.isValid())
         options->bdReqThrottleParams.store(p);
     else
-        qCWarning(normal) << "arguments out of range, ignoring new bitcoind_throttle setting";
+        qCWarning(f) << "arguments out of range, ignoring new bitcoind_throttle setting";
 }
 
 /* static */ std::map<QString, std::function<void()>> App::registeredTests, App::registeredBenches;

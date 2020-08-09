@@ -42,7 +42,7 @@ Job::Job(QObject *context, ThreadPool *pool, const VoidFunc & work, const VoidFu
     : QObject(nullptr), pool(pool), work(work), weakContextRef(context ? context : pool)
 {
     if (!context && (completion || fail))
-        qCDebug(normal) << "Warning: use of ThreadPool jobs without a context is not recommended, FIXME!";
+        qCDebug(f) << "Warning: use of ThreadPool jobs without a context is not recommended, FIXME!";
     if (completion)
         connect(this, &Job::completed, context ? context : pool, [completion]{ completion(); });
     if (fail)
@@ -53,13 +53,13 @@ Job::~Job() {}
 void Job::run() {
     emit started();
     if (UNLIKELY(pool->isShuttingDown())) {
-        qCDebug(normal) << objectName() << ": blockNewWork = true, exiting early without doing any work";
+        qCDebug(f) << objectName() << ": blockNewWork = true, exiting early without doing any work";
         return;
 
     } else if (UNLIKELY(!weakContextRef)) {
         // this is here so we avoid doing any work in case work is costly when we know for a fact the
         // interested/subscribed context object is already deleted.
-        qCDebug(normal) << objectName() << ": context already deleted, exiting early without doing any work";
+        qCDebug(f) << objectName() << ": context already deleted, exiting early without doing any work";
         return;
     }
     if (LIKELY(work)) {
@@ -79,11 +79,11 @@ void Job::run() {
 void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidFunc & completion, const FailFunc & fail, int priority)
 {
     if (blockNewWork) {
-        qDebug(normal) << "Ignoring new work submitted because blockNewWork = true";
+        qDebug(f) << "Ignoring new work submitted because blockNewWork = true";
         return;
     }
     static const FailFunc defaultFail = [](const QString &msg) {
-            qWarning(normal) << "A ThreadPool job failed with the error message:" << msg;
+            qWarning(f) << "A ThreadPool job failed with the error message:" << msg;
     };
     const FailFunc & failFuncToUse (fail ? fail : defaultFail);
     Job *job = new Job(context, this, work, completion, failFuncToUse);
@@ -95,11 +95,11 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
         failFuncToUse(msg);
         if (&failFuncToUse != &defaultFail)
             // make sure log gets the error
-            qWarning(normal) << msg;
+            qWarning(f) << msg;
         return;
     } else if (UNLIKELY(njobs < 0)) {
         // should absolutely never happen.
-        qCritical(normal) << "FIXME: njobs" << njobs << "< 0!";
+        qCritical(f) << "FIXME: njobs" << njobs << "< 0!";
     } else if (njobs > extantMaxSeen)
         // FIXME: this isn't entirely atomic but this value is for diagnostic purposes and doesn't need to be strictly correct
         extantMaxSeen = njobs;
@@ -108,13 +108,13 @@ void ThreadPool::submitWork(QObject *context, const VoidFunc & work, const VoidF
     job->setObjectName(QStringLiteral("Job %1 for '%2'").arg(num).arg( context ? context->objectName() : QStringLiteral("<no context>")));
     if constexpr (debugPrt) {
         QObject::connect(job, &Job::started, this, [n=job->objectName()]{
-            qDebug(normal) << n << "-- started";
+            qDebug(f) << n << "-- started";
         }, Qt::DirectConnection);
         QObject::connect(job, &Job::completed, this, [n=job->objectName()]{
-            qDebug(normal) << n << "-- completed";
+            qDebug(f) << n << "-- completed";
         }, Qt::DirectConnection);
         QObject::connect(job, &Job::failed, this, [n=job->objectName()](const QString &msg){
-            qDebug(normal) << n << "-- failed: " << msg;
+            qDebug(f) << n << "-- failed: " << msg;
         }, Qt::DirectConnection);
     }
     pool->start(job, priority);
@@ -124,7 +124,7 @@ bool ThreadPool::shutdownWaitForJobs(int timeout_ms)
 {
     blockNewWork = true;
     if constexpr (debugPrt) {
-        qDebug(normal) << "waiting for jobs ...";
+        qDebug(f) << "waiting for jobs ...";
     }
     pool->clear();
     return pool->waitForDone(timeout_ms);

@@ -153,13 +153,13 @@ namespace Merkle {
         for (auto & tx : txs) tx = QByteArray::fromHex(tx);
         auto pair = Merkle::branchAndRoot(txs, 0);
         static const auto ba2quoted = [](const auto &b){return QString("'%1'").arg(QString::fromUtf8(b.toHex()));};
-        qCInfo(normal) << "Txs: [ " << Util::Stringify(txs, ba2quoted) << " ]";
-        qCInfo(normal) << "Branch: [ " << Util::Stringify(pair.first, ba2quoted) << " ]";
-        qCInfo(normal) << "Root: '" << pair.second.toHex() << "'";
-        qCInfo(normal) << "Level1: [ " << Util::Stringify(Merkle::level(txs, 1), ba2quoted) << " ]";
+        qCInfo(f) << "Txs: [ " << Util::Stringify(txs, ba2quoted) << " ]";
+        qCInfo(f) << "Branch: [ " << Util::Stringify(pair.first, ba2quoted) << " ]";
+        qCInfo(f) << "Root: '" << pair.second.toHex() << "'";
+        qCInfo(f) << "Level1: [ " << Util::Stringify(Merkle::level(txs, 1), ba2quoted) << " ]";
 
         const size_t num = 64000;
-        qCInfo(normal) << "Testing performance, filling " << num << " hashes and computing merkle...";
+        qCInfo(f) << "Testing performance, filling " << num << " hashes and computing merkle...";
         // next, test perfromance -- by
         Merkle::HashVec txs2(num);
         for (size_t i = 0; i < txs2.size(); ++i) {
@@ -169,7 +169,7 @@ namespace Merkle {
         }
         const auto t0 = Util::getTimeNS();
         auto pair2 = Merkle::branchAndRoot(txs2, 0);
-        qCInfo(normal) << "Merkle took: " << QString::number((Util::getTimeNS() - t0)/1e6, 'f', 4) << " msec";
+        qCInfo(f) << "Merkle took: " << QString::number((Util::getTimeNS() - t0)/1e6, 'f', 4) << " msec";
     }
 
 
@@ -195,14 +195,14 @@ namespace Merkle {
     void Cache::initialize(unsigned l)
     {
         ExclusiveLockGuard g(lock);
-        qCInfo(normal) << "Initializing header merkle cache ...";
+        qCInfo(f) << "Initializing header merkle cache ...";
         const auto hashes = getHashes(0, l);
         initialize_nolock(hashes);
     }
     void Cache::initialize(const HashVec &hashes)
     {
         ExclusiveLockGuard g(lock);
-        qCInfo(normal) << "Initializing header merkle cache ...";
+        qCInfo(f) << "Initializing header merkle cache ...";
         initialize_nolock(hashes);
     }
 
@@ -214,7 +214,7 @@ namespace Merkle {
         depthHigher = Merkle::treeDepth(length) / 2;
         level = getLevel(hashes);
         initialized = true;
-        qCDebug(normal) << "Merkle cache initialized to length" << length;
+        qCDebug(f) << "Merkle cache initialized to length" << length;
     }
 
     HashVec Cache::getLevel(const HashVec &hashes) const {
@@ -237,7 +237,7 @@ namespace Merkle {
         level.reserve(level.size() + vec.size());
         level.insert(level.end(), vec.begin(), vec.end());
         length = l;
-        qCDebug(normal) << "Merkle cache extended to length" << length;
+        qCDebug(f) << "Merkle cache extended to length" << length;
     }
 
     HashVec Cache::levelFor(unsigned l) const
@@ -308,7 +308,7 @@ namespace Merkle {
             qWarning() << "limit > levelSize in merkle cache truncate. FIXME!";
         }
         level.erase(level.begin()+limit, level.end());
-        qCDebug(normal) << "Merkle cache truncated to length" << length;
+        qCDebug(f) << "Merkle cache truncated to length" << length;
     }
 
 

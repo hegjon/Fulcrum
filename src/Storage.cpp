@@ -256,7 +256,7 @@ namespace {
                 }
             } else {
                 if (UNLIKELY(acceptExtraBytesAtEndOfData))
-                    qCDebug(normal) << "Warning:  Caller misuse of function '" << __func__
+                    qCDebug(f) << "Warning:  Caller misuse of function '" << __func__
                             << "'. 'acceptExtraBytesAtEndOfData=true' is ignored when deserializing using QDataStream.";
                 bool ok;
                 ret.emplace( Deserialize<RetType>(FromSlice(datum), &ok) );
@@ -538,11 +538,11 @@ Storage::Storage(const std::shared_ptr<const Options> & options_)
     _thread.setObjectName(objectName());
 }
 
-Storage::~Storage() { qCDebug(normal) << __func__; cleanup(); }
+Storage::~Storage() { qCDebug(f) << __func__; cleanup(); }
 
 void Storage::startup()
 {
-    qCInfo(normal) << "Loading database ...";
+    qCInfo(f) << "Loading database ...";
 
     if (UNLIKELY(!subsmgr || !options))
         throw BadArgs("Storage instance constructed with nullptr for `options` and/or `subsmgr` -- FIXME!");
@@ -612,7 +612,7 @@ void Storage::startup()
             p->meta = m_db;
             Debug () << "Read meta from db ok";
             if (!p->meta.chain.isEmpty())
-                qCInfo(normal) << "Chain: " << p->meta.chain;
+                qCInfo(f) << "Chain: " << p->meta.chain;
         } else {
             // ok, did not exist .. write a new one to db
             saveMeta_impl();
@@ -735,7 +735,7 @@ void Storage::setChain(const QString &chain)
         LockGuard l(p->metaLock);
         p->meta.chain = chain;
     }
-    qCInfo(normal) << "Chain: " << chain;
+    qCInfo(f) << "Chain: " << chain;
     save(SaveItem::Meta);
 }
 
@@ -797,7 +797,7 @@ void Storage::saveMeta_impl()
         throw DatabaseError("Failed to write meta to db");
     }
 
-    qCDebug(normal) << "Wrote new metadata to db";
+    qCDebug(f) << "Wrote new metadata to db";
 }
 
 void Storage::appendHeader(const Header &h, BlockHeight height)
@@ -879,7 +879,7 @@ void Storage::loadCheckHeadersInDB()
     assert(p->blockHeaderSize() > 0);
     p->headersFile = std::make_unique<RecordFile>(options->datadir + QDir::separator() + "headers", size_t(p->blockHeaderSize()), 0x00f026a1); // may throw
 
-    qCInfo(normal) << "Verifying headers ...";
+    qCInfo(f) << "Verifying headers ...";
     uint32_t num = unsigned(p->headersFile->numRecords());
     std::vector<QByteArray> hVec;
     const auto t0 = Util::getTimeNS();
@@ -890,7 +890,7 @@ void Storage::loadCheckHeadersInDB()
                                       .arg(num));
         // verify headers: hashPrevBlock must match what we actually read from db
         if (num) {
-            qCDebug(normal) << "Verifying " << num << " " << Util::Pluralize("header", num) << " ...";
+            qCDebug(f) << "Verifying " << num << " " << Util::Pluralize("header", num) << " ...";
             QString err;
             hVec = headersFromHeight_nolock_nocheck(0, num, &err);
             if (!err.isEmpty() || hVec.size() != num)
@@ -914,7 +914,7 @@ void Storage::loadCheckHeadersInDB()
     if (num) {
         const auto elapsed = Util::getTimeNS();
 
-        qCDebug(normal) << "Read & verified " << num << " " << Util::Pluralize("header", num) << " from db in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
+        qCDebug(f) << "Read & verified " << num << " " << Util::Pluralize("header", num) << " from db in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
     }
 
     if (!p->merkleCache->isInitialized() && !hVec.empty())
@@ -927,12 +927,12 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
     // may throw.
     p->txNumsFile = std::make_unique<RecordFile>(options->datadir + QDir::separator() + "txnum2txhash", HashLen, 0x000012e2);
     p->txNumNext = p->txNumsFile->numRecords();
-    qCDebug(normal) << "Read TxNumNext from file: " << p->txNumNext.load();
+    qCDebug(f) << "Read TxNumNext from file: " << p->txNumNext.load();
     TxNum ct = 0;
     if (const int height = latestTip().first; height >= 0)
     {
         p->blkInfos.reserve(std::min(size_t(height+1), MAX_HEADERS));
-        qCInfo(normal) << "Checking tx counts ...";
+        qCInfo(f) << "Checking tx counts ...";
         for (int i = 0; i <= height; ++i) {
             static const QString errMsg("Failed to read a blkInfo from db, the database may be corrupted");
             const auto blkInfo = GenericDBGetFailIfMissing<BlkInfo>(p->db.blkinfo.get(), uint32_t(i), errMsg, false, p->db.defReadOpts);
@@ -944,7 +944,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
             p->blkInfos.emplace_back(blkInfo);
             p->blkInfosByTxNum[blkInfo.txNum0] = unsigned(p->blkInfos.size()-1);
         }
-        qCInfo(normal) << ct << " total transactions";
+        qCInfo(f) << ct << " total transactions";
     }
     if (ct != p->txNumNext) {
         throw DatabaseFormatError(QString("BlkInfo txNums do not add up to expected value of %1 != %2."
@@ -959,7 +959,7 @@ void Storage::loadCheckUTXOsInDB()
     FatalAssert(!!p->db.utxoset, "Utxo set db is not open");
 
     if (options->doSlowDbChecks) {
-        qCInfo(normal) << "CheckDB: Verifying utxo set (this may take some time) ...";
+        qCInfo(f) << "CheckDB: Verifying utxo set (this may take some time) ...";
 
         const auto t0 = Util::getTimeNS();
         {
@@ -1012,7 +1012,7 @@ void Storage::loadCheckUTXOsInDB()
                     throw DatabaseError(msg);
                 }
                 if (0 == ++p->utxoCt % 100000) {
-                    (0 == p->utxoCt % 2500000 ? qInfo(normal) : qDebug(normal)) << "CheckDB: Verified" << p->utxoCt << "utxos ...";
+                    (0 == p->utxoCt % 2500000 ? qInfo(f) : qDebug(f)) << "CheckDB: Verified" << p->utxoCt << "utxos ...";
                 }
             }
 
@@ -1023,14 +1023,14 @@ void Storage::loadCheckUTXOsInDB()
 
         }
         const auto elapsed = Util::getTimeNS();
-        qCDebug(normal) << "CheckDB: Verified utxos in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
+        qCDebug(f) << "CheckDB: Verified utxos in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
 
     } else {
         p->utxoCt = readUtxoCtFromDB();
     }
 
     if (const auto ct = utxoSetSize(); ct)
-        qCInfo(normal) << "UTXO set:"  << ct << Util::Pluralize(" utxo", ct)
+        qCInfo(f) << "UTXO set:"  << ct << Util::Pluralize(" utxo", ct)
               << "," << QString::number(utxoSetSizeMiB(), 'f', 3) << "MiB";
 }
 
@@ -1053,7 +1053,7 @@ void Storage::loadCheckEarliestUndo()
         }
     }
     if (ctr) {
-        qCDebug(normal) << "Undo db contains " << ctr << " entries, earliest is " << p->earliestUndoHeight.load() << ", "
+        qCDebug(f) << "Undo db contains " << ctr << " entries, earliest is " << p->earliestUndoHeight.load() << ", "
                 << QString::number((Util::getTimeNS() - t0)/1e6, 'f', 2) << " msec elapsed.";
     }
 }
@@ -1302,7 +1302,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                         const auto & out = ppb->outputs[oidx];
                         if (out.spentInInputIndex.has_value()) {
                             if constexpr (debugPrt)
-                                qCDebug(normal) << "Skipping output #: " << oidx << " for " << ppb->txInfos[out.txIdx].hash.toHex() << " (was spent in same block tx: " << ppb->txInfos[ppb->inputs[*out.spentInInputIndex].txIdx].hash.toHex() << ")";
+                                qCDebug(f) << "Skipping output #: " << oidx << " for " << ppb->txInfos[out.txIdx].hash.toHex() << " (was spent in same block tx: " << ppb->txInfos[ppb->inputs[*out.spentInInputIndex].txIdx].hash.toHex() << ")";
                             continue;
                         }
                         const TxHash & hash = ppb->txInfos[out.txIdx].hash;
@@ -1333,7 +1333,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                     } else if (in.parentTxOutIdx.has_value()) {
                         // was an input that was spent in this block so it's ok to skip.. we never added it to utxo set
                         if constexpr (debugPrt)
-                            qCDebug(normal) << "Skipping input " << txo.toString() << ", spent in this block (output # " << *in.parentTxOutIdx << ")";
+                            qCDebug(f) << "Skipping input " << txo.toString() << ", spent in this block (output # " << *in.parentTxOutIdx << ")";
                     } else if (const auto opt = utxoGetFromDB(txo); opt.has_value()) {
                         const auto & info = *opt;
                         if (info.confirmedHeight.has_value() && *info.confirmedHeight != ppb->height) {
@@ -1388,7 +1388,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             }
 
             if constexpr (debugPrt)
-                qCDebug(normal) << "utxoset size: " << utxoSetSize() << " block: " << ppb->height;
+                qCDebug(f) << "utxoset size: " << utxoSetSize() << " block: " << ppb->height;
         }
 
         {
@@ -1456,19 +1456,19 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
 
             if constexpr (debugPrt) {
                 // testing undo ser/deser
-                qCDebug(normal) << "Undo info 1: " << undo->toDebugString();
+                qCDebug(f) << "Undo info 1: " << undo->toDebugString();
                 QByteArray ba = Serialize(*undo);
-                qCDebug(normal) << "Undo info 1 serSize: " << ba.length();
+                qCDebug(f) << "Undo info 1 serSize: " << ba.length();
                 bool ok;
                 auto undo2 = Deserialize<UndoInfo>(ba, &ok);
                 ba.fill('z'); // ensure no shallow copies of buffer exist in deserialized object. if they do below tests will fail
                 FatalAssert(ok && undo2.isValid(), "Deser of undo info failed!");
-                qCDebug(normal) << "Undo info 2: " << undo2.toDebugString();
-                qCDebug(normal) << "Undo info 1 == undo info 2: " << (*undo == undo2);
+                qCDebug(f) << "Undo info 2: " << undo2.toDebugString();
+                qCDebug(f) << "Undo info 1 == undo info 2: " << (*undo == undo2);
             } else {
                 const auto elapsedms = (Util::getTimeNS() - t0)/1e6;
                 const size_t nTx = undo->blkInfo.nTx, nSH = undo->scriptHashes.size();
-                qCDebug(normal) << "Saved undo for block " << undo->height << ", "
+                qCDebug(f) << "Saved undo for block " << undo->height << ", "
                         << nTx << " " << Util::Pluralize("transaction", nTx)
                         << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
                         << ", in " << QString::number(elapsedms, 'f', 2) << " msec.";
@@ -1485,7 +1485,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             static const QString errPrefix("Error deleting old/stale undo info from undo db");
             GenericDBDelete(p->db.undo.get(), uint32_t(expireUndoHeight), errPrefix, p->db.defWriteOpts);
             p->earliestUndoHeight = unsigned(expireUndoHeight + 1);
-            if constexpr (debugPrt) qCDebug(normal) << "Deleted undo for block " << expireUndoHeight << ", earliest now " << p->earliestUndoHeight.load();
+            if constexpr (debugPrt) qCDebug(f) << "Deleted undo for block " << expireUndoHeight << ", earliest now " << p->earliestUndoHeight.load();
         }
 
         appendHeader(rawHeader, ppb->height);
@@ -1642,7 +1642,7 @@ BlockHeight Storage::undoLatestBlock(bool notifySubs)
 
         const size_t nTx = undo.blkInfo.nTx, nSH = undo.scriptHashes.size();
         const auto elapsedms = (Util::getTimeNS() - t0) / 1e6;
-        qCInfo(normal) << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
+        qCInfo(f) << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
               << nTx << " " << Util::Pluralize("transaction", nTx)
               << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
               << ", in " << QString::number(elapsedms, 'f', 2) << " msec, new height now: " << prevHeight;
@@ -1838,7 +1838,7 @@ auto Storage::getHistory(const HashX & hashX, bool conf, bool unconf) const -> H
             }
         }
     } catch (const std::exception &e) {
-        qWarning(normal) << e.what();
+        qWarning(f) << e.what();
     }
     return ret;
 }
@@ -1954,7 +1954,7 @@ auto Storage::listUnspent(const HashX & hashX) const -> UnspentItems
             // between capacity and size, it's fine.
             ret.shrink_to_fit();
     } catch (const std::exception &e) {
-        qWarning(normal) << e.what();
+        qWarning(f) << e.what();
     }
     return ret;
 }
@@ -2027,7 +2027,7 @@ auto Storage::getBalance(const HashX &hashX) const -> std::pair<bitcoin::Amount,
             }
         }
     } catch (const std::exception &e) {
-        qWarning(normal) << e.what();
+        qWarning(f) << e.what();
     }
     return ret;
 }

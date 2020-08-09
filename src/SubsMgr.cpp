@@ -76,7 +76,7 @@ SubsMgr::SubsMgr(const std::shared_ptr<const Options> & o, Storage *s, const QSt
     setObjectName(n);
     _thread.setObjectName(n);
 }
-SubsMgr::~SubsMgr() { qCDebug(normal) << __func__; cleanup(); }
+SubsMgr::~SubsMgr() { qCDebug(f) << __func__; cleanup(); }
 void SubsMgr::startup() {
     if (UNLIKELY(!storage || !options))
         // paranoia
@@ -85,7 +85,7 @@ void SubsMgr::startup() {
 }
 void SubsMgr::cleanup() {
     if (_thread.isRunning())
-         qCDebug(normal) << "Stopping " << objectName() << " ...";
+         qCDebug(f) << "Stopping " << objectName() << " ...";
     stop();
 }
 
@@ -184,14 +184,14 @@ void SubsMgr::doNotifyAllPending()
         if (doemit) {
             const auto nClients = sub->subscribedClientIds.size();
             ctr += nClients;
-            qCDebug(normal) << "Notifying" << nClients << Util::Pluralize(" client", nClients) << "of status for" << Util::ToHexFast(sh);
+            qCDebug(f) << "Notifying" << nClients << Util::Pluralize(" client", nClients) << "of status for" << Util::ToHexFast(sh);
             sub->updateTS();
             emit sub->statusChanged(sh, status);
         }
     }
     if (ctr || ctrSH) {
         const auto elapsedMS = (Util::getTimeNS() - t0)/1e6;
-        qCDebug(normal) << ctr << Util::Pluralize(" client", ctr) << ctrSH << Util::Pluralize(" scripthash", ctrSH)
+        qCDebug(f) << ctr << Util::Pluralize(" client", ctr) << ctrSH << Util::Pluralize(" scripthash", ctrSH)
                << "in" << QString::number(elapsedMS, 'f', 4) << "msec";
     }
 }
@@ -269,7 +269,7 @@ auto SubsMgr::subscribe(RPC::ConnectionBase *c, const HashX &sh, const StatusCal
         if (!wasnew && sub->subscribedClientIds.count(c->id)) {
             // already had a sub for this client, disconnect it because we will re-add the new functor below
             bool res = QObject::disconnect(sub.get(), &Subscription::statusChanged, c, nullptr);
-            if constexpr (debugPrint) qCDebug(normal) << "Existing sub disconnected signal: " << (res ? "ok" : "not ok!");
+            if constexpr (debugPrint) qCDebug(f) << "Existing sub disconnected signal: " << (res ? "ok" : "not ok!");
         } else {
             // did not have a sub for this client, add its id and also add the destroyed signal to clean up the id
             // upon client object destruction
@@ -303,7 +303,7 @@ auto SubsMgr::subscribe(RPC::ConnectionBase *c, const HashX &sh, const StatusCal
 
     if constexpr (debugPrint) {
         const auto elapsed = Util::getTimeNS() - t0;
-        qCDebug(normal) << "subscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
+        qCDebug(f) << "subscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
     }
     return ret;
 }
@@ -340,7 +340,7 @@ bool SubsMgr::unsubscribe(RPC::ConnectionBase *c, const HashX &sh)
     }
     if constexpr (debugPrint) {
         const auto elapsed = Util::getTimeNS() - t0;
-        qCDebug(normal) << int(ret) << " unsubscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
+        qCDebug(f) << int(ret) << " unsubscribed " << Util::ToHexFast(sh) << " in " << QString::number(elapsed/1e6, 'f', 4) << " msec";
     }
     return ret;
 }
@@ -378,7 +378,7 @@ auto SubsMgr::getFullStatus(const HashX &sh) const -> StatusHash
     const auto elapsed = Util::getTimeNS() - t0;
     constexpr qint64 kTookKindaLongNS = 7500000LL; // 7.5mec -- if it takes longer than this, log it to debug log, otherwise don't as this can get spammy.
     if (elapsed > kTookKindaLongNS) {
-        qCDebug(normal) << "full status for" << Util::ToHexFast(sh) << hist.size() << "items in" << QString::number(elapsed/1e6, 'f', 4) << "msec";
+        qCDebug(f) << "full status for" << Util::ToHexFast(sh) << hist.size() << "items in" << QString::number(elapsed/1e6, 'f', 4) << "msec";
     }
     return ret;
 }
@@ -406,7 +406,7 @@ void SubsMgr::removeZombies(bool forced)
     if (ctr) {
         p->subs.reserve(p->kSubsReserveSize); // shrink_to_fit if over kSubsReserveSize
         const auto elapsed = Util::getTimeNS() - t0;
-        qCDebug(normal) << "SubsMgr: Removed" << ctr << "zombie" << Util::Pluralize("sub", ctr) << "out of" << total <<
+        qCDebug(f) << "SubsMgr: Removed" << ctr << "zombie" << Util::Pluralize("sub", ctr) << "out of" << total <<
                 "in" << QString::number(elapsed/1e6, 'f', 4) << "msec";
     }
 }

@@ -39,7 +39,7 @@ struct Exception : public std::runtime_error
 struct InternalError : public Exception { using Exception::Exception; };
 struct BadArgs : public Exception { using Exception::Exception; };
 
-Q_DECLARE_LOGGING_CATEGORY(normal);
+Q_DECLARE_LOGGING_CATEGORY(f);
 Q_DECLARE_LOGGING_CATEGORY(trace);
 
 #define APPNAME "Fulcrum"

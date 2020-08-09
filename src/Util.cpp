@@ -379,7 +379,7 @@ template <> Log & Log::operator<<(const std::string &t) { s << t.c_str(); return
 
 Debug::~Debug()
 {
-    doprt = normal().isDebugEnabled();
+    doprt = f().isDebugEnabled();
     if (!doprt) return;
     if (!colorOverridden) color = Cyan;
     str = QStringLiteral("(Debug) ") + str;
@@ -388,7 +388,7 @@ Debug::~Debug()
 bool Debug::forceEnable = false;
 
 bool Debug::isEnabled() {
-    return normal().isDebugEnabled();
+    return f().isDebugEnabled();
 }
 
 

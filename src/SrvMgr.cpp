@@ -57,7 +57,7 @@ SrvMgr::SrvMgr(const std::shared_ptr<const Options> & options,
 
 SrvMgr::~SrvMgr()
 {
-    qCDebug(normal) << __func__ ;
+    qCDebug(f) << __func__ ;
     cleanup();
 }
 
@@ -102,7 +102,7 @@ void SrvMgr::startServers()
     _net = BTC::NetFromName(storage->getChain()); // set this now since server instances may need this information
 
     if (options->peerDiscovery) {
-        qCInfo(normal) << "SrvMgr: starting PeerMgr ...";
+        qCInfo(f) << "SrvMgr: starting PeerMgr ...";
         peermgr = std::make_shared<PeerMgr>(this, storage, options);
         peermgr->startup(); // may throw
         connect(this, &SrvMgr::allServersStarted, peermgr.get(), &PeerMgr::on_allServersStarted);
@@ -120,7 +120,7 @@ void SrvMgr::startServers()
     const auto num =   options->interfaces.length() + options->sslInterfaces.length()
                      + options->wsInterfaces.length() + options->wssInterfaces.length()
                      + options->adminInterfaces.length();
-    qCInfo(normal) << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
+    qCInfo(f) << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
     const auto firstSsl = options->interfaces.size(),
                firstWs = options->interfaces.size() + options->sslInterfaces.size(),
                firstWss = options->interfaces.size() + options->sslInterfaces.size() + options->wsInterfaces.size();
@@ -213,16 +213,16 @@ void SrvMgr::clientConnected(IdMixin::Id cid, const QHostAddress &addr)
                 clientWillDieAnyway = true;
                 break;
             case Client::PerIPData::WhiteListState::WhiteListed:
-                qCDebug(normal) << "Client" << cid << "from" << addr << "would have exceeded the connection limit ("
+                qCDebug(f) << "Client" << cid << "from" << addr << "would have exceeded the connection limit ("
                        << maxPerIP << ") but its IP matches subnet" << matched.toString() << " from 'subnets_to_exclude_from_per_ip_limits'";
                 break;
             default:
                 // This should never happen.
-                qCritical(normal) << "Invalid WhiteListState " << int(wlstate) << " for Client " << cid << " from " << addr.toString() << ". FIXME!";
+                qCritical(f) << "Invalid WhiteListState " << int(wlstate) << " for Client " << cid << " from " << addr.toString() << ". FIXME!";
             }
         } else {
             clientWillDieAnyway = true;
-            qCDebug(normal) << "Client" << cid << "from" << addr << "-- missing per-IP data. The client may have been already deleted.";
+            qCDebug(f) << "Client" << cid << "from" << addr << "-- missing per-IP data. The client may have been already deleted.";
         }
     }
 
@@ -230,7 +230,7 @@ void SrvMgr::clientConnected(IdMixin::Id cid, const QHostAddress &addr)
     const bool banned = isIPBanned(addr, true);
 
     if (banned && !clientWillDieAnyway) {
-        qCInfo(normal) << "Rejecting client" << cid << "from" << addr << "(banned)";
+        qCInfo(f) << "Rejecting client" << cid << "from" << addr << "(banned)";
         emit clientIsBanned(cid);
     }
 }
@@ -266,7 +266,7 @@ bool SrvMgr::isPeerHostNameBanned(const QString &h) const
 void SrvMgr::clientDisconnected(IdMixin::Id cid, const QHostAddress &addr)
 {
     if (auto count = addrIdMap.remove(addr, cid); UNLIKELY(count > 1)) {
-        qCWarning(normal) << "Multiple clients with id:" << cid << ", address " << addr << "in addrIdMap in" <<  " -- FIXME!";
+        qCWarning(f) << "Multiple clients with id:" << cid << ", address " << addr << "in addrIdMap in" <<  " -- FIXME!";
     } else if (count) {
         if (const auto size = size_t(addrIdMap.size());
                 size >= tableSqueezeThreshold && size * 2U <= size_t(addrIdMap.capacity())) {
@@ -291,7 +291,7 @@ void SrvMgr::on_banPeersWithSuffix(const QString &hn)
         }
     }
     if (newBan)
-        qCInfo(normal) << "Peers with host names matching *" << suffix << "are now banned";
+        qCInfo(f) << "Peers with host names matching *" << suffix << "are now banned";
     emit kickPeersWithSuffix(suffix); // tell peer mgr to kick peers it has with that name (if any)
 }
 
@@ -306,13 +306,13 @@ void SrvMgr::on_liftPeerSuffixBan(const QString &s)
         wasBanned = bannedPeerSuffixes.remove(suffix);
     }
     if (wasBanned)
-        qCInfo(normal) << "Peers matching suffix *" << suffix << " are no longer banned";
+        qCInfo(f) << "Peers matching suffix *" << suffix << " are no longer banned";
 }
 
 void SrvMgr::on_banIP(const QHostAddress &addr)
 {
     if (addr.isNull()) {
-        qCDebug(normal) << "address is null!";
+        qCDebug(f) << "address is null!";
         return;
     }
     bool wasNew = false;
@@ -329,7 +329,7 @@ void SrvMgr::on_banIP(const QHostAddress &addr)
     int kicks = addrIdMap.count(addr);
     emit kickByAddress(addr); // we must emit this regardless as the PeerMgr also listens for this, and we have no way of knowing from this class if it's connected to the peer in question or has it in queue, etc.
     if (wasNew || kicks)
-        qCInfo(normal) << addr<< "is now banned"
+        qCInfo(f) << addr<< "is now banned"
               << (kicks ? QString(" (%1 %2 kicked)").arg(kicks).arg(Util::Pluralize("client", kicks)) : QString());
 }
 
@@ -345,13 +345,13 @@ void SrvMgr::on_banID(IdMixin::Id cid)
     if (!found.isNull())
         emit banIP(found);
     else
-        qCDebug(normal) << "Unable to ban client" << cid << "; not found";
+        qCDebug(f) << "Unable to ban client" << cid << "; not found";
 }
 
 void SrvMgr::on_liftIPBan(const QHostAddress &addr)
 {
     if (addr.isNull()) {
-        qCDebug(normal) << "address is null!";
+        qCDebug(f) << "address is null!";
         return;
     }
 
@@ -361,7 +361,7 @@ void SrvMgr::on_liftIPBan(const QHostAddress &addr)
         wasBanned = banMap.remove(addr);
     }
     if (wasBanned)
-        qCInfo(normal) << "Address" << addr << "is no longer banned";
+        qCInfo(f) << "Address" << addr << "is no longer banned";
 }
 
 auto SrvMgr::stats() const -> Stats
@@ -456,9 +456,9 @@ std::shared_ptr<Client::PerIPData> SrvMgr::getOrCreatePerIPData(const QHostAddre
                                               : Client::PerIPData::WhiteListState::NotWhiteListed;
             if constexpr (!isReleaseBuild()) {
                 if (whiteListed)
-                    qCDebug(normal) << address << "is whitelisted (subnet:" << ret->_whiteListedSubnet.toString() << ")";
+                    qCDebug(f) << address << "is whitelisted (subnet:" << ret->_whiteListedSubnet.toString() << ")";
                 else
-                    qCDebug(normal) << address << "is NOT whitelisted";
+                    qCDebug(f) << address << "is NOT whitelisted";
             }
         }
     }
@@ -479,14 +479,14 @@ void SrvMgr::globalSubsLimitReached()
         Defer deferred = [this, allNearLimit=allNearLimit /*<- C++ bugs */] {
             if (allNearLimit) {
                 const int when = kPeriod / 2;
-                qCDebug(normal) << "Requesting zombie sub removal in" << when << "msec ...";
+                qCDebug(f) << "Requesting zombie sub removal in" << when << "msec ...";
                 emit storage->subs()->requestRemoveZombiesSoon(when); // we do it with a delay to give the kick code time to run.
             }
         };
 
         if (!activeNearLimit) {
             // Ok, so there may be zombies. Come back again if there are, and give the zombie reaper a chance to fire.
-            qCDebug(normal) << "SrvMgr max subs kicker: Timer fired but we are no longer near the global active subs limit, returning early ...";
+            qCDebug(f) << "SrvMgr max subs kicker: Timer fired but we are no longer near the global active subs limit, returning early ...";
             return allNearLimit && ctr < 2; // fire once again later if we are near the limit after zombies are collected.
         }
 
@@ -509,10 +509,10 @@ void SrvMgr::globalSubsLimitReached()
             // lock released at scope end
         }
         if (LIKELY(max > 0)) {
-            qCInfo(normal) << "Global subs limit reached, kicking all clients for IP" << maxIP.toString() << "(subs:" << max << ")";
+            qCInfo(f) << "Global subs limit reached, kicking all clients for IP" << maxIP.toString() << "(subs:" << max << ")";
             emit kickByAddress(maxIP); // kick!
         } else {
-            qCDebug(normal) << "Global subs limit reached, but could not find a client to kick (num per-IP-datas:" << tableSize << ")";
+            qCDebug(f) << "Global subs limit reached, but could not find a client to kick (num per-IP-datas:" << tableSize << ")";
         }
         return false; // don't keep firing in this execution path.
     });

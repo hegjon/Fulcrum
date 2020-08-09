@@ -503,7 +503,7 @@ namespace Util {
         try {
             ret.emplace( LambdaOnObject<RET>(obj, lambda, timeout_ms) );
         } catch (const ThreadNotRunning & e) {
-            qWarning(normal) << e.what();
+            qWarning(f) << e.what();
         } catch (const Exception &) {}
         return ret;
     }
@@ -574,7 +574,7 @@ namespace Util {
         try {
             ret.emplace( CallOnObjectWithTimeout<RET>(timeout_ms, obj, method, std::forward<Args>(args)...) );
         } catch (const ThreadNotRunning & e) {
-            qWarning(normal) << e.what();
+            qWarning(f) << e.what();
         } catch (const Exception &) {}
         return ret;
     }
@@ -594,7 +594,7 @@ namespace Util {
         try {
             ret.emplace( CallOnObject<RET>(obj, method, std::forward<Args>(args)...) );
         } catch (const ThreadNotRunning & e) {
-            qWarning(normal) << e.what();
+            qWarning(f) << e.what();
         } catch (const Exception &) {}
         return ret;
     }
