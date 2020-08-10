@@ -272,14 +272,14 @@ namespace RPC {
     void ConnectionBase::_sendRequest(const Message::Id & reqid, const QString &method, const QVariantList & params)
     {
         if (status != Connected || !socket) {
-            qCDebug(f) <<  "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
+            qCDebug(f) << "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
         }
         const QByteArray jsonData = Message::makeRequest(reqid, method, params, v1).toJsonUtf8();
         if (jsonData.isEmpty()) {
-            qCritical(f) <<  " method: " << method << "; Unable to generate request JSON! FIXME!";
+            qCritical(f) << "method:" << method << "; Unable to generate request JSON! FIXME!";
             return;
         }
         if (idMethodMap.size() >= MAX_UNANSWERED_REQUESTS) {  // prevent memory leaks in case of misbehaving peer
@@ -297,7 +297,7 @@ namespace RPC {
     void ConnectionBase::_sendNotification(const QString &method, const QVariant & params)
     {
         if (status != Connected || !socket) {
-            qCDebug(f) <<  "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
+            qCDebug(f) << "method:" << method << "; Not connected!" << "(id:" << this->id << "), forcing on_disconnect ...";
             // the below ensures socket cleanup code runs.  This guarantees a disconnect & cleanup on bad socket state.
             do_disconnect();
             return;
@@ -308,11 +308,11 @@ namespace RPC {
         } else if (params.canConvert<QVariantList>()) {
             json = Message::makeNotification(method, params.toList(), v1).toJsonUtf8();
         } else {
-            qCritical() <<  " method: " << method << "; Notification requires either a QVarantList or a QVariantMap as its argument! FIXME!";
+            qCritical(f) <<  "method:" << method << "; Notification requires either a QVarantList or a QVariantMap as its argument! FIXME!";
             return;
         }
         if (json.isEmpty()) {
-            qCritical() <<  " method: " << method << "; Unable to generate notification JSON! FIXME!";
+            qCritical(f) <<  "method:" << method << "; Unable to generate notification JSON! FIXME!";
             return;
         }
         qCDebug(trace) << "Sending json:" << Util::Ellipsify(json);
@@ -474,13 +474,13 @@ namespace RPC {
                 doDisconnect = false; // if was true, already enqueued graceful disconnect after error reply, if was false, no-op here
             }
             if (doDisconnect) {
-                qCritical() << "Error reading/parsing data coming in: " << (lastPeerError=e.what());
+                qCritical(f) << "Error reading/parsing data coming in:" << (lastPeerError=e.what());
                 do_disconnect();
                 status = Bad;
             }
         } catch (const std::exception &e) {
             // Other low-level error such as bad_alloc, etc. This is very unlikely. We simply disconnect and give up.
-            qCritical() << prettyName(false, true) << ": Low-level error reading/parsing data coming in: " << (lastPeerError=e.what());
+            qCritical(f) << prettyName(false, true) << ": Low-level error reading/parsing data coming in:" << (lastPeerError=e.what());
             do_disconnect();
             status = Bad;
         } // end try/catch

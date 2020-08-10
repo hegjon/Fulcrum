@@ -1023,7 +1023,7 @@ void Storage::loadCheckUTXOsInDB()
 
         }
         const auto elapsed = Util::getTimeNS();
-        qCDebug(f) << "CheckDB: Verified utxos in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
+        qCDebug(f) << "CheckDB: Verified utxos in" << QString::number((elapsed-t0)/1e6, 'f', 3) << "msec";
 
     } else {
         p->utxoCt = readUtxoCtFromDB();
