@@ -1334,7 +1334,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                     } else if (in.parentTxOutIdx.has_value()) {
                         // was an input that was spent in this block so it's ok to skip.. we never added it to utxo set
                         if constexpr (debugPrt)
-                            qCDebug(f) << "Skipping input " << txo.toString() << ", spent in this block (output # " << *in.parentTxOutIdx << ")";
+                            qCDebug(f) << "Skipping input" << txo << ", spent in this block (output # " << *in.parentTxOutIdx << ")";
                     } else if (const auto opt = utxoGetFromDB(txo); opt.has_value()) {
                         const auto & info = *opt;
                         if (info.confirmedHeight.has_value() && *info.confirmedHeight != ppb->height) {

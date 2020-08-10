@@ -592,7 +592,7 @@ void SynchMempoolTask::processResults()
                     sh = prevInfo.hashX;
                     tx->hashXs[sh].unconfirmedSpends[prevTXO] = prevInfo;
                     prevTxRef->hashXs[sh].utxo.erase(prevN); // remove this spend from utxo set for prevTx in mempool
-                    qCDebug(trace) << hash.toHex() << "unconfirmed spend:" << prevTXO.toString() << prevInfo.amount.ToString().c_str();
+                    qCDebug(trace) << hash.toHex() << "unconfirmed spend:" << prevTXO << prevInfo.amount.ToString().c_str();
                 } else {
                     // prev is a confirmed tx
                     const auto optTXOInfo = storage->utxoGetFromDB(prevTXO, false); // this may also throw on low-level db error
@@ -617,7 +617,7 @@ void SynchMempoolTask::processResults()
                     }
                     // end memory saving hack
                     hxit->second.confirmedSpends[prevTXO] = prevInfo;
-                    qCDebug(trace) << hash.toHex() << "confirmed spend:" << prevTXO.toString() << prevInfo.amount.ToString().c_str();
+                    qCDebug(trace) << hash.toHex() << "confirmed spend:" << prevTXO << prevInfo.amount.ToString().c_str();
                 }
                 tx->fee += prevInfo.amount;
                 assert(sh == prevInfo.hashX);
