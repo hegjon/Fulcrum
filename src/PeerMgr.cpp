@@ -20,6 +20,7 @@
 
 #include "Compat.h"
 #include "Options.h"
+#include "Pluralize2.h"
 #include "Servers.h"
 #include "SrvMgr.h"
 #include "Storage.h"
@@ -358,7 +359,7 @@ void PeerMgr::retryFailedPeers(bool useBadMap)
                 // optimization to not waste memory on defunct peers and is not a requirement for correctness.
                 // Keeping the seedPeers around indefinitely even if 'failed' does very little harm since the seedPeer
                 // list is bounded and small, and it does good (in the case of an extended connectivity outage).
-                qCInfo(f) << "Purging failed peer " << pi.hostName << " because it has been unavailable for " <<  failureHoursString(pi);
+                qCInfo(f) << "Purging failed peer" << pi.hostName << "because it has been unavailable for" <<  failureHoursString(pi);
                 continue;
             }
             auto it = queued.insert(pi.hostName, pi);
@@ -369,7 +370,7 @@ void PeerMgr::retryFailedPeers(bool useBadMap)
     failed.clear();
     failed.squeeze();
     if (ctr) {
-        qCDebug(f) << "Retrying" << ctr << (useBadMap ? "'bad'" : "'failed'") << Util::Pluralize(" peer", ctr) << "...";
+        qCDebug(f) << "Retrying" << ctr << (useBadMap ? "bad" : "failed") << Util::Pluralize("peer", ctr) << "...";
         processSoon();
     }
 }
@@ -520,7 +521,7 @@ void PeerMgr::on_kickByAddress(const QHostAddress &addr)
         }
     }
     if (const auto uniqs = hostnames.size(); uniqs)
-        qInfo(f) << uniqs << Util::Pluralize(" entry", uniqs) << " matching IP " << addr.toString() << " removed from the PeerMgr";
+        qInfo(f) << Pluralize2(uniqs, "entry") << "matching IP" << addr << "removed from the PeerMgr";
 }
 
 void PeerMgr::on_kickBySuffix(const QString &suffix)
@@ -545,7 +546,7 @@ void PeerMgr::on_kickBySuffix(const QString &suffix)
     // lastly, loop through the active/connected clients and tell them all to delete themselves
     for (PeerClient *c : clients) {
         if (c->info.hostName.endsWith(suffix)) {
-            qCDebug(f) <<  "kicked connected peer" << c->info.hostName << c->info.addr.toString();
+            qCDebug(f) << "kicked connected peer" << c->info.hostName << c->info.addr;
             hostnames.insert(c->info.hostName);
             c->wasKicked = true;
             c->deleteLater(); // this will call us back to remove it from the hashmap, etc
@@ -553,7 +554,7 @@ void PeerMgr::on_kickBySuffix(const QString &suffix)
         }
     }
     if (const auto uniqs = hostnames.size(); uniqs)
-        qCInfo(f) << "Removed" << uniqs << Util::Pluralize(" entry", uniqs) << "matching *" << suffix;
+        qCInfo(f) << "Removed" << Pluralize2(uniqs, "entry") << "matching *" << suffix;
 }
 
 auto PeerMgr::stats() const -> Stats
