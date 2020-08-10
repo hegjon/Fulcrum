@@ -197,6 +197,7 @@ SOURCES += \
     Storage.cpp \
     SubsMgr.cpp \
     ThreadPool.cpp \
+    TXO.cpp \
     Util.cpp \
     Version.cpp \
     WebSocket.cpp \

@@ -1317,10 +1317,11 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                         if (undo) { // save undo info if we are in saveUndo mode
                             undo->addUndos.emplace_back(txo, info.hashX, ctxo);
                         }
+
                         if constexpr (debugPrt)
-                            Debug() << "Added txo: " << txo.toString()
-                                    << " (txid: " << hash.toHex() << " height: " << ppb->height << ") "
-                                    << " amount: " << info.amount.ToString() << " for HashX: " << info.hashX.toHex();
+                            qCDebug(f) << "Added txo:" << txo
+                                       << "(txid:" << hash.toHex() << "height:" << ppb->height << ")"
+                                       << "amount:" << info.amount.ToString().c_str() << "for HashX:" << info.hashX.toHex();
                     }
                 }
 

@@ -68,6 +68,8 @@ struct TXO {
     static constexpr size_t serSize() noexcept { return HashLen + sizeof(IONum); }
 };
 
+QDebug operator<<(QDebug dbg, const TXO &txo);
+
 namespace std {
 /// specialization of std::hash to be able to add struct TXO to any unordered_set or unordered_map as a key
 template<> struct hash<TXO> {
