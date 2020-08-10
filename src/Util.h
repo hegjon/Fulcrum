@@ -21,7 +21,6 @@
 #include "ByteView.h"
 #include "Common.h"
 #include <QtCore>
-#include <QtDebug>
 
 #include <algorithm>
 #include <atomic>
@@ -60,55 +59,6 @@ class App;
 
 #define LIKELY(bool_expr)   EXPECT(int(bool(bool_expr)), 1)
 #define UNLIKELY(bool_expr) EXPECT(int(bool(bool_expr)), 0)
-
-
-/// Super class of Debug, Warning, Error classes.  Can be instantiated for regular log messages.
-class Log
-{
-public:
-    enum Color {
-        Reset = 0,
-        Normal = Reset, // no color/reset
-        Black,
-        Red, Green, Yellow, Blue, Magenta, Cyan, White,
-        BrightBlack,
-        BrightRed, BrightGreen, BrightYellow, BrightBlue, BrightMagenta, BrightCyan, BrightWhite,
-        Color_N
-    };
-
-
-    bool doprt = true;
-
-    explicit Log(const char *fmt...) ATTR_PRINTF(2,3);
-    explicit Log(Color);
-    Log();
-    virtual ~Log();
-
-    template <class T> Log & operator<<(const T & t) { s << t; return *this;  }
-
-    Log & setColor(Color c) { color = c; colorOverridden = true; return *this; }
-    Color getColor() const { return color; }
-
-    /// Used by the DebugM macros, etc.  Unpacks all of its args using operator<< for each arg.
-    template <class ...Args>
-    Log & operator()(Args&& ...args) {  ((*this) << ... << args); return *this; }
-
-protected:
-    static QString colorString(Color c);
-    QString colorize(const QString &, Color c);
-
-    bool colorOverridden = false, useColor = true;
-    int level = 0;
-    Color color = Normal;
-    QString str = "";
-    QTextStream s = QTextStream(&str, QIODevice::WriteOnly);
-};
-
-
-// specialization to set the color.
-template <> Log & Log::operator<<(const Color &);
-// specialization for std::string
-template <> Log & Log::operator<<(const std::string &t);
 
 
 #define FatalAssert(b, message)                                       \
