@@ -70,7 +70,7 @@ public:
             qCDebug(f) << objectName() << ": Checking table...";
             for (auto it = table.begin(); it != table.end(); ++it) {
                 if (!it.value().expired())
-                    qCritical() << objectName() << " d'tor: a weak ref was still alive for " << ToString(it.key()) << ". FIXME!";
+                    qCritical() << objectName() << "d'tor: a weak ref was still alive for" << ToString(it.key()) << ". FIXME!";
             }
         }
     }
@@ -90,7 +90,7 @@ public:
             // ugh, we need to do it this way to avoid unused lambda capture warnings in the !debugPrt branch
             if constexpr (debugPrt)
                 return [&key, &ret, me] {
-                    qCDebug(f) << me->objectName() << ": " << ToString(key) << " found existing with refct: " << ret.use_count();
+                    qCDebug(f) << me->objectName() << ":" << ToString(key) << "found existing with refct: " << ret.use_count();
                 };
             else return [] {};
         };

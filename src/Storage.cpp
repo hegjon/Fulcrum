@@ -1388,7 +1388,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             }
 
             if constexpr (debugPrt)
-                qCDebug(f) << "utxoset size: " << utxoSetSize() << " block: " << ppb->height;
+                qCDebug(f) << "utxoset size:" << utxoSetSize() << "block:" << ppb->height;
         }
 
         {
@@ -1468,10 +1468,10 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             } else {
                 const auto elapsedms = (Util::getTimeNS() - t0)/1e6;
                 const size_t nTx = undo->blkInfo.nTx, nSH = undo->scriptHashes.size();
-                qCDebug(f) << "Saved undo for block " << undo->height << ", "
-                        << nTx << " " << Util::Pluralize("transaction", nTx)
-                        << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
-                        << ", in " << QString::number(elapsedms, 'f', 2) << " msec.";
+                qCDebug(f) << "Saved undo for block" << undo->height << ", "
+                        << nTx << Util::Pluralize("transaction", nTx)
+                        << "involving" << nSH << Util::Pluralize("scripthash", nSH)
+                        << ", in" << QString::number(elapsedms, 'f', 2) << "msec.";
             }
         }
         // Expire old undos >10 blocks ago to keep the db tidy.  We only do this if we know there is an old
@@ -1485,7 +1485,7 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
             static const QString errPrefix("Error deleting old/stale undo info from undo db");
             GenericDBDelete(p->db.undo.get(), uint32_t(expireUndoHeight), errPrefix, p->db.defWriteOpts);
             p->earliestUndoHeight = unsigned(expireUndoHeight + 1);
-            if constexpr (debugPrt) qCDebug(f) << "Deleted undo for block " << expireUndoHeight << ", earliest now " << p->earliestUndoHeight.load();
+            if constexpr (debugPrt) qCDebug(f) << "Deleted undo for block" << expireUndoHeight << ", earliest now" << p->earliestUndoHeight.load();
         }
 
         appendHeader(rawHeader, ppb->height);
