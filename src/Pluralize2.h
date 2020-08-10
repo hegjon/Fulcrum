@@ -16,8 +16,7 @@
 // along with this program (see LICENSE.txt).  If not, see
 // <https://www.gnu.org/licenses/>.
 //
-#ifndef PLURALIZE2_H
-#define PLURALIZE2_H
+#pragma once
 
 #include <QDebug>
 #include <QString>
@@ -32,5 +31,3 @@ public:
 };
 
 QDebug operator<<(QDebug dbg, const Pluralize2 &p);
-
-#endif // PLURALIZE2_H
