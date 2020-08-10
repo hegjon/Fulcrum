@@ -23,6 +23,7 @@
 #include "BTC_Address.h"
 #include "Merkle.h"
 #include "PeerMgr.h"
+#include "Pluralize2.h"
 #include "ServerMisc.h"
 #include "SrvMgr.h"
 #include "Storage.h"
@@ -614,7 +615,7 @@ void ServerBase::killClientsByAddress(const QHostAddress &address)
         ++ctr;
     }
     if (ctr)
-        qCDebug(f) << "Killed" << ctr << Util::Pluralize(" client", ctr) << "matching address:" << address;
+        qCDebug(f) << "Killed" << Pluralize2(ctr, "client") << "matching address:" << address;
 }
 // public slot
 void ServerBase::applyMaxBufferToAllClients(int newMax)
@@ -627,7 +628,7 @@ void ServerBase::applyMaxBufferToAllClients(int newMax)
         client->setMaxBuffer(newMax);
         ++ctr;
     }
-    qCDebug(f) << "Applied new max_buffer setting of" << newMax << "to" << ctr << Util::Pluralize(" client", ctr);
+    qCDebug(f) << "Applied new max_buffer setting of" << newMax << "to" << Pluralize2(ctr, "client");
 }
 
 
@@ -637,7 +638,7 @@ void ServerBase::onMessage(IdMixin::Id clientId, const RPC::Message &m)
     if (Client *c = getClient(clientId); c) {
         const auto member = dispatchTable.value(m.method);
         if (!member)
-            qCritical() << "Unknown method: \"" << m.method << "\". This shouldn't happen. FIXME! Json: " << m.toJsonUtf8();
+            qCritical(f) << "Unknown method:" << m.method << ". This shouldn't happen. FIXME! Json: " << m.toJsonUtf8();
         else {
             // indicate a good request, accepted request
             ++c->info.nRequestsRcv;
@@ -2399,7 +2400,7 @@ Client::Client(const RPC::MethodMap & mm, IdMixin::Id id_in, QTcpSocket *sock, i
     errorPolicy = ErrorPolicySendErrorMessage;
     setObjectName(QStringLiteral("Client.%1").arg(id_in));
     on_connected();
-    qCInfo(f) << "New " << prettyName(false, false) << ", " << N << Util::Pluralize(QStringLiteral(" client"), N) << " total";
+    qCInfo(f) << "New" << prettyName(false, false) << "," << Pluralize2(N, "client") << "total";
 }
 
 Client::~Client()
