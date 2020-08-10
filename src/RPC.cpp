@@ -559,7 +559,7 @@ namespace RPC {
     {
 #ifndef NDEBUG
         if (this->thread() != QThread::currentThread()) {
-            qCritical(normal) << "-- called from a thread outside this object's thread! FIXME!";
+            qCritical(f) << "-- called from a thread outside this object's thread! FIXME!";
             return;
         }
 #endif

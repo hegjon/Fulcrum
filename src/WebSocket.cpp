@@ -1285,8 +1285,6 @@ namespace WebSocket {
     }
     int test(int argc, char *argv[])
     {
-        Debug::forceEnable = true;
-        Trace::forceEnable = true;
         if (argc < 3) {
             // stand alone test encoding / decoding
             std::cout << "Enter text:\n";
@@ -1426,7 +1424,7 @@ namespace WebSocket {
                         });
                         auto tmpConnections = std::make_shared<QList<QMetaObject::Connection>>();
                         *tmpConnections += connect(socket, &QSslSocket::disconnected, this, [socket, peerName]{
-                            qCDebug(normal) << peerName << " SSL handshake failed due to disconnect before completion, deleting socket";
+                            qDebug() << peerName << " SSL handshake failed due to disconnect before completion, deleting socket";
                             socket->deleteLater();
                         });
                         *tmpConnections += connect(socket, &QSslSocket::encrypted, this, [this, timer, tmpConnections, socket, peerName] {
@@ -1438,15 +1436,15 @@ namespace WebSocket {
                                 for (const auto & conn : *tmpConnections)
                                     disconnect(conn);
                             }
-                            qCDebug(normal) << "Encrypted ok, wrapping with WebSocket and initiating handshake";
+                            qCDebug(f) << "Encrypted ok, wrapping with WebSocket and initiating handshake";
                             WebSocket::Wrapper *wsock = new WebSocket::Wrapper(socket, this);
                             connect(wsock, &QAbstractSocket::disconnected, this, [wsock]{
                                 auto peerName = QString::asprintf("%s:%hu", wsock->peerAddress().toString().toUtf8().constData(), wsock->peerPort());
-                                qCDebug(normal) << peerName << "disconnected, deleting";
+                                qCDebug(f) << peerName << "disconnected, deleting";
                                 wsock->deleteLater();
                             });
                             connect(wsock, &Wrapper::handshakeSuccess, this, [wsock, this]{
-                                qCDebug(normal) << "Handshake ok, calling addPendingConnection";
+                                qCDebug(f) << "Handshake ok, calling addPendingConnection";
                                 addPendingConnection(wsock);
                                 emit newConnection();
                             });
@@ -1456,7 +1454,7 @@ namespace WebSocket {
                         connect(socket, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), this, [socket, peerName](const QList<QSslError> & errors) {
                             for (const auto & e : errors)
                                 qWarning() << peerName << " SSL error: " << e.errorString();
-                            qCDebug(normal) << peerName << " Aborting connection due to SSL errors";
+                            qCDebug(f) << peerName << " Aborting connection due to SSL errors";
                             socket->deleteLater();
                         });
                         timer->start(10000); // give the handshake 10 seconds to complete
@@ -1486,7 +1484,7 @@ namespace WebSocket {
                 qCritical() << "Failed to read key file:" << argv[2];
                 return 4;
             }
-            qCDebug(normal) << "Read cert and key ok";
+            qCDebug(f) << "Read cert and key ok";
             QHostAddress iface;
             iface.setAddress(QString(argv[3]));
             if (iface.isNull()) {
@@ -1507,7 +1505,7 @@ namespace WebSocket {
                     app.exit(1);
                     return;
                 }
-                qCDebug(normal) << "Listening for connections on" << hostPortStr;
+                qCDebug(f) << "Listening for connections on" << hostPortStr;
             });
             QObject::connect(&srv, &QTcpServer::newConnection, &app, [&]{
                 QTcpSocket *tsock = srv.nextPendingConnection();
@@ -1519,7 +1517,7 @@ namespace WebSocket {
                     return;
                 }
                 const QString peerName = QString::asprintf("%s:%hu", sock->peerAddress().toString().toLatin1().constData(), sock->peerPort());
-                qCDebug(normal) << "Got connection from" << peerName;
+                qCDebug(f) << "Got connection from" << peerName;
                 auto closing = std::make_shared<bool>(false);
                 auto extantPings = std::make_shared<QSet<QByteArray>>();
                 QObject::connect(sock, &WebSocket::Wrapper::messagesReady, sock, [sock, extantPings]() mutable {
