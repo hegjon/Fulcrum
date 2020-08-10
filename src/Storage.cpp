@@ -610,9 +610,9 @@ void Storage::startup()
                 throw DatabaseFormatError(errMsg);
             }
             p->meta = m_db;
-            Debug () << "Read meta from db ok";
+            qCDebug(f) << "Read meta from db ok";
             if (!p->meta.chain.isEmpty())
-                qCInfo(f) << "Chain: " << p->meta.chain;
+                qCInfo(f) << "Chain:" << p->meta.chain;
         } else {
             // ok, did not exist .. write a new one to db
             saveMeta_impl();
@@ -1350,10 +1350,10 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                         }
                         if constexpr (debugPrt) {
                             const auto dbgTxIdHex = ppb->txHashForInputIdx(inum).toHex();
-                            Debug() << "Spent " << txo.toString() << " amount: " << info.amount.ToString()
-                                    << " in txid: "  << dbgTxIdHex << " height: " << ppb->height
-                                    << " input number: " << ppb->numForInputIdx(inum).value_or(0xffff)
-                                    << " HashX: " << info.hashX.toHex();
+                            qCDebug(f) << "Spent" << txo << "amount:" << info.amount.ToString().c_str()
+                                    << "in txid:"  << dbgTxIdHex << "height:" << ppb->height
+                                    << "input number:" << ppb->numForInputIdx(inum).value_or(0xffff)
+                                    << "HashX:" << info.hashX.toHex();
                         }
                         // delete from db
                         utxoBatch.remove(txo, info.hashX, CompactTXO(info.txNum, txo.outN)); // delete from db
