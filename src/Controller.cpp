@@ -22,6 +22,7 @@
 #include "Controller.h"
 #include "Mempool.h"
 #include "Merkle.h"
+#include "Pluralize2.h"
 #include "SubsMgr.h"
 #include "ThreadPool.h"
 #include "TXO.h"
@@ -504,8 +505,8 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
     std::lock_guard g(mut);
     if (force || (newSize > 0 && (oldSize != newSize || oldNumAddresses != numAddresses) && now - lastTS >= interval)) {
         auto log = isDebug ? qDebug(f) : qInfo(f);
-        log << newSize << Util::Pluralize(" mempool tx", newSize) << "involving" << numAddresses
-            << Util::Pluralize(" address", numAddresses);
+        log << Pluralize2(newSize, "mempool tx") << "involving"
+            << Pluralize2(numAddresses, "address");
         if (!force) {
             oldSize = newSize;
             oldNumAddresses = numAddresses;
@@ -707,7 +708,7 @@ void SynchMempoolTask::doGetRawMempool()
                     auto [mempool, lock] = storage->mutableMempool(); // take the lock exclusively here
                     const auto sz = mempool.txs.size();
                     mempool.clear();
-                    qCDebug(f) << "Mempool cleared of" << sz << Util::Pluralize(" tx", sz);
+                    qCDebug(f) << "Mempool cleared of" << Pluralize2(sz, "tx");
                 }
             });
         int newCt = 0;
@@ -1019,9 +1020,9 @@ void Controller::process(bool beSilentIfUpToDate)
         process_DownloadingBlocks();
     } else if (sm->state == State::FinishedDL) {
         size_t N = sm->endHeight - sm->startheight + 1;
-        qCInfo(f) << "Processed " << N << " new " << Util::Pluralize("block", N) << " with " << sm->nTx << " " << Util::Pluralize("tx", sm->nTx)
-              << " (" << sm->nIns << " " << Util::Pluralize("input", sm->nIns) << ", " << sm->nOuts << " " << Util::Pluralize("output", sm->nOuts)
-              << ", " << sm->nSH << Util::Pluralize(" address", sm->nSH) << ")"
+        qCInfo(f) << "Processed" << Pluralize2(N, "new block") << "with" << Pluralize2(sm->nTx, "tx")
+              << "(" << Pluralize2(sm->nIns, "input") << "," << Pluralize2(sm->nOuts, "output")
+              << ", " << Pluralize2(sm->nSH, "address") << ")"
               << ", verified ok.";
         {
             std::lock_guard g(smLock);
@@ -1057,7 +1058,7 @@ void Controller::process(bool beSilentIfUpToDate)
             sm.reset();  // great success!
         }
         enablePollTimer = true;
-        qWarning() << "bitcoind is in initial block download, will try again in 1 minute";
+        qWarning(f) << "bitcoind is in initial block download, will try again in 1 minute";
         polltimeout = 60 * 1000; // try again every minute
         emit synchFailure();
     } else if (sm->state == State::SynchMempool) {
@@ -1259,14 +1260,14 @@ void CtlTask::on_finished()
 
 void CtlTask::on_error(const RPC::Message &resp)
 {
-    qWarning() << resp.method << ": error response: " << resp.toJsonUtf8();
+    qWarning(f) << resp.method << ": error response:" << resp.toJsonUtf8();
     errorCode = resp.errorCode();
     errorMessage = resp.errorMessage();
     emit errored();
 }
 void CtlTask::on_failure(const RPC::Message::Id &id, const QString &msg)
 {
-    qWarning() << id.toString() << ": FAIL: " << msg;
+    qWarning(f) << id.toString() << ": FAIL:" << msg;
     errorCode = id.toInt();
     errorMessage = msg;
     emit errored();
@@ -1530,8 +1531,8 @@ void Controller::dumpScriptHashes(const QString &fileName) const
     });
     outFile.flush();
     outFile.close();
-    qCInfo(f) << "Dump: wrote " << count << Util::Pluralize(" script hash", count) << " to \"" << fileName << "\""
-          << " in " << QString::number(Util::getTimeSecs() - t0, 'f', 1) << " seconds"
-          <<" (" << QString::number(outFile.size()/1e6, 'f', 3) << " MiB)";
+    qCInfo(f) << "Dump: wrote" << Pluralize2(count, "script hash") << "to" << fileName
+          << "in" << QString::number(Util::getTimeSecs() - t0, 'f', 1) << "seconds"
+          <<"(" << QString::number(outFile.size()/1e6, 'f', 3) << "MiB)";
     emit dumpScriptHashesComplete();
 }

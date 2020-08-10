@@ -277,7 +277,6 @@ namespace Util {
     {
         return uint64_t(CityHash::CityHash64WithSeed(bv.charData(), bv.size(), hashSeed.get<CityHash::uint64>()));
     }
-
 } // end namespace Util
 
 

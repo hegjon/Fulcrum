@@ -19,6 +19,7 @@
 
 #include "BitcoinD.h"
 #include "bitcoin/rpc/protocol.h"
+#include "Pluralize2.h"
 
 #include <QHostInfo>
 #include <QMetaType>
@@ -47,7 +48,7 @@ BitcoinDMgr::BitcoinDMgr(const QString &hostName, quint16 port, const QString &u
 BitcoinDMgr::~BitcoinDMgr() {  cleanup(); }
 
 void BitcoinDMgr::startup() {
-    qCInfo(f) << objectName() << ": starting " << N_CLIENTS << " " << Util::Pluralize("bitcoin rpc client", N_CLIENTS) << " ...";
+    qCInfo(f) << objectName() << ": starting" << Pluralize2(N_CLIENTS, "bitcoin rpc client") << " ...";
 
     // As soon as a good BitcoinD is up, try and grab the network info (version, subversion, etc).  This must
     // happen early because the values in this info object determine which workarounds we may or may not apply to

@@ -21,6 +21,7 @@
 #include "Compat.h"
 #include "Controller.h"
 #include "Json.h"
+#include <Pluralize2.h>
 #include "Servers.h"
 #include "ThreadPool.h"
 #include "Util.h"
@@ -140,7 +141,7 @@ void App::startup()
 
         if (!options->statsInterfaces.isEmpty()) {
             const auto num = options->statsInterfaces.count();
-            qCInfo(f).noquote() << "Stats HTTP: starting" << num << Util::Pluralize("server", num) << "...";
+            qCInfo(f) << "Stats HTTP: starting" << Pluralize2(num, "server") << "...";
             // start 'stats' http servers, if any
             for (const auto & i : options->statsInterfaces)
                 start_httpServer(i); // may throw

@@ -201,7 +201,8 @@ SOURCES += \
     Util.cpp \
     Version.cpp \
     WebSocket.cpp \
-    register_MetaTypes.cpp
+    register_MetaTypes.cpp \
+    Pluralize2.cpp
 
 HEADERS += \
     AbstractConnection.h \
@@ -240,7 +241,8 @@ HEADERS += \
     TXO_Compact.h \
     Util.h \
     Version.h \
-    WebSocket.h
+    WebSocket.h \
+    Pluralize2.h
 
 # Robin Hood unordered_flat_map implememntation (single header and MUCH more efficient than unordered_map!)
 HEADERS += robin_hood/robin_hood.h
