@@ -16,6 +16,7 @@
 // along with this program (see LICENSE.txt).  If not, see
 // <https://www.gnu.org/licenses/>.
 //
+#include "Pluralize2.h"
 #include "SubsMgr.h"
 #include "Util.h"
 
@@ -184,14 +185,14 @@ void SubsMgr::doNotifyAllPending()
         if (doemit) {
             const auto nClients = sub->subscribedClientIds.size();
             ctr += nClients;
-            qCDebug(f) << "Notifying" << nClients << Util::Pluralize(" client", nClients) << "of status for" << Util::ToHexFast(sh);
+            qCDebug(f) << "Notifying" << Pluralize2(nClients, "client") << "of status for" << Util::ToHexFast(sh);
             sub->updateTS();
             emit sub->statusChanged(sh, status);
         }
     }
     if (ctr || ctrSH) {
         const auto elapsedMS = (Util::getTimeNS() - t0)/1e6;
-        qCDebug(f) << ctr << Util::Pluralize(" client", ctr) << ctrSH << Util::Pluralize(" scripthash", ctrSH)
+        qCDebug(f) << Pluralize2(ctr, "client") << Pluralize2(ctrSH, "scripthash")
                << "in" << QString::number(elapsedMS, 'f', 4) << "msec";
     }
 }
@@ -406,7 +407,7 @@ void SubsMgr::removeZombies(bool forced)
     if (ctr) {
         p->subs.reserve(p->kSubsReserveSize); // shrink_to_fit if over kSubsReserveSize
         const auto elapsed = Util::getTimeNS() - t0;
-        qCDebug(f) << "SubsMgr: Removed" << ctr << "zombie" << Util::Pluralize("sub", ctr) << "out of" << total <<
+        qCDebug(f) << "SubsMgr: Removed" << Pluralize2(ctr, "zombie sub") << "out of" << total <<
                 "in" << QString::number(elapsed/1e6, 'f', 4) << "msec";
     }
 }

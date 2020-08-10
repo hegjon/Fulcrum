@@ -20,6 +20,7 @@
 #include "CostCache.h"
 #include "Mempool.h"
 #include "Merkle.h"
+#include "Pluralize2.h"
 #include "RecordFile.h"
 #include "Storage.h"
 #include "SubsMgr.h"
@@ -890,7 +891,7 @@ void Storage::loadCheckHeadersInDB()
                                       .arg(num));
         // verify headers: hashPrevBlock must match what we actually read from db
         if (num) {
-            qCDebug(f) << "Verifying " << num << " " << Util::Pluralize("header", num) << " ...";
+            qCDebug(f) << "Verifying" << Pluralize2(num, "header") << "...";
             QString err;
             hVec = headersFromHeight_nolock_nocheck(0, num, &err);
             if (!err.isEmpty() || hVec.size() != num)
@@ -914,7 +915,7 @@ void Storage::loadCheckHeadersInDB()
     if (num) {
         const auto elapsed = Util::getTimeNS();
 
-        qCDebug(f) << "Read & verified " << num << " " << Util::Pluralize("header", num) << " from db in " << QString::number((elapsed-t0)/1e6, 'f', 3) << " msec";
+        qCDebug(f) << "Read & verified" << Pluralize2(num, "header") << "from db in" << QString::number((elapsed-t0)/1e6, 'f', 3) << "msec";
     }
 
     if (!p->merkleCache->isInitialized() && !hVec.empty())
@@ -927,7 +928,7 @@ void Storage::loadCheckTxNumsFileAndBlkInfo()
     // may throw.
     p->txNumsFile = std::make_unique<RecordFile>(options->datadir + QDir::separator() + "txnum2txhash", HashLen, 0x000012e2);
     p->txNumNext = p->txNumsFile->numRecords();
-    qCDebug(f) << "Read TxNumNext from file: " << p->txNumNext.load();
+    qCDebug(f) << "Read TxNumNext from file:" << p->txNumNext.load();
     TxNum ct = 0;
     if (const int height = latestTip().first; height >= 0)
     {
@@ -1030,7 +1031,7 @@ void Storage::loadCheckUTXOsInDB()
     }
 
     if (const auto ct = utxoSetSize(); ct)
-        qCInfo(f) << "UTXO set:"  << ct << Util::Pluralize(" utxo", ct)
+        qCInfo(f) << "UTXO set:" << Pluralize2(ct, "utxo")
               << "," << QString::number(utxoSetSizeMiB(), 'f', 3) << "MiB";
 }
 
@@ -1470,8 +1471,8 @@ void Storage::addBlock(PreProcessedBlockPtr ppb, bool saveUndo, unsigned nReserv
                 const auto elapsedms = (Util::getTimeNS() - t0)/1e6;
                 const size_t nTx = undo->blkInfo.nTx, nSH = undo->scriptHashes.size();
                 qCDebug(f) << "Saved undo for block" << undo->height << ", "
-                        << nTx << Util::Pluralize("transaction", nTx)
-                        << "involving" << nSH << Util::Pluralize("scripthash", nSH)
+                        << Pluralize2(nTx, "transaction")
+                        << "involving" << Pluralize2(nSH, "scripthash")
                         << ", in" << QString::number(elapsedms, 'f', 2) << "msec.";
             }
         }
@@ -1643,10 +1644,10 @@ BlockHeight Storage::undoLatestBlock(bool notifySubs)
 
         const size_t nTx = undo.blkInfo.nTx, nSH = undo.scriptHashes.size();
         const auto elapsedms = (Util::getTimeNS() - t0) / 1e6;
-        qCInfo(f) << "Applied undo for block " << undo.height << " hash " << Util::ToHexFast(undo.hash) << ", "
-              << nTx << " " << Util::Pluralize("transaction", nTx)
-              << " involving " << nSH << " " << Util::Pluralize("scripthash", nSH)
-              << ", in " << QString::number(elapsedms, 'f', 2) << " msec, new height now: " << prevHeight;
+        qCInfo(f) << "Applied undo for block" << undo.height << "hash" << Util::ToHexFast(undo.hash) << ","
+              << Pluralize2(nTx, "transaction")
+              << "involving" << Pluralize2(nSH, "scripthash")
+              << ", in" << QString::number(elapsedms, 'f', 2) << "msec, new height now:" << prevHeight;
     } // release locks
 
     // now, do notifications

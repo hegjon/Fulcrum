@@ -22,6 +22,7 @@
 #include "BitcoinD.h"
 #include "Compat.h"
 #include "PeerMgr.h"
+#include "Pluralize2.h"
 #include "ServerMisc.h"
 #include "Servers.h"
 #include "Storage.h"
@@ -120,7 +121,7 @@ void SrvMgr::startServers()
     const auto num =   options->interfaces.length() + options->sslInterfaces.length()
                      + options->wsInterfaces.length() + options->wssInterfaces.length()
                      + options->adminInterfaces.length();
-    qCInfo(f) << "SrvMgr: starting " << num << " " << Util::Pluralize("service", num) << " ...";
+    qCInfo(f) << "SrvMgr: starting" << Pluralize2(num, "service") << "...";
     const auto firstSsl = options->interfaces.size(),
                firstWs = options->interfaces.size() + options->sslInterfaces.size(),
                firstWss = options->interfaces.size() + options->sslInterfaces.size() + options->wsInterfaces.size();
