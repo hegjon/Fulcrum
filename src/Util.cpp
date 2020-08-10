@@ -377,20 +377,6 @@ QString Log::colorize(const QString &str, Color c) {
 template <> Log & Log::operator<<(const Color &c) { setColor(c); return *this; }
 template <> Log & Log::operator<<(const std::string &t) { s << t.c_str(); return *this; }
 
-Debug::~Debug()
-{
-    doprt = f().isDebugEnabled();
-    if (!doprt) return;
-    if (!colorOverridden) color = Cyan;
-    str = QStringLiteral("(Debug) ") + str;
-}
-
-bool Debug::forceEnable = false;
-
-bool Debug::isEnabled() {
-    return f().isDebugEnabled();
-}
-
 
 #ifdef ENABLE_TESTS
 #include "bitcoin/utilstrencodings.h"

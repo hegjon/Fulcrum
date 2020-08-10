@@ -110,27 +110,6 @@ template <> Log & Log::operator<<(const Color &);
 // specialization for std::string
 template <> Log & Log::operator<<(const std::string &t);
 
-/** \brief Stream-like class to print a debug message to the app's logging facility
-    Example:
-   \code
-        Debug() << "This is a debug message"; // would print a debug message to the logging facility
-   \endcode
- */
-class Debug : public Log
-{
-public:
-    using Log::Log; // inherit c'tor
-    virtual ~Debug();
-
-    static bool isEnabled();
-    static bool forceEnable; ///< defaults false -- set to true if there is not App and you want to ensure Debug() works
-
-#if defined(__GNUC__) && !defined(__clang__)
-    // Grr.. GCC doesn't fully implement C++ 17 so we must do this. :(
-    template <typename ...Args>
-    explicit Debug(Args && ...args) : Log(std::forward<Args>(args)...) {}
-#endif
-};
 
 #define FatalAssert(b, message)                                       \
     do {                                                              \
