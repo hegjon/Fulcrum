@@ -378,7 +378,7 @@ void App::parseArgs()
                 auto it = registeredTests.find(tname);
                 if (it == registeredTests.end())
                     throw BadArgs(QString("No such test: %1").arg(tname));
-                qCInfo(f) << "Running test: " << it->first << " ...";
+                qCInfo(f) << "Running test:" << it->first << "...";
                 it->second();
             }
         }
@@ -389,7 +389,7 @@ void App::parseArgs()
                 auto it = registeredBenches.find(tname);
                 if (it == registeredBenches.end())
                     throw BadArgs(QString("No such bench: %1").arg(tname));
-                qCInfo(f) << "Running benchmark: " << it->first << " ...";
+                qCInfo(f) << "Running benchmark:" << it->first << "...";
                 it->second();
             }
         }
@@ -471,9 +471,9 @@ void App::parseArgs()
         const bool confIsSet = conf.hasValue(l);
         const auto envVar = env ? std::getenv(env) : nullptr;
         if ((cliIsSet || confIsSet) && envVar)
-            qCWarning(f) << "Warning: " << l <<  " is specified both via the " << (cliIsSet ? "CLI" : "config file")
-                      << " and the environement (as " << env << "). The " << (cliIsSet ? "CLI arg" : "config file setting")
-                      << " will take precendence.";
+            qCWarning(f) << "Warning:" << l <<  "is specified both via the" << (cliIsSet ? "CLI" : "config file")
+                      << "and the environement (as" << env << "). The" << (cliIsSet ? "CLI arg" : "config file setting")
+                      << "will take precendence.";
         if (((!cliIsSet && !confIsSet) || conf.value(l, parser.value(s)).isEmpty()) && (!env || !envVar))
             throw BadArgs(QString("Required option missing or empty: -%1 (--%2)%3").arg(s).arg(l).arg(env ? QString(" (or env var: %1)").arg(env) : ""));
         else if (parser.values(s).count() > 1)
