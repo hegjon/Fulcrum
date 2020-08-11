@@ -250,7 +250,7 @@ void GetChainInfoTask::process()
 
             emit success();
         } catch (const Exception & e) {
-            qCCritical(f) << "INTERNAL ERROR: " << e.what();
+            qCCritical(f) << "INTERNAL ERROR:" << e.what();
             emit errored();
         }
     });
@@ -390,19 +390,19 @@ void DownloadBlocksTask::do_get(unsigned int bnum)
                         ++q_ct;
                     }
                 } else if (!sizeOk) {
-                    qCWarning(f) << resp.method << ": at height " << bnum << " header not valid (decoded size: " << header.length() << ")";
+                    qCWarning(f) << resp.method << ": at height" << bnum << "header not valid (decoded size:" << header.length() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("bad size for height %1").arg(bnum);
                     emit errored();
                 } else {
-                    qCWarning(f) << resp.method << ": at height " << bnum << " header not valid (expected hash: " << hash.toHex() << ", got hash: " << chkHash.toHex() << ")";
+                    qCWarning(f) << resp.method << ": at height" << bnum << "header not valid (expected hash:" << hash.toHex() << ", got hash:" << chkHash.toHex() << ")";
                     errorCode = int(bnum);
                     errorMessage = QString("hash mismatch for height %1").arg(bnum);
                     emit errored();
                 }
             });
         } else {
-            qWarning(f) << resp.method << ": at height " << bnum << " hash not valid (decoded size: " << hash.length() << ")";
+            qWarning(f) << resp.method << ": at height" << bnum << "hash not valid (decoded size:" << hash.length() << ")";
             errorCode = int(bnum);
             errorMessage = QString("invalid hash for height %1").arg(bnum);
             emit errored();
@@ -469,7 +469,7 @@ void SynchMempoolTask::process()
         try {
             processResults();
         } catch (const std::exception & e) {
-            qCCritical(f) << "Caught exception when processing mempool tx's: " << e.what();
+            qCCritical(f) << "Caught exception when processing mempool tx's:" << e.what();
             emit errored();
             return;
         }
@@ -959,7 +959,7 @@ void Controller::process(bool beSilentIfUpToDate)
                 // the blockchain.address.* methods not work. This warning will spam the log so hopefully it will not
                 // go unnoticed. I doubt anyone anytime soon will rename "main" or "test" or "regtest", but it pays
                 // to be safe.
-                qWarning() << "Warning: Bitcoind reports chain: \"" << chain << "\", which is unknown to this software. "
+                qCWarning(f) << "Warning: Bitcoind reports chain: \"" << chain << "\", which is unknown to this software. "
                           << "Some protocol methods such as \"blockchain.address.*\" will not work correctly. "
                           << "Please update your software and/or report this to the developers.";
             }
@@ -970,25 +970,25 @@ void Controller::process(bool beSilentIfUpToDate)
                 if (task->info.bestBlockhash == tipHash) { // no reorg
                     if (!beSilentIfUpToDate) {
                         storage->updateMerkleCache(unsigned(tip));
-                        qCInfo(f) << "Block height " << tip << ", up-to-date";
+                        qCInfo(f) << "Block height" << tip << ", up-to-date";
                         emit upToDate();
                         emit newHeader(unsigned(tip), tipHeader);
                     }
                     sm->state = State::SynchMempool; // now, move on to synch mempool
                 } else {
                     // height ok, but best block hash mismatch.. reorg
-                    qWarning() << "We have bestBlock " << tipHash.toHex() << ", but bitcoind reports bestBlock " << task->info.bestBlockhash.toHex() << "."
-                              << " Possible reorg, will rewind back 1 block and try again ...";
+                    qWarning(f) << "We have bestBlock" << tipHash.toHex() << ", but bitcoind reports bestBlock" << task->info.bestBlockhash.toHex() << "."
+                              << "Possible reorg, will rewind back 1 block and try again ...";
                     process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                     return;
                 }
             } else if (tip > sm->ht) {
-                qWarning() << "We have height " << tip << ", but bitcoind reports height " << sm->ht << "."
-                          << " Possible reorg, will rewind back 1 block and try again ...";
+                qCWarning(f) << "We have height" << tip << ", but bitcoind reports height" << sm->ht << "."
+                          << "Possible reorg, will rewind back 1 block and try again ...";
                 process_DoUndoAndRetry(); // attempt to undo 1 block and try again.
                 return;
             } else {
-                qCInfo(f) << "Block height " << sm->ht << ", downloading new blocks ...";
+                qCInfo(f) << "Block height" << sm->ht << ", downloading new blocks ...";
                 emit synchronizing();
                 sm->state = State::GetBlocks;
             }

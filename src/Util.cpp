@@ -56,7 +56,7 @@ namespace Util {
         // CLOCK_BOOTTIME here for that.
         if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
             ts = {0, 0};
-            // We can't do a qWarning() or qCCritical(f) here because that would cause infinite recursion.
+            // We can't do a qCWarning(f) or qCCritical(f) here because that would cause infinite recursion.
             // This is an unlikely and also pretty fatal situation, though, so we must warn
             std::cerr << "Fatal: clock_gettime for CLOCK_MONOTONIC returned error status: " << strerror(errno) << std::endl;
         }
@@ -255,7 +255,7 @@ namespace Util {
             HashSeed() {
                 auto gen = QRandomGenerator::global();
                 if (!gen) {
-                    qWarning() << "App-global random number generator is null! Seeding hash seed with current time. FIXME!";
+                    qCWarning(f) << "App-global random number generator is null! Seeding hash seed with current time. FIXME!";
                     seed = uint64_t(getTimeNS());
                 } else {
                     seed = uint64_t(gen->generate64());

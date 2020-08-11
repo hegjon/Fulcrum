@@ -878,7 +878,7 @@ bool parse(QVariant &out, const QByteArray &bytes)
         out = root.toVariant(); // convert to (possibly nested) QVariant containing QVariants
     } catch (const std::exception &e) {
         // this is unlikely to happen, but may if std::bad_alloc (or if bugs in this code).
-        qWarning() << "Failed to parse JSON: " << e.what();
+        qCWarning(f) << "Failed to parse JSON: " << e.what();
         return false;
     }
 

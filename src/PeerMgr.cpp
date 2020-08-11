@@ -97,7 +97,7 @@ void PeerMgr::startup()
             break;
     }
     if (!hasip4 && !hasip6)
-        qWarning() << objectName() << ": Could not determine which protocols are available based on bind addresses.";
+        qCWarning(f) << objectName() << ": Could not determine which protocols are available based on bind addresses.";
 
     start();
     // wait for thread to start before returning.

@@ -152,7 +152,7 @@ public:
                     if (LIKELY(it != me->table.end())) {
                         if (const auto existingRef = it.value().lock();
                                 UNLIKELY(existingRef && existingRef.get() != p)) {
-                            qWarning() << myname << ": Deleter for " << ToString(key)
+                            qCWarning(f) << myname << ": Deleter for " << ToString(key)
                                       << " found entry, but the weak_ref in the table refers to a different object! FIXME!";
                         } else {
                             // Eithr a valid entry was found in the table or a defunct weak_ref was found.. in either

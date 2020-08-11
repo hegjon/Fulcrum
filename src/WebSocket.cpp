@@ -1077,7 +1077,7 @@ namespace WebSocket
         if (socket->readBufferSize() > 0) { // <=0 indicates "infinite" read buffer (which is the default for QAbstractSocket)
             if (const auto size = buf.size() + bytesAvailable(); size > socket->readBufferSize()) {
                 const auto peerName = peerAddress().toString() + ":" + QString::number(peerPort());
-                qWarning() << "WebSocket::wrapper: working buffer size " << size << " exceeds readBufferSize " << socket->readBufferSize() << ", skipping read for peer " << peerName;
+                qCWarning(f) << "WebSocket::wrapper: working buffer size " << size << " exceeds readBufferSize " << socket->readBufferSize() << ", skipping read for peer " << peerName;
                 return;
             }
         }
@@ -1126,8 +1126,8 @@ namespace WebSocket
         } catch (const std::exception &e) {
             const auto type = dynamic_cast<const WebSocket::Deser::ProtocolError *>(&e) ? "protocol error" : "exception";
             const auto peerName = socket->peerAddress().toString() + ":" + QString::number(socket->peerPort());
-            qWarning() << "WebSocket: " << type << " for " << peerName << ": " << e.what();
-            qWarning() << "WebSocket: aborting " << peerName;
+            qCWarning(f) << "WebSocket: " << type << " for " << peerName << ": " << e.what();
+            qCWarning(f) << "WebSocket: aborting " << peerName;
             close();
             setErrorString(e.what());
         }
@@ -1135,7 +1135,7 @@ namespace WebSocket
 
     bool Wrapper::canReadLine() const
     {
-        qWarning() << "WebSocket::Wrapper Warning: canReadLine called -- this is not how this class is meant to be used";
+        qCWarning(f) << "WebSocket::Wrapper Warning: canReadLine called -- this is not how this class is meant to be used";
         if (readDataPartialBuf.contains('\n'))
             return true;
         for (const auto & m : dataMessages) {
@@ -1173,7 +1173,7 @@ namespace WebSocket
         if (len < 0)
             return len;
         if (qint64 max = std::numeric_limits<int>::max()/2; len > max) {
-            qWarning() << "Wrapper::writeData: len " << len << " exceeds max " << max << ", will do a short write.";
+            qCWarning(f) << "Wrapper::writeData: len " << len << " exceeds max " << max << ", will do a short write.";
             len = max;
         }
         auto res = socket->write(Ser::wrapPayload(QByteArray(data, int(len)), FrameType(_messageMode), isMasked()));
@@ -1188,7 +1188,7 @@ namespace WebSocket
     qint64 Wrapper::readData(char *data, qint64 maxlen) { ///< this breaks the framing if called.
         if (!isValid() || !isOpen() || maxlen < 0)
             return -1;
-        qWarning() << "WebSocket::Wrapper Warning: readData called -- this is not how this class is meant to be used";
+        qCWarning(f) << "WebSocket::Wrapper Warning: readData called -- this is not how this class is meant to be used";
         qint64 nread = 0;
         while (maxlen > 0 && (readDataPartialBuf.size() || !dataMessages.empty())) {
             if (readDataPartialBuf.isEmpty()) {
@@ -1209,7 +1209,7 @@ namespace WebSocket
     qint64 Wrapper::readLineData(char *data, qint64 maxlen) { ///< this breaks the framing if called.
         if (!isValid() || !isOpen() || maxlen < 0)
             return -1;
-        qWarning() << "WebSocket::Wrapper Warning: readLineData called -- this is not how this class is meant to be used";
+        qCWarning(f) << "WebSocket::Wrapper Warning: readLineData called -- this is not how this class is meant to be used";
         if (!canReadLine()) // <-- this is slow, but then again, this whole API is not how this class should be used.
             return 0;
         qint64 nread = 0;
@@ -1410,7 +1410,7 @@ namespace WebSocket {
                         socket->setProtocol(QSsl::SslProtocol::AnyProtocol);
                         const auto peerName = QStringLiteral("%1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
                         if (socket->state() != QAbstractSocket::SocketState::ConnectedState || socket->isEncrypted()) {
-                            qWarning() << peerName << " socket had unexpected state (must be both connected and unencrypted), deleting socket";
+                            qCWarning(f) << peerName << " socket had unexpected state (must be both connected and unencrypted), deleting socket";
                             delete socket;
                             return;
                         }
@@ -1418,7 +1418,7 @@ namespace WebSocket {
                         timer->setObjectName(QStringLiteral("ssl handshake timer"));
                         timer->setSingleShot(true);
                         connect(timer, &QTimer::timeout, this, [socket, timer, peerName]{
-                            qWarning() << peerName << " SSL handshake timed out after " << QString::number(timer->interval()/1e3, 'f', 1) << " secs, deleting socket";
+                            qCWarning(f) << peerName << " SSL handshake timed out after " << QString::number(timer->interval()/1e3, 'f', 1) << " secs, deleting socket";
                             socket->abort();
                             socket->deleteLater();
                         });
@@ -1453,14 +1453,14 @@ namespace WebSocket {
                         *tmpConnections +=
                         connect(socket, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), this, [socket, peerName](const QList<QSslError> & errors) {
                             for (const auto & e : errors)
-                                qWarning() << peerName << " SSL error: " << e.errorString();
+                                qCWarning(f) << peerName << " SSL error: " << e.errorString();
                             qCDebug(f) << peerName << " Aborting connection due to SSL errors";
                             socket->deleteLater();
                         });
                         timer->start(10000); // give the handshake 10 seconds to complete
                         socket->startServerEncryption();
                     } else {
-                        qWarning() << "setSocketDescriptor returned false -- unable to initiate SSL for client: " << socket->errorString();
+                        qCWarning(f) << "setSocketDescriptor returned false -- unable to initiate SSL for client: " << socket->errorString();
                         delete socket;
                     }
                 }
@@ -1512,7 +1512,7 @@ namespace WebSocket {
                 if (!tsock) return;
                 WebSocket::Wrapper *sock = dynamic_cast<WebSocket::Wrapper *>(tsock);
                 if (!sock) {
-                    qWarning() << "Socket not a WebSocket::Wrapper! FIXME!";
+                    qCWarning(f) << "Socket not a WebSocket::Wrapper! FIXME!";
                     tsock->deleteLater();
                     return;
                 }

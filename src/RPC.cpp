@@ -719,7 +719,7 @@ namespace RPC {
                         if (name == s_content_type) {
                             sm->contentType = QString::fromUtf8(value);
                             if (sm->contentType.compare(s_application_json, Qt::CaseInsensitive) != 0) {
-                                qWarning() << "Got unexpected content type: " << sm->contentType << (!trace().isDebugEnabled() ? "; will log the rest of this HTTP response" : "");
+                                qCWarning(f) << "Got unexpected content type: " << sm->contentType << (!trace().isDebugEnabled() ? "; will log the rest of this HTTP response" : "");
                                 sm->logBad = true;
                             }
                         } else if (name == s_content_length) {

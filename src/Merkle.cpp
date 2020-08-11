@@ -305,7 +305,7 @@ namespace Merkle {
         auto limit = length >> depthHigher;
         if (limit > level.size()) {
             limit = unsigned(level.size());
-            qWarning() << "limit > levelSize in merkle cache truncate. FIXME!";
+            qCWarning(f) << "limit > levelSize in merkle cache truncate. FIXME!";
         }
         level.erase(level.begin()+limit, level.end());
         qCDebug(f) << "Merkle cache truncated to length" << length;

@@ -32,7 +32,7 @@ RollingBloomFilter::RollingBloomFilter(const uint32_t nElements, const double fp
     constexpr auto EPSILON = std::numeric_limits<double>::epsilon();
     const Defer deferredIsValidChecker([&] {
         if (!isValid())
-            qWarning() << "Warning: RollingBloomFilter was passed invalid arguments: "
+            qCWarning(f) << "Warning: RollingBloomFilter was passed invalid arguments: "
                       << "(" << nElements << ", " << fpRate << ")";
     });
     if (std::fabs(fpRate) <= EPSILON || nElements == 0) {

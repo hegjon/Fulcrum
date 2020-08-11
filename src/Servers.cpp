@@ -855,7 +855,7 @@ QVariant Server::stats() const
         v = m;
     } else {
         // runtime catch if we introduce a change to the stats map layout that breaks the above assumptions
-        qWarning()  << "Expected ServerBase::stats to return a map with a single sub-map in it. Unable to insert "
+        qCWarning(f)  << "Expected ServerBase::stats to return a map with a single sub-map in it. Unable to insert "
                    << "\"" << ServerMisc::kBloomFiltersKey << "\" key into stats map. FIXME!";
     }
     return v;
@@ -1960,7 +1960,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     socket->setSslConfiguration(sslConfiguration);
     const auto peerName = QStringLiteral("%1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
     if (socket->state() != QAbstractSocket::SocketState::ConnectedState || socket->isEncrypted()) {
-        qWarning() << peerName << " socket had unexpected state (must be both connected and unencrypted), deleting socket";
+        qCWarning(f) << peerName << " socket had unexpected state (must be both connected and unencrypted), deleting socket";
         delete socket;
         return;
     }
@@ -1969,7 +1969,7 @@ void ServerSSL::incomingConnection(qintptr socketDescriptor)
     timer->setSingleShot(true);
     static const auto kTimedOutPropertyName = "ServerSSL_Handshake_Timed_Out";
     connect(timer, &QTimer::timeout, this, [socket, timer, peerName]{
-        qWarning() << peerName << " SSL handshake timed out after " << QString::number(timer->interval()/1e3, 'f', 1) << " secs, deleting socket";
+        qCWarning(f) << peerName << " SSL handshake timed out after " << QString::number(timer->interval()/1e3, 'f', 1) << " secs, deleting socket";
         socket->setProperty(kTimedOutPropertyName, true);
         socket->abort();
         socket->deleteLater();
