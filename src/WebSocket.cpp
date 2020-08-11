@@ -903,7 +903,7 @@ namespace WebSocket
         setSocketError(socket->error());
 
         if (socket->state() != ConnectedState) {
-            ::qCritical() << "WebSocket Wrapper may only be used with an already-connected socket";
+            qCCritical(f) << "WebSocket Wrapper may only be used with an already-connected socket";
         }
 
         // on handshake success, setup the auto-ping interval
@@ -1046,7 +1046,7 @@ namespace WebSocket
         try {
             res = socket->write(Ser::wrapText(data, isMasked()));
         } catch (const std::exception & e) {
-            ::qCritical() << "Wrapper::sendText caught exception: " << e.what();
+            qCCritical(f) << "Wrapper::sendText caught exception: " << e.what();
         }
         if (res > -1) {
             emit bytesWritten(data.size());
@@ -1061,7 +1061,7 @@ namespace WebSocket
         try {
             res = socket->write(Ser::wrapBinary(data, isMasked()));
         } catch (const std::exception & e) {
-            ::qCritical() << "Wrapper::sendBinary caught exception: " << e.what();
+            qCCritical(f) << "Wrapper::sendBinary caught exception: " << e.what();
         }
         if (res > -1) {
             emit bytesWritten(data.size());
@@ -1467,33 +1467,33 @@ namespace WebSocket {
             };
             QFile certf(argv[1]), keyf(argv[2]);
             if (!certf.open(QIODevice::ReadOnly)) {
-                qCritical() << "Failed to open certificate file:" << argv[1];
+                qCCritical(f) << "Failed to open certificate file:" << argv[1];
                 return 1;
             }
             if (!keyf.open(QIODevice::ReadOnly)) {
-                qCritical() << "Failed to open key file:" << argv[2];
+                qCCritical(f) << "Failed to open key file:" << argv[2];
                 return 2;
             }
             QSslCertificate cert(&certf, QSsl::EncodingFormat::Pem);
             if (cert.isNull()) {
-                qCritical() << "Failed to read certificate file:" << argv[1];
+                qCCritical(f) << "Failed to read certificate file:" << argv[1];
                 return 3;
             }
             QSslKey key(&keyf, QSsl::KeyAlgorithm::Rsa, QSsl::EncodingFormat::Pem);
             if (key.isNull()) {
-                qCritical() << "Failed to read key file:" << argv[2];
+                qCCritical(f) << "Failed to read key file:" << argv[2];
                 return 4;
             }
             qCDebug(f) << "Read cert and key ok";
             QHostAddress iface;
             iface.setAddress(QString(argv[3]));
             if (iface.isNull()) {
-                qCritical() << "Bad interface" << argv[3];
+                qCCritical(f) << "Bad interface" << argv[3];
                 return 5;
             }
             quint16 port = QString(argv[4]).toUShort();
             if (port < 1024) {
-                qCritical() << "Bad port" << argv[4];
+                qCCritical(f) << "Bad port" << argv[4];
                 return 6;
             }
             QCoreApplication app(argc, argv);
@@ -1501,7 +1501,7 @@ namespace WebSocket {
             QTimer::singleShot(10, &srv, [&]{
                 const QString hostPortStr = QString::asprintf("%s:%hu", iface.toString().toLatin1().constData(), port);
                 if (!srv.listen(iface, port)) {
-                    qCritical() << "Failed to listen on" << hostPortStr;
+                    qCCritical(f) << "Failed to listen on" << hostPortStr;
                     app.exit(1);
                     return;
                 }

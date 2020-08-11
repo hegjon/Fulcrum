@@ -2048,7 +2048,7 @@ void Storage::updateMerkleCache(unsigned int height)
         try {
             p->merkleCache->initialize(height+1); // this may take a few seconds
         } catch (const std::exception & e) {
-            qCritical() << e.what();
+            qCCritical(f) << e.what();
         }
     }
 }

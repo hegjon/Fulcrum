@@ -124,7 +124,7 @@ void AbstractTcpServer::on_finished()
 
 void AbstractTcpServer::on_acceptError(QAbstractSocket::SocketError e)
 {
-    qCritical() << objectName() << "; error acceptError, code: " << int(e);
+    qCCritical(f) << objectName() << "; error acceptError, code: " << int(e);
 }
 
 /*static*/
@@ -743,7 +743,7 @@ void ServerBase::generic_do_async(Client *c, const RPC::Message::Id &reqId, cons
             priority
         );
     } else
-        qCritical() << "INTERNAL ERROR: work must be valid! FIXME!";
+        qCCritical(f) << "INTERNAL ERROR: work must be valid! FIXME!";
 }
 
 void ServerBase::generic_async_to_bitcoind(Client *c, const RPC::Message::Id & reqId, const QString &method,
@@ -1150,7 +1150,7 @@ void Server::rpc_blockchain_block_headers(Client *c, const RPC::Message &m)
             const auto & hdr = hdrs[i];
             if (UNLIKELY(hdr.size() != int(hdrSz))) { // ensure header looks the right size
                 // this should never happen.
-                qCritical() << "Header size from db height " << i + height << " is not " << hdrSz << " bytes! Database corruption likely! FIXME!";
+                qCCritical(f) << "Header size from db height " << i + height << " is not " << hdrSz << " bytes! Database corruption likely! FIXME!";
                 throw RPCError("Server header store invalid", RPC::Code_InternalError);
             }
             // fast, in-place conversion to hex

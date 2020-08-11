@@ -1144,13 +1144,13 @@ void App::registerTestBenchCommon(const char *fname, const char *brief, NameFunc
                                   const NameFuncMap::key_type &name, const NameFuncMap::mapped_type &func)
 {
     if (_globalInstance) {
-        qCritical() << fname << "cannot be called after the app has already started!"
+        qCritical(f) << fname << "cannot be called after the app has already started!"
                 << "Ignoring request to register" << brief  << name;
         return;
     }
     const auto & [_, inserted] = map.insert({name, func});
     if (!inserted)
-        qCritical() << fname << ": ignoring duplicate" << brief << name;
+        qCritical(f) << fname << ": ignoring duplicate" << brief << name;
 }
 /* static */
 auto App::registerTest(const QString &name, const std::function<void()> &func) -> RegisteredTest

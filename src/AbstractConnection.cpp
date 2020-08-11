@@ -174,7 +174,7 @@ bool AbstractConnection::do_write(const QByteArray & data)
         err = " called from another thread! FIXME!";
     }
     if (!err.isEmpty()) {
-        qCritical() <<  " (" << objectName() << ") " << err << " id=" << id;
+        qCritical(f) <<  " (" << objectName() << ") " << err << " id=" << id;
         return false;
     }
     if (writeBackLog > MAX_BUFFER) {

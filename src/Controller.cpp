@@ -250,7 +250,7 @@ void GetChainInfoTask::process()
 
             emit success();
         } catch (const Exception & e) {
-            qCritical() << "INTERNAL ERROR: " << e.what();
+            qCCritical(f) << "INTERNAL ERROR: " << e.what();
             emit errored();
         }
     });
@@ -469,12 +469,12 @@ void SynchMempoolTask::process()
         try {
             processResults();
         } catch (const std::exception & e) {
-            qCritical() << "Caught exception when processing mempool tx's: " << e.what();
+            qCCritical(f) << "Caught exception when processing mempool tx's: " << e.what();
             emit errored();
             return;
         }
     } else {
-        qCritical() << "Unexpected state in " << __PRETTY_FUNCTION__ << ". FIXME!";
+        qCCritical(f) << "Unexpected state in " << __PRETTY_FUNCTION__ << ". FIXME!";
         emit errored();
         return;
     }
@@ -519,7 +519,7 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
 void SynchMempoolTask::processResults()
 {
     if (txsDownloaded.size() != expectedNumTxsDownloaded) {
-        qCritical() << __PRETTY_FUNCTION__ << ": Expected to downlaod " << expectedNumTxsDownloaded << ", instead got " << txsDownloaded.size() << ". FIXME!";
+        qCCritical(f) << __PRETTY_FUNCTION__ << ": Expected to downlaod " << expectedNumTxsDownloaded << ", instead got " << txsDownloaded.size() << ". FIXME!";
         emit errored();
         return;
     }
@@ -676,11 +676,11 @@ void SynchMempoolTask::doDLNextTx()
         const int expectedLen = txdata.length() / 2;
         txdata = Util::ParseHexFast(txdata);
         if (txdata.length() != expectedLen) {
-            qCritical() << "Received tx data is of the wrong length -- bad hex? FIXME";
+            qCCritical(f) << "Received tx data is of the wrong length -- bad hex? FIXME";
             emit errored();
             return;
         } else if (BTC::HashRev(txdata) != tx->hash) {
-            qCritical() << "Received tx data appears to not match requested tx! FIXME!!";
+            qCCritical(f) << "Received tx data appears to not match requested tx! FIXME!!";
             emit errored();
             return;
         }

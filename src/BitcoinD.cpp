@@ -272,7 +272,7 @@ void BitcoinDMgr::refreshBitcoinDNetworkInfo()
             qCritical(f) << "getnetworkinfo error, code:" << msg.errorCode() << ", error: " << msg.errorMessage();
         },
         // failure
-        [](const RPC::Message::Id &, const QString &reason){ qCritical() << "getnetworkinfo failed: " << reason; }
+        [](const RPC::Message::Id &, const QString &reason){ qCritical(f) << "getnetworkinfo failed: " << reason; }
     );
 }
 

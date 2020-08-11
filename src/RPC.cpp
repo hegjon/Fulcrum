@@ -661,7 +661,7 @@ namespace RPC {
             sm = std::unique_ptr<StateMachine, SMDel>(new StateMachine, [](StateMachine *sm) { delete sm; });
         if (!socket) {
             // this should never happen. here for paranoia.
-            qCritical() << "on_readyRead with socket == nullptr -- were we called from a defunct timer? FIXME";
+            qCCritical(f) << "on_readyRead with socket == nullptr -- were we called from a defunct timer? FIXME";
             return;
         }
         using St = StateMachine::State;

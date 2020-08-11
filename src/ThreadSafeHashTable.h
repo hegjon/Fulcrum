@@ -70,7 +70,7 @@ public:
             qCDebug(f) << objectName() << ": Checking table...";
             for (auto it = table.begin(); it != table.end(); ++it) {
                 if (!it.value().expired())
-                    qCritical() << objectName() << "d'tor: a weak ref was still alive for" << ToString(it.key()) << ". FIXME!";
+                    qCCritical(f) << objectName() << "d'tor: a weak ref was still alive for" << ToString(it.key()) << ". FIXME!";
             }
         }
     }
@@ -136,7 +136,7 @@ public:
 
                     auto me = weakThis.data();
                     if (UNLIKELY(!me)) {
-                        qCritical() << myname << " CRITICAL: While deleting entry for " << ToString(key)
+                        qCCritical(f) << myname << " CRITICAL: While deleting entry for " << ToString(key)
                                 << ", manager object no longer exists! FIXME!";
                         return;
                     }
@@ -170,7 +170,7 @@ public:
                         }
                     } else {
                         // this should never happen
-                        qCritical() << myname << ": Deleter for " << ToString(key) << " could not find an entry in the table for this item! FIXME!";
+                        qCCritical(f) << myname << ": Deleter for " << ToString(key) << " could not find an entry in the table for this item! FIXME!";
                     }
                 });
                 table.insert(key, DataWeakRef{ret}); // Note: QHash::insert overwrites existing, unlike std::unordered_map::insert!
