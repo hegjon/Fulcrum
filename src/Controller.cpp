@@ -474,7 +474,7 @@ void SynchMempoolTask::process()
             return;
         }
     } else {
-        qCCritical(f) << "Unexpected state in " << __PRETTY_FUNCTION__ << ". FIXME!";
+        qCCritical(f) << "Unexpected state. FIXME!";
         emit errored();
         return;
     }
@@ -519,7 +519,7 @@ void Controller::printMempoolStatusToLog(size_t newSize, size_t numAddresses, bo
 void SynchMempoolTask::processResults()
 {
     if (txsDownloaded.size() != expectedNumTxsDownloaded) {
-        qCCritical(f) << __PRETTY_FUNCTION__ << ": Expected to downlaod " << expectedNumTxsDownloaded << ", instead got " << txsDownloaded.size() << ". FIXME!";
+        qCCritical(f) << "Expected to downlaod" << expectedNumTxsDownloaded << ", instead got" << txsDownloaded.size() << ". FIXME!";
         emit errored();
         return;
     }

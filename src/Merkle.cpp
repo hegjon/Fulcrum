@@ -31,13 +31,13 @@ namespace Merkle {
         BranchAndRootPair ret;
         const unsigned hvsz = unsigned(hashVec.size());
         if (!hvsz || index >= hvsz) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": Misused. Please specify a non-empty hash vector as well as an in-range index. FIXME!";
+            qCCritical(f) << "Misused. Please specify a non-empty hash vector as well as an in-range index. FIXME!";
             throw BadArgs(QString("Bad args to %1").arg(__func__));
         }
         const unsigned natLen = branchLength(unsigned(hvsz));
         const unsigned length = optLen.value_or(natLen);
         if (length < natLen) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": Misused. Must specify a length argument that is >= " << natLen << " for a vector of size " << hvsz << ". FIXME!";
+            qCCritical(f) << "Misused. Must specify a length argument that is >=" << natLen << "for a vector of size" << hvsz << ". FIXME!";
             throw BadArgs(QString("Bad length arg to %1").arg(__func__));
         }
         HashVec branch;
@@ -67,7 +67,7 @@ namespace Merkle {
             recomputeHashes(hashes); // makes hashes be 1/2 the size each time
         }
         if (UNLIKELY(hashes.empty())) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": INTERNAL ERROR. Output vector is empty! FIXME!";
+            qCCritical(f) << "INTERNAL ERROR. Output vector is empty! FIXME!";
             throw InternalError(QString("%1: Output hash vector is empty").arg(__func__));
         }
         ret = { std::move(branch), hashes.front() };
@@ -85,7 +85,7 @@ namespace Merkle {
             index >>= 1;
         }
         if (index) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": INTERNAL ERROR. Passed-in index is out of range! FIXME!";
+            qCCritical(f) << "INTERNAL ERROR. Passed-in index is out of range! FIXME!";
             throw BadArgs(QString("%1: Index argument out of range").arg(__func__));
         }
         return hash;
@@ -95,11 +95,11 @@ namespace Merkle {
     {
         HashVec ret;
         if (depthHigher > MaxDepth) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": INTERNAL ERROR. depthHigher is too large " << depthHigher << " > " << MaxDepth << ". FIXME!";
+            qCCritical(f) << "INTERNAL ERROR. depthHigher is too large " << depthHigher << " > " << MaxDepth << ". FIXME!";
             throw BadArgs("Argument depthHigher is too large");
         }
         if (hashes.empty()) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": INTERNAL ERROR. empty hashes vector! FIXME!";
+            qCCritical(f) << "INTERNAL ERROR. empty hashes vector! FIXME!";
             throw BadArgs("Argument hashes cannot be empty");
         }
         const unsigned hsz = unsigned(hashes.size());
@@ -117,7 +117,7 @@ namespace Merkle {
     {
         BranchAndRootPair ret;
         if (level.empty() || leafHashes.empty() || depthHigher > MaxDepth) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": Invalid args";
+            qCCritical(f) << "Invalid args";
             throw BadArgs(QString("Invalid arguments to %1").arg(__func__));
         }
         const unsigned leafIndex = (index >> depthHigher) << depthHigher; // funny way to make 0's on the right.
@@ -127,7 +127,7 @@ namespace Merkle {
         const auto levelPair = branchAndRoot(level, index);
         const auto & [levelBranch, root] = levelPair;
         if (index >= level.size() || leafRoot != level[index]) {
-            qCCritical(f) << __PRETTY_FUNCTION__ << ": leaf hashes inconsistent with level. FIXME!";
+            qCCritical(f) << "leaf hashes inconsistent with level. FIXME!";
             throw InternalError(QString("%1: leaf hashes inconsistent with level").arg(__func__));
         }
         auto & outVec (leafBranch); // we concatenate to the end of this vector

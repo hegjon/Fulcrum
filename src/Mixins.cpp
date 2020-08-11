@@ -26,7 +26,7 @@ QObject *QObjectMixin::qobj() const
 {
     QObject *ret = dynamic_cast<QObject *>(const_cast<QObjectMixin *>(this));
     if (!ret) {
-        qCritical(f) << __PRETTY_FUNCTION__ << ": Cannot cast this to QObject! App will likely crash now!";
+        qCritical(f) << "Cannot cast this to QObject! App will likely crash now!";
     }
     return ret;
 }

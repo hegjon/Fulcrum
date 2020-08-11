@@ -68,7 +68,7 @@ void SrvMgr::startup()
     if (servers.empty()) {
         startServers();
     } else {
-        qCCritical(f) << __PRETTY_FUNCTION__ << " called with servers already active! FIXME!";
+        qCCritical(f) << "Called with servers already active! FIXME!";
     }
 }
 
