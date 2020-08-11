@@ -1110,25 +1110,12 @@ void App::start_httpServer(const Options::Interface &iface)
     });
 }
 
-/* static */
-void App::customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-{
-    // suppressions
-    if ( msg.contains(QStringLiteral("QSslCertificate::isSelfSigned"))
-         || msg.contains(QStringLiteral("Type conversion already registered")))
-        return;
-    // /suppressions
-
-    const QByteArray umsg = msg.toUtf8();
-}
-
 void App::miscPreAppFixups()
 {
     if(qEnvironmentVariableIsSet("JOURNAL_STREAM")) {
         qputenv("QT_LOGGING_TO_CONSOLE", QByteArray("0"));
     } else {
         qSetMessagePattern("[%{time yyyy-MM-dd hh:mm:ss.zzz}] %{if-category}[%{category}] %{endif}%{message}");
-        //qInstallMessageHandler(customMessageHandler);
     }
 #ifdef Q_OS_DARWIN
     // workaround for annoying macos keychain access prompt. see: https://doc.qt.io/qt-5/qsslsocket.html#setLocalCertificate

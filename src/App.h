@@ -108,9 +108,6 @@ private:
     void register_MetaTypes();
     void start_httpServer(const Options::Interface &iface); // may throw
 
-    /// Used to forward Qt messages to our Log() subsystem, installed by miscPreAppFixups()
-    static void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
-
     /// Used for registerTest and registerBench
     using NameFuncMap = std::map<QString, std::function<void()>>;
     static NameFuncMap registeredTests, registeredBenches;
