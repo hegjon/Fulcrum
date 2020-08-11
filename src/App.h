@@ -83,10 +83,6 @@ public slots:
     /// from any thread and/or to use a Qt::DirectConnection here.
     void on_bitcoindThrottleParamsChange(int hi, int lo, int decay);
 
-private slots:
-    void on_setVerboseDebug(bool);
-    void on_setVerboseTrace(bool);
-
 private:
     std::atomic<quint64> globalId = 0;
     const std::unique_ptr<ThreadPool> tpool;
